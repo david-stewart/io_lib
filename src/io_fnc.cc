@@ -212,3 +212,18 @@ void io_scaleByBinWidth(TH1D* hg, double scale_factor) {
         }
     }
 };
+void io_scaleByBinWidth(TH2D* hg, double scale_factor, bool byXwidth, bool byYwidth) {
+    if (!byXwidth && !byYwidth) {
+        hg->Scale(scale_factor);
+        return;
+    }
+    for (int x{1}; x<=(int) hg->GetNbinsX(); ++x) {
+        double x_wide { byXwidth ? hg->GetXaxis()->GetBinWidth(x) : 1. };
+        for (int y{1}; y<=(int) hg->GetNbinsY(); ++y)  {
+            double y_wide { byYwidth ? hg->GetYaxis()->GetBinWidth(y) : 1. };
+            double factor { scale_factor / y_wide / x_wide };
+            hg->SetBinContent(x, y, hg->GetBinContent(x,y) * factor);
+            hg->SetBinError  (x, y, hg->GetBinError(x,y)   * factor);
+        }
+    }
+};

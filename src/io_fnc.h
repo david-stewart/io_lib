@@ -59,4 +59,7 @@ vector<string> io_split_string(string str) ;
 // scale each bin by the 1./width 
 void io_scaleByBinWidth(TH1D* hg, double scale_factor=1.);
 
+// scale each bin by the 1./widthx/widthy
+void io_scaleByBinWidth(TH2D* hg, double scale_factor=1., bool byXwidth=true, bool byYwidth=true);
+
 #endif
