@@ -56,4 +56,7 @@ pair<int, double*> io_vec_BinEdge(TH1* hg) ;
 // split strings like: "first name|| second name|| third name|| fourth name"
 vector<string> io_split_string(string str) ;
 
+// scale each bin by the 1./width 
+void io_scaleByBinWidth(TH1D* hg, double scale_factor=1.);
+
 #endif

@@ -202,3 +202,13 @@ TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm) {
     }
     return ret;
 };
+
+void io_scaleByBinWidth(TH1D* hg, double scale_factor) {
+    for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
+        if (hg->GetBinContent(i)) {
+            double factor { scale_factor / hg->GetBinWidth(i) };
+            hg->SetBinContent(i, hg->GetBinContent(i) * factor);
+            hg->SetBinError(i, hg->GetBinError(i) * factor);
+        }
+    }
+};
