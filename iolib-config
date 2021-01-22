@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+if [ $1 = "-I" ]; then
+    echo -I${HOME}/root_macros/io_lib/include
+elif [ $1 = "-L" ]; then
+    echo -L${HOME}/root_macros/io_lib/lib -lioClass -lioOptMap -lio_fmt -lio_fnc
+fi
+
