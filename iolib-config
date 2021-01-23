@@ -2,6 +2,10 @@
 if [ $1 = "-I" ]; then
     echo -I${HOME}/root_macros/io_lib/include
 elif [ $1 = "-L" ]; then
-    echo -L${HOME}/root_macros/io_lib/lib -lioClass -lioOptMap -lio_fmt -lio_fnc
+    str="-L${HOME}/root_macros/io_lib/lib"
+    while read line; do
+        str="${str} -lio${line}"
+    done < lib_list
+    echo ${str}
 fi
 

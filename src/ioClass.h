@@ -5,6 +5,8 @@
 #include "TFile.h"
 #include <vector>
 #include "TPad.h"
+#include <iostream>
+#include <fstream>
 #include "TCanvas.h"
 #include <map>
 #include <string>
@@ -85,6 +87,17 @@ struct ioPads {
 
     // To do here:
 
+};
+
+struct ioIntList {
+    vector<int> list;
+    bool operator()(int); // check if argument is in the list
+    bool has(int);
+    bool has_not(int);
+    ioIntList(const char* in_file, ofstream& log, bool print=true);
+    ioIntList(const char* in_file, bool print=true);
+    private:
+    string make(const char* in_file, bool print);
 };
 
 /* vector<pair<ioPadDim,ioPadDim>> ioPadDimGrid( */ 

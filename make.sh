@@ -6,18 +6,19 @@ if [[ ! -d ${file} ]]; then
 fi
 done
 
-for x in Class OptMap _fnc _fmt; do
+while read line; do
+# for x in Class OptMap _fnc _fmt; do
     root -l<<EOF
-        .L src/io${x}.cc+
+        .L src/io${line}.cc+
 EOF
-    if [[ ! -f include/io${x}.h ]]; then
+    if [[ ! -f include/io${line}.h ]]; then
         cd include
-        ln -s ../src/io${x}.h .
+        ln -s ../src/io${line}.h .
         cd ..
     fi
-    if [[ ! -f lib/libio${x}.so ]]; then
+    if [[ ! -f lib/libio${line}.so ]]; then
         cd lib
-        ln -s ../src/io${x}_cc.so libio${x}.so
+        ln -s ../src/io${line}_cc.so libio${line}.so
         cd ..
     fi
-done
+done < lib_list
