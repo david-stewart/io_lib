@@ -25,8 +25,9 @@ struct ioXsec_pAu2015 {
     //      if collected events, use collected events
     //      else use default numbers (from my local trees)
     /* double XsecPyth8(int pthat_min, int pthat_max, int number_of_events=0); */
+    double XsecPyth8(pair<int,int>, int number_of_events=0);
     double XsecPyth8(int pthat_bin, int number_of_events=0);
-    /* double XsecPyth6(int pthat_min, int pthat_max, int number_of_events=0); */
+    double XsecPyth6(pair<int,int>, int number_of_events=0);
     double XsecPyth6(int pthat_bin, int number_of_events=0);
     void collect(int pthat_bin);
     void collect(int pthat_min, int pthat_max);

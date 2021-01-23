@@ -38,9 +38,12 @@ unsigned int ioXsec_pAu2015::pthatbin(int pthat_min, int pthat_max){
 /*     return XsecPyth8(pthatbin(pthat_min, pthat_max), number_of_events); */
 /* }; */
 
-/* double ioXsec_pAu2015::XsecPyth6(int pthat_min, int pthat_max, int number_of_events=0){ */
-/*     return XsecPyth6(pthatbin(pthat_min, pthat_max), number_of_events); */
-/* }; */
+double ioXsec_pAu2015::XsecPyth6(pair<int,int> ptrange, int number_of_events){
+    return XsecPyth6(pthatbin(ptrange.first, ptrange.second), number_of_events);
+};
+double ioXsec_pAu2015::XsecPyth8(pair<int,int> ptrange, int number_of_events){
+    return XsecPyth8(pthatbin(ptrange.first, ptrange.second), number_of_events);
+};
 
 double ioXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
 	const static double Xsec[9] {
@@ -70,7 +73,7 @@ double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
 	const static double Xsec[9] {
 		0.10849815,      0.019171747,  0.0047063602,
 	    0.0020085739,  0.00035981473, 9.6174432e-06,
-		4.722213e-07,  2.6900098e-08, 1.3887308e-09
+		4.722213e-07,  2.6900098e-08, 1.3887308e-09 };
     const static int nEvents[9] { // for my trees
         375735, 217715, 110680,
         168886, 518397, 177438,
@@ -91,7 +94,7 @@ double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
 };
 
 void   ioXsec_pAu2015::collect(int pthat_min, int pthat_max){
-    collect(pthatbin(pthat_bin, pthat_max);
+    collect(pthatbin(pthat_min, pthat_max));
 };
 void   ioXsec_pAu2015::collect(int pthat_bin){
     ++n_collected[pthat_bin];
