@@ -1,11 +1,12 @@
 #!/usr/bin/bash
+lib_list="${HOME}/root_macros/io_lib/lib_list"
 if [ $1 = "-I" ]; then
     echo -I${HOME}/root_macros/io_lib/include
 elif [ $1 = "-L" ]; then
     str="-L${HOME}/root_macros/io_lib/lib"
     while read line; do
         str="${str} -lio${line}"
-    done < lib_list
+    done < ${lib_list}
     echo ${str}
 fi
 
