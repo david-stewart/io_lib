@@ -21,4 +21,9 @@ EOF
         ln -s ../src/io${line}_cc.so libio${line}.so
         cd ..
     fi
+    if [[ ! -f lib/io${line}_cc_ACLiC_dict_rdict.pcm ]]; then
+        cd lib
+        ln -s ../src/io${line}_cc_ACLiC_dict_rdict.pcm
+        cd ..
+    fi
 done < lib_list

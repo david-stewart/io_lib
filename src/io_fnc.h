@@ -14,6 +14,8 @@
 
 #include "ioOptMap.h"
 
+using std::pair;
+
 TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm=false);
 
 const char* ioUniqueName(int i=0); // return a unique name to the directory
