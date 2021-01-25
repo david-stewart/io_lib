@@ -103,4 +103,16 @@ struct ioIntList {
 /* vector<pair<ioPadDim,ioPadDim>> ioPadDimGrid( */ 
         /* vector<ioPadDim> x_coord, vector<ioPadDim> y_coord, bool by_rows = true); */
 
+struct ioRunListId {
+    public:
+    ioRunListId(const char* file_name, bool skip_127053_138064=true);
+    map<int,double> map_id;  // runid -> map_id
+    map<int,int>    run_sec; // runid -> duration
+    bool has_run(int);
+    double set_id(int run_id);
+    double id; // last set id
+    int  size();
+    double operator()(int);  // return map_id[runid], unless not present, then -1.
+};
+
 #endif
