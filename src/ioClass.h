@@ -140,11 +140,11 @@ struct ioHgStats {
 
     double mean_Xsigma(double X); // return StdDev * X + mean
 
-    void cut_above(double cut, bool cut_times_sigma=false);
-    void cut_below(double cut, bool cut_times_sigma=false);
-    void cut_zeros();
-    void cut_to_range(double cut0, double cut1, bool cut_times_sigma=false);
-    void restore_points();
+    ioHgStats& cut_above(double cut, bool cut_times_sigma=false);
+    ioHgStats& cut_below(double cut, bool cut_times_sigma=false);
+    ioHgStats& cut_zeros();
+    ioHgStats& cut_to_range(double cut0, double cut1, bool cut_times_sigma=false);
+    ioHgStats& restore_points();
 
     ioHgStats(TH1D* hg, bool cut_zeros=false);
     ioHgStats(TProfile* hg, bool cut_zeros=false, bool weight_by_entries=false);

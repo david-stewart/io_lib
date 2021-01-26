@@ -434,7 +434,7 @@ TGraph* ioHgStats::points_between(double locut, double hicut, bool cut_times_sig
     return new TGraph(n_pts,xpts,ypts);
 };
 // cuts
-void ioHgStats::cut_above(double cut, bool cut_times_sigma) {
+ioHgStats& ioHgStats::cut_above(double cut, bool cut_times_sigma) {
     // count how many points are above
     double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
     int n_above {0};
@@ -442,8 +442,9 @@ void ioHgStats::cut_above(double cut, bool cut_times_sigma) {
         if (weight[i]!=0. && vals[i]>y) weight[i] = 0.;
     }
     calc_stats();
+    return *this;
 };
-void ioHgStats::cut_below(double cut, bool cut_times_sigma) {
+ioHgStats& ioHgStats::cut_below(double cut, bool cut_times_sigma) {
     // count how many points are above
     double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
     int n_pts {0};
@@ -451,8 +452,9 @@ void ioHgStats::cut_below(double cut, bool cut_times_sigma) {
         if (weight[i]!=0. && vals[i]<y) weight[i] = 0.;
     }
     calc_stats();
+    return *this;
 };
-void ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
+ioHgStats& ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
     // count how many points are above
     double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut;
     double y_hi = cut_times_sigma ? mean_Xsigma(hicut) : hicut;
@@ -461,6 +463,7 @@ void ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
         if (weight[i]!=0. && (vals[i]<y_lo || vals[i]>y_hi)) weight[i] = 0.;
     }
     calc_stats();
+    return *this;
 };
 TGraph* ioHgStats::points() {
     int n_pts {0};
@@ -493,15 +496,17 @@ vector<int> ioHgStats::bin_indices() {
     }
     return vec;
 };
-void ioHgStats::restore_points() {
+ioHgStats& ioHgStats::restore_points() {
     for (auto i{0}; i<nbins; ++i) {
         weight[i] = 1.;
     }
     calc_stats();
+    return *this;
 };
-void ioHgStats::cut_zeros() {
+ioHgStats& ioHgStats::cut_zeros() {
     for (auto i{0}; i<nbins; ++i) {
         if (vals[i]==0) weight[i] =0.;
     }
     calc_stats();
+    return *this;
 };
