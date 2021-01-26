@@ -227,3 +227,56 @@ void io_scaleByBinWidth(TH2D* hg, double scale_factor, bool byXwidth, bool byYwi
         }
     }
 };
+
+
+vector<double> io_vecBinContent(TH1D* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
+    return vec;
+};
+vector<double> io_vecBinError  (TH1D* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
+    return vec;
+};
+vector<double> io_vecBinContent(TProfile* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
+    return vec;
+};
+vector<double> io_vecBinError  (TProfile* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
+    return vec;
+};
+vector<double> io_vecBinEntries(TProfile* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinEntries(i));
+    return vec;
+};
+vector<double> io_vecAxisBinCenter (TAxis* axis, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? axis->GetNbins()+1 : axis->GetNbins();
+    for (int i=i0;i<=i1;++i) {
+        vec.push_back(axis->GetBinCenter(i));
+    }
+    return vec;
+};
+vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? axis->GetNbins()+2: axis->GetNbins()+1;
+    for (int i=i0;i<=i1;++i) vec.push_back(axis->GetBinLowEdge(i));
+    return vec;
+};

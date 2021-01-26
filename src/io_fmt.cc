@@ -1,11 +1,12 @@
 #include "io_fmt.h"
 
-void io_fmt(TLine* line, ioOptMap options, ioOptMap dict)
+TLine* io_fmt(TLine* line, ioOptMap options, ioOptMap dict)
 {
     dict += options;
     line->SetLineColorAlpha(dict["LineColor"],dict["LineColorAlpha"].val());
     line->SetLineStyle(dict["LineStyle"]);
     line->SetLineWidth(dict["LineWidth"]);
+    return line;
 };
 
 
@@ -182,7 +183,7 @@ void io_fmt_ranges(vector<TH1D*> hgs, vector<TH1D*> hgs_2, ioOptMap dict) {
     io_fmt_ranges(tmp, dict);
 }
 
-void io_fmt (TCanvas* canv, ioOptMap dict) {
+TCanvas* io_fmt (TCanvas* canv, ioOptMap dict) {
     int FillStyle = dict("TCanvasFillStyle") ?
         dict["TCanvasFillStyle"].get_int() : 4000;
 
@@ -191,8 +192,9 @@ void io_fmt (TCanvas* canv, ioOptMap dict) {
 
     canv->SetFillStyle(FillStyle);
     canv->SetFrameFillStyle(FrameFillStyle);
+    return canv;
 };
-void io_fmt (TPad* pad, ioOptMap dict) {
+TPad* io_fmt (TPad* pad, ioOptMap dict) {
     int FillStyle = dict("TCanvasFillStyle") ?
         dict["TCanvasFillStyle"].get_int() : 4000;
 
@@ -201,15 +203,17 @@ void io_fmt (TPad* pad, ioOptMap dict) {
 
     pad->SetFillStyle(FillStyle);
     pad->SetFrameFillStyle(FrameFillStyle);
+    return pad;
 };
-void io_fmt (TLegend* leg, ioOptMap dict) {
+TLegend* io_fmt (TLegend* leg, ioOptMap dict) {
     int LineColor =  dict("LineColor") ? dict["LineColor"]   : kWhite;
     int FillColor =  dict("FillColor") ? dict["FillColor"]   : kWhite;
     double alpha  =  dict("alpha")     ? dict["alpha"].val() : 0.;
     leg->SetLineColorAlpha(LineColor, alpha);
     leg->SetFillColorAlpha(FillColor, alpha);
+    return leg;
 };
-void io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
+TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
     dict += _override;
 
     /* cout << " format " << endl; */
@@ -277,6 +281,8 @@ void io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
     if (dict("yAxisLabelSize"))
         hg->GetYaxis()->SetLabelSize(dict["yAxisLabelSize"].val());
     if (dict("yAxisLabelOffset"))
+        hg->GetYaxis()->SetLabelOffset(dict["yAxisLabelOffset"].val());
+
 
     // z Axis
     if (dict("zAxisTitleFont"))
@@ -291,9 +297,10 @@ void io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetZaxis()->SetLabelSize(dict["zAxisLabelSize"].val());
     if (dict("zAxisLabelOffset"))
         hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
+    return hg;
 };
 
-void io_fmt (TH1D* hg, TPad* pad, ioOptMap _override, ioOptMap dict) {
+TH1D* io_fmt (TH1D* hg, TPad* pad, ioOptMap _override, ioOptMap dict) {
     // cancel the x and y-axis if there is no margin for them
     if (!pad->GetBottomMargin()) {
         io_fmt(hg, {"no-xAxis:0;;"},{});
@@ -302,9 +309,10 @@ void io_fmt (TH1D* hg, TPad* pad, ioOptMap _override, ioOptMap dict) {
         io_fmt(hg, {"no-yAxis:0;;"},{});
     }
     io_fmt(hg, _override, dict);
+    return hg;
 };
 
-void io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
+TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
     /* cout << " alpha " << endl; */
     dict += _override;
 
@@ -384,6 +392,7 @@ void io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
     if (dict("yAxisLabelSize"))
         hg->GetYaxis()->SetLabelSize(dict["yAxisLabelSize"].val());
     if (dict("yAxisLabelOffset"))
+        hg->GetYaxis()->SetLabelOffset(dict["yAxisLabelOffset"].val());
 
     // z Axis
     if (dict("zAxisTitleFont"))
@@ -398,6 +407,103 @@ void io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetZaxis()->SetLabelSize(dict["zAxisLabelSize"].val());
     if (dict("zAxisLabelOffset"))
         hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
-    cout << " MarkerColor: " << hg->GetMarkerColor() << endl;
+    /* cout << " MarkerColor: " << hg->GetMarkerColor() << endl; */
+    return hg;
+};
+// repeat of the above TGraph*
+TGraph* io_fmt (TGraph* hg, TPad* pad, ioOptMap _override, ioOptMap dict) {
+    // cancel the x and y-axis if there is no margin for them
+    if (!pad->GetBottomMargin()) {
+        io_fmt(hg, {"no-xAxis:0;;"},{});
+    }
+    if (!pad->GetLeftMargin()) {
+        io_fmt(hg, {"no-yAxis:0;;"},{});
+    }
+    io_fmt(hg, _override, dict);
+    return hg;
+};
+
+TGraph* io_fmt (TGraph* hg, ioOptMap _override, ioOptMap dict) {
+    /* cout << " alpha " << endl; */
+    dict += _override;
+
+    /* cout << " format " << endl; */
+    /* cout << dict << endl; */
+
+    /* if (dict("normalize")) hg->Scale(1./hg->Integral()); */
+    /* if (dict("Rebin"))        hg->Rebin(dict["Rebin"]); */
+
+    if (!dict("MarkerAlpha")) dict["MarkerAlpha"] = 1.;
+    if (dict("noTitle"))      hg->SetTitle("");
+    /* if (dict("SetStats"))     hg->SetStats(dict["SetStats"]); */
+
+
+    if (dict("MarkerStyle"))
+        hg->SetMarkerStyle(dict["MarkerStyle"]);
+    if (dict("MarkerColor"))
+        hg->SetMarkerColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val());
+    if (dict("MarkerSize"))
+        hg->SetMarkerSize(dict["MarkerSize"].val());
+
+    if (dict("LineWidth"))
+        hg->SetLineWidth(dict["LineWidth"]);
+    if (dict("LineStyle"))
+        hg->SetLineStyle(dict["LineStyle"]);
+    if (dict("MarkerColor"))
+        hg->SetLineColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val());
+    
+    if (dict("LineColor")) {
+        double LineAlpha = dict("LineAlpha") ? dict["LineAlpha"].val() : dict["MarkerAlpha"].val();
+        hg->SetLineColorAlpha(dict["LineColor"], LineAlpha);
+    }
+
+    // Set titles
+    if (dict("Title")) hg->SetTitle(dict["SetTitle"]);
+    if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
+    if (dict("yAxisTitle")) hg->GetYaxis()->SetTitle(dict["yAxisTitle"]);
+
+    if (dict("no-xAxis")) { 
+        hg->GetXaxis()->SetLabelColor(kWhite,0.);
+        hg->GetXaxis()->SetTitle("");
+    }
+    if (dict("no-yAxis")) { 
+        hg->GetYaxis()->SetLabelColor(kWhite,0.);
+        hg->GetYaxis()->SetTitle("");
+    }
+
+    
+
+    // Set axes styles
+
+    // x Axis
+    if (dict("xAxisTitleFont"))
+        hg->GetXaxis()->SetTitleFont(dict["xAxisTitleFont"]);
+    if (dict("xAxisTitleSize"))
+        hg->GetXaxis()->SetTitleSize(dict["xAxisTitleSize"].val());
+    /* cout << " beta " << endl; */
+    /* if (dict("xAxisTitleOffset")) cout << " Setting xaxistitleoffset " <<  dict["xAxisTitleOffset"].val() << endl; */
+    if (dict("xAxisTitleOffset"))
+        hg->GetXaxis()->SetTitleOffset(dict["xAxisTitleOffset"].val());
+    if (dict("xAxisLabelFont"))
+        hg->GetXaxis()->SetLabelFont(dict["xAxisLabelFont"]);
+    if (dict("xAxisLabelSize"))
+        hg->GetXaxis()->SetLabelSize(dict["xAxisLabelSize"].val());
+    if (dict("xAxisLabelOffset"))
+        hg->GetXaxis()->SetLabelOffset(dict["xAxisLabelOffset"].val());
+
+    // y Axis
+    if (dict("yAxisTitleFont"))
+        hg->GetYaxis()->SetTitleFont(dict["yAxisTitleFont"]);
+    if (dict("yAxisTitleSize"))
+        hg->GetYaxis()->SetTitleSize(dict["yAxisTitleSize"].val());
+    if (dict("yAxisTitleOffset"))
+        hg->GetYaxis()->SetTitleOffset(dict["yAxisTitleOffset"].val());
+    if (dict("yAxisLabelFont"))
+        hg->GetYaxis()->SetLabelFont(dict["yAxisLabelFont"]);
+    if (dict("yAxisLabelSize"))
+        hg->GetYaxis()->SetLabelSize(dict["yAxisLabelSize"].val());
+    if (dict("yAxisLabelOffset"))
+        hg->GetYaxis()->SetLabelOffset(dict["yAxisLabelOffset"].val());
+    return hg;
 };
 

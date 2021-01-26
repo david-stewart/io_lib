@@ -64,4 +64,15 @@ void io_scaleByBinWidth(TH1D* hg, double scale_factor=1.);
 // scale each bin by the 1./widthx/widthy
 void io_scaleByBinWidth(TH2D* hg, double scale_factor=1., bool byXwidth=true, bool byYwidth=true);
 
+// functions to get vector<double> of bin content, error, and edges
+// using TH1D*
+vector<double> io_vecBinContent(TH1D* hg, bool under_over_flow=false);
+vector<double> io_vecBinError  (TH1D* hg, bool under_over_flow=false);
+// using TProfile*
+vector<double> io_vecBinContent(TProfile* hg, bool under_over_flow=false);
+vector<double> io_vecBinError  (TProfile* hg, bool under_over_flow=false);
+vector<double> io_vecBinEntries(TProfile* hg, bool under_over_flow=false);
+vector<double> io_vecAxisBinCenter (TAxis* axis, bool under_over_flow=false);
+vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow=false);
+
 #endif

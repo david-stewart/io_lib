@@ -10,6 +10,8 @@
 #include "TCanvas.h"
 #include <map>
 #include <string>
+#include "TLine.h"
+#include "TGraph.h"
 
 #include "io_fnc.h"
 #include "io_fmt.h"
@@ -113,6 +115,42 @@ struct ioRunListId {
     double id; // last set id
     int  size();
     double operator()(int);  // return map_id[runid], unless not present, then -1.
+};
+
+struct ioHgStats {
+    // used to get basic statistics and cuts
+    double mean;
+    double stddev;
+    void calc_stats(); // just the 
+
+    TAxis* axis;
+
+    /* vector<bool>   cut ; // points that are cut */
+    vector<double> vals;
+    vector<double> errs;
+    vector<double> weight;
+    int nbins;
+
+    TLine* get_horizontal_TLine(double cut, bool cut_times_sigma=false);
+
+    TGraph* points_above(double cut, bool cut_times_sigma=false);
+    TGraph* points_below(double cut, bool cut_times_sigma=false);
+    TGraph* points_between(double cut0, double cut1, bool cut_times_sigma=false);
+    TGraph* points();
+
+    double mean_Xsigma(double X); // return StdDev * X + mean
+
+    void cut_above(double cut, bool cut_times_sigma=false);
+    void cut_below(double cut, bool cut_times_sigma=false);
+    void cut_zeros();
+    void cut_to_range(double cut0, double cut1, bool cut_times_sigma=false);
+    void restore_points();
+
+    ioHgStats(TH1D* hg, bool cut_zeros=false);
+    ioHgStats(TProfile* hg, bool cut_zeros=false, bool weight_by_entries=false);
+
+    int count_points();
+    vector<int> bin_indices();
 };
 
 #endif

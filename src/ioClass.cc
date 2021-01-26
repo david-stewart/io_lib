@@ -1,9 +1,11 @@
 #include "ioClass.h"
 #include "io_fmt.h"
+#include "io_fnc.h"
 
 #include <sstream>
 #include <algorithm>
 #include "TString.h" // not used, but present for some header 
+#include "TMath.h"
 
 using namespace std;
 
@@ -314,3 +316,192 @@ double ioRunListId::set_id(int run_id) {
     return id;
 };
 
+
+// ioHgStats
+ioHgStats::ioHgStats(TH1D* hg, bool cut_zeros) {
+    vals = io_vecBinContent(hg);
+    errs = io_vecBinError  (hg);
+    axis=hg->GetXaxis();
+    nbins = axis->GetNbins();
+    if (cut_zeros) {
+        for (auto i{0}; i<nbins;++i) {
+            weight.push_back( vals[i] == 0 ? 0. : 1.);
+        }
+    } else {
+        for (auto i{0}; i<nbins; ++i) {
+            weight.push_back(1.);
+        }
+    }
+    calc_stats();
+};
+ioHgStats::ioHgStats(TProfile* hg, bool cut_zeros, bool weight_by_entries) {
+    vals = io_vecBinContent(hg);
+    errs = io_vecBinError  (hg);
+    axis=hg->GetXaxis();
+    nbins = axis->GetNbins();
+    if (weight_by_entries) {
+        weight = io_vecBinEntries(hg);
+    } else {
+        if (cut_zeros) {
+            for (auto i{0}; i<nbins;++i) {
+                weight.push_back( vals[i] == 0 ? 0. : 1.);
+            }
+        } else {
+            for (auto i{0}; i<nbins; ++i) {
+                weight.push_back(1.);
+            }
+        }
+    }
+    calc_stats();
+};
+void ioHgStats::calc_stats() {
+    mean   = TMath::Mean(vals.begin(), vals.end(), weight.begin());
+    stddev = TMath::StdDev(vals.begin(), vals.end(), weight.begin());
+};
+double ioHgStats::mean_Xsigma(double X) {
+    /* double sumW{0}; */
+    /* double sumV{0}; */
+    /* double sumE{0}; */
+    /* for (auto w : weight) sumW += w; */
+    /* for (auto w : vals) sumV += w; */
+    /* for (auto w : errs) sumE += w; */
+    /* cout << " mean: " << mean << "  stddev " << stddev << "  X " << X << "  val: " << */
+        /* mean+X*stddev << " >> npts" << nbins << Form("stats:%f,%f,%f",sumV,sumE,sumW) <<endl; */
+    return mean+ X * stddev;
+};
+TLine* ioHgStats::get_horizontal_TLine(double cut, bool cut_times_sigma) {
+    double x0 = axis->GetBinLowEdge(1);
+    double x1 = axis->GetBinUpEdge(axis->GetNbins());
+    double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
+    return new TLine(x0,y,x1,y);
+};
+TGraph* ioHgStats::points_above(double cut, bool cut_times_sigma) {
+    // count how many points are above
+    double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
+    int n_above {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]>y) ++n_above;
+    }
+    double* xpts = new double[n_above];
+    double* ypts = new double[n_above];
+    int n{0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]>y) {
+            xpts[n] = axis->GetBinCenter(i+1);
+            ypts[n] = vals[i];
+            ++n;
+        }
+    }
+    return new TGraph(n_above,xpts,ypts);
+};
+TGraph* ioHgStats::points_below(double cut, bool cut_times_sigma) {
+    // count how many points are above
+    double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]<y) ++n_pts;
+    }
+    double* xpts = new double[n_pts];
+    double* ypts = new double[n_pts];
+    int n{0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]<y) {
+            xpts[n] = axis->GetBinCenter(i+1);
+            ypts[n] = vals[i];
+            ++n;
+        }
+    }
+    return new TGraph(n_pts,xpts,ypts);
+};
+TGraph* ioHgStats::points_between(double locut, double hicut, bool cut_times_sigma) {
+    // count how many points are above
+    double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut;
+    double y_hi = cut_times_sigma ? mean_Xsigma(hicut) : hicut;
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]>y_lo && vals[i]<y_hi) ++n_pts;
+    }
+    double* xpts = new double[n_pts];
+    double* ypts = new double[n_pts];
+    int n{0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]<y_hi && vals[i]>y_lo) {
+            xpts[n] = axis->GetBinCenter(i+1);
+            ypts[n] = vals[i];
+            ++n;
+        }
+    }
+    return new TGraph(n_pts,xpts,ypts);
+};
+// cuts
+void ioHgStats::cut_above(double cut, bool cut_times_sigma) {
+    // count how many points are above
+    double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
+    int n_above {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]>y) weight[i] = 0.;
+    }
+    calc_stats();
+};
+void ioHgStats::cut_below(double cut, bool cut_times_sigma) {
+    // count how many points are above
+    double y = cut_times_sigma ? mean_Xsigma(cut) : cut;
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && vals[i]<y) weight[i] = 0.;
+    }
+    calc_stats();
+};
+void ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
+    // count how many points are above
+    double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut;
+    double y_hi = cut_times_sigma ? mean_Xsigma(hicut) : hicut;
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0. && (vals[i]<y_lo || vals[i]>y_hi)) weight[i] = 0.;
+    }
+    calc_stats();
+};
+TGraph* ioHgStats::points() {
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0.) ++n_pts;
+    }
+    double* xpts = new double[n_pts];
+    double* ypts = new double[n_pts];
+    int n{0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0.) {
+            xpts[n] = axis->GetBinCenter(i+1);
+            ypts[n] = vals[i];
+            ++n;
+        }
+    }
+    return new TGraph(n_pts,xpts,ypts);
+};
+int ioHgStats::count_points() {
+    int n_pts {0};
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0.) ++n_pts;
+    }
+    return n_pts;
+};
+vector<int> ioHgStats::bin_indices() {
+    vector<int> vec;
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0.) vec.push_back(i+1);
+    }
+    return vec;
+};
+void ioHgStats::restore_points() {
+    for (auto i{0}; i<nbins; ++i) {
+        weight[i] = 1.;
+    }
+    calc_stats();
+};
+void ioHgStats::cut_zeros() {
+    for (auto i{0}; i<nbins; ++i) {
+        if (vals[i]==0) weight[i] =0.;
+    }
+    calc_stats();
+};
