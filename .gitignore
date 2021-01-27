@@ -1,3 +1,9 @@
 *.d
 *.pcm
 *.so
+*ACLiC*
+*.list
+include
+fastjet
+_**
+obj

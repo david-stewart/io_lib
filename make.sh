@@ -1,29 +1,39 @@
 #!/usr/bin/bash
-# Drive the program make_drove.sh
 for file in include lib; do
 if [[ ! -d ${file} ]]; then
     mkdir ${file}
 fi
 done
 
+# make the src_oi files
 while read line; do
-# for x in Class OptMap _fnc _fmt; do
-    root -l<<EOF
-        .L src/io${line}.cc+
-EOF
-    if [[ ! -f include/io${line}.h ]]; then
+    make -f src_oi/Makefile lib/liboi${line}.so
+    if [ ! -L include/oi${line}.h ]; then
         cd include
-        ln -s ../src/io${line}.h .
+        ln -s ../src_oi/oi${line}.h .
         cd ..
     fi
-    if [[ ! -f lib/libio${line}.so ]]; then
+done < oi_lib_list
+
+# Make the src_io files
+while read line; do
+    root -l<<EOF
+        .L src_io/io${line}.cc+
+EOF
+    if [ ! -L include/io${line}.h ]; then
+        cd include
+        ln -s ../src_io/io${line}.h .
+        cd ..
+    fi
+    if [ ! -L lib/libio${line}.so ]; then
         cd lib
-        ln -s ../src/io${line}_cc.so libio${line}.so
+        ln -s ../src_io/io${line}_cc.so libio${line}.so
         cd ..
     fi
-    if [[ ! -f lib/io${line}_cc_ACLiC_dict_rdict.pcm ]]; then
+    if [ ! -L lib/io${line}_cc_ACLiC_dict_rdict.pcm ]; then
         cd lib
-        ln -s ../src/io${line}_cc_ACLiC_dict_rdict.pcm
+        ln -s ../src_io/io${line}_cc_ACLiC_dict_rdict.pcm
         cd ..
     fi
-done < lib_list
+done < io_lib_list
+

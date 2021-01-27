@@ -16,6 +16,7 @@ using std::endl;
 using std::string;
 using std::ostream;
 using std::map;
+using std::vector;
 
 
 // Takes entries as either strings, values, or pairs of values,
