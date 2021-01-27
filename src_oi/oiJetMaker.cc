@@ -26,6 +26,12 @@ void oiJetMaker::reset() {
     njets = 0;
     n_next = -1;
 };
+void oiJetMaker::reset_jets() {
+    jets.clear();
+    pseudo_jets.clear();
+    njets = 0;
+    n_next = -1;
+};
 
 bool oiJetMaker::next() {
     ++n_next;

@@ -42,7 +42,8 @@ class oiJetMaker {
     vector<PseudoJet> particles {};
     void add_particle(double pT, double eta, double phi);
     int  cluster_jets(); // returns how many jets
-    void reset();
+    void reset();      // reset both jets and particles
+    void reset_jets(); // reset only jets (in order to add more particles)
 
     int    n_particles{0};
     int    njets{0};
