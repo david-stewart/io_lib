@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-for file in include lib; do
+for file in include lib obj; do
 if [[ ! -d ${file} ]]; then
     mkdir ${file}
 fi
