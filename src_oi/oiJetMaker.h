@@ -30,7 +30,7 @@ class oiJetMaker {
     // set the values for const members in the constructor
     oiJetMaker(ioOptMap options={},
             ioOptMap defaults={{
-            "jet_R",  0.6, 
+            "jet_R",  0.4, 
             "jetrap",  -1, // if -1. will default to 1 - jetR
             "jet_def", "antikt",
             "min_jet_pt", 0.2
