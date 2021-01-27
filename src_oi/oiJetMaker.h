@@ -11,22 +11,51 @@
 using fastjet::PseudoJet;
 using std::vector;
 
-class oiJetMaker {
-    static constexpr double pi0mass {0.13498};
-    bool   make_areas {false};
-    double jet_R;
-    double ghost_R;
-    double ghost_max_rap;
-    const  string jet_algo;
-    double max_abs_eta_jet = -1.;  // if negative, defaults to 1.-jet_R
-
-    public:
-    vector<PseudoJet> in_particles {};
-    int n_in{0};
-    oiJetMaker();
-    ~oiJetMaker();
-    void add_particle(double pt, double eta, double phi);
+struct __oiJetMaker_Jet {
+    __oiJetMaker_Jet(double _pT,double _eta, double _phi);
+    double pT, eta, phi;
 };
 
+class oiJetMaker {
+    static constexpr double pi0mass {0.13498};
+
+    public:
+    ioOptMap opt;
+    const double jet_R;
+    const double                 jetrap;
+    const fastjet::JetDefinition jet_def; // {antikt,kt,cambridge}_algorithm
+    const fastjet::Selector      jet_selection; // default to not_pure_ghost && jetrap
+    const double min_jet_pt;
+
+    // set the values for const members in the constructor
+    oiJetMaker(ioOptMap options={},
+            ioOptMap defaults={{
+            "jet_R",  0.6, 
+            "jetrap",  -1, // if -1. will default to 1 - jetR
+            "jet_def", "antikt",
+            "min_jet_pt", 0.2
+        }}
+    );
+
+    // add options in the future to jet jet areas with ghost_particles
+
+    vector<PseudoJet> particles {};
+    void add_particle(double pT, double eta, double phi);
+    int  cluster_jets(); // returns how many jets
+    void reset();
+
+    int    n_particles{0};
+    int    njets{0};
+    int    n_next{-1};
+    bool   next(); // used to loop through all data using n_next and njets
+    double pT(int i=-1);  // get current jet pT
+    double eta(int i=-1); // get current jet eta
+    double phi(int i=-1); // get current jet phi
+
+    vector<PseudoJet> pseudo_jets {};
+    vector<__oiJetMaker_Jet> jets {}; // filled from pseudo_jets
+
+    /* ~oiJetMaker(); */
+};
 
 #endif

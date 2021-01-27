@@ -12,14 +12,25 @@ ldflg=`${FASTJET3}/fastjet-config --libs` `root-config --glibs` `${io_setter} -L
 
 # LIB_PYTH=-I${PYTHIA8}/include -L${PYTHIA8}/lib -lpythia8
 # LIB_FASTJET=`${FASTJET3}/fastjet-config --cxxflags --libs`
-# LIB_ROOT=`root-config --cflags --glibs`
 # LIB_DUO= ${LIB_ROOT} ${LIB_FASTJET}
 # LIB_TRI= ${LIB_ROOT} ${LIB_FASTJET} `${io_setter} -L`
 
 # compilation option
 CC=g++
 CFLAGS=-std=c++11 -O3 -Wno-deprecated
+LIB_FASTJET=`${FASTJET3}/fastjet-config --cxxflags --libs`
+LIB_ROOT=`root-config --cflags --glibs`
 # CFLAGS_CHECK=-std=c++11 -O0 -Wno-deprecated -g
+
+# test: obj/test.o obj/oiJetMaker.o
+	# ${CC} ${ccflg} -o test.o ../obj/oiJetMaker.o
+	#
+
+test0: obj/test.o obj/oiJetMaker.o
+	 ${CC} ${CFLAGS} -o $@ $^ ${LIB_ROOT} ${LIB_FASTJET} `${io_setter} -L`
+
+obj/test.o: src_oi/test.cc
+	${CC} ${ccflg}  -c $< -o $@
 
 lib/liboiJetMaker.so: obj/oiJetMaker.o
 	${CC} -shared -o lib/liboiJetMaker.so obj/oiJetMaker.o
