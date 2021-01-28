@@ -288,29 +288,29 @@ int io_geant05(int geantid) {
         case 11: return 2;
         case 12: return 3;
         case 14: return 4;
-        case 15: return 6;
+        case 15: return 5;
     }
     return -1;
 };
-string io_geant05_ascii(int geantid) {
+const char* io_geant05_ascii(int geantid) {
     switch (geantid) {
         case 8: return "pi";
         case 9: return "antipi";
         case 11: return "K";
         case 12: return "antiK";
-        case 14: return "P";
+        case 14: return "p";
         case 15: return "pbar";
 
         case 0: return "pi";
         case 1: return "antipi";
         case 2: return "K";
         case 3: return "antiK";
-        case 4: return "P";
+        case 4: return "p";
         case 5: return "pbar";
     }
     return "none";
 };
-string io_geant05_greek(int geantid) {
+const char* io_geant05_greek(int geantid) {
     switch (geantid) {
         case 8: return "#pi";
         case 9: return "#pi^{-}";
