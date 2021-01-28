@@ -289,3 +289,51 @@ vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow){
     for (int i=i0;i<=i1;++i) vec.push_back(axis->GetBinLowEdge(i));
     return vec;
 };
+
+int io_geant05(int geantid) {
+    switch (geantid) {
+        case 8: return 0;
+        case 9: return 1;
+        case 11: return 2;
+        case 12: return 3;
+        case 14: return 4;
+        case 15: return 5;
+    }
+    return -1;
+};
+const char* io_geant05_ascii(int geantid) {
+    switch (geantid) {
+        case 8: return "pi";
+        case 9: return "antipi";
+        case 11: return "K";
+        case 12: return "antiK";
+        case 14: return "p";
+        case 15: return "pbar";
+
+        case 0: return "pi";
+        case 1: return "antipi";
+        case 2: return "K";
+        case 3: return "antiK";
+        case 4: return "p";
+        case 5: return "pbar";
+    }
+    return "none";
+};
+const char* io_geant05_greek(int geantid) {
+    switch (geantid) {
+        case 8: return "#pi";
+        case 9: return "#pi^{-}";
+        case 11: return "K";
+        case 12: return "K^{-}";
+        case 14: return "p";
+        case 15: return "#bar{p}";
+
+        case 0: return "#pi";
+        case 1: return "#pi^{-}";
+        case 2: return "K";
+        case 3: return "K^{-}";
+        case 4: return "p";
+        case 5: return "#bar{p}";
+    }
+    return "none";
+};

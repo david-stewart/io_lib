@@ -75,4 +75,10 @@ vector<double> io_vecBinEntries(TProfile* hg, bool under_over_flow=false);
 vector<double> io_vecAxisBinCenter (TAxis* axis, bool under_over_flow=false);
 vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow=false);
 
+
+// map pi-K-p numbers to 0,1,2,3,4,5 : pi, pi-, K, K-, p, pbar
+int    io_geant05(int geantid);
+const char* io_geant05_ascii(int geantid);
+const char* io_geant05_greek(int geantid);
+
 #endif
