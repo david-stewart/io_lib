@@ -95,6 +95,7 @@ ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
 {
     if (_canvas_width)  canvas_width  = _canvas_width;
     if (_canvas_height) canvas_height = _canvas_height;
+    init();
 };
 ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
     if (_pad_dim.size() % 2 != 0) {
@@ -109,6 +110,7 @@ ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
     };
     if (c_wide) canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
+    init();
 };
 ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) {
     if (x_dim.size()==1) {
@@ -134,6 +136,7 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
     nCol = x_dim.size();
     if (c_wide) canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
+    init();
 };
 ioPads::ioPads(int nPads, int c_wide, int c_high){
     if (nPads==2) {
@@ -148,6 +151,7 @@ ioPads::ioPads(int nPads, int c_wide, int c_high){
     } else {
         throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2");
     }
+    init();
 };
 TPad* ioPads::operator()(int row, int col) {
     if (pads.size() == 0) init();
@@ -189,14 +193,16 @@ TPad* ioPads::operator()(int row, int col) {
 void ioPads::init() {
     // make and stylize the TCanvas and pads currently in the list
     int i{0};
-    canvas = new TCanvas(ioUniqueName(),"",canvas_width, canvas_height);
+    canvas = new TCanvas(ioUniqueName(),ioUniqueName(),canvas_width, canvas_height);
     canvas->Draw();
-
-    cout << " name " << canvas->GetName() << endl;
+    /* cout << " is it: " <<( gDirectory->FindObjectAny(canvas->GetName()) == nullptr )<< endl; */
+    /* cout << " is it: " <<( gDirectory->FindObjectAny("unique_name__1") == nullptr )<< endl; */
+    /* cout << " name " << canvas->GetName() << endl; */
     io_fmt(this->canvas);
 
     i=0;
-    canvas_pad = new TPad(ioUniqueName(),"",0.,0.,1.,1.);
+    canvas_pad = new TPad(ioUniqueName(),ioUniqueName(),0.,0.,1.,1.);
+    /* cout << " name Pad " << canvas_pad->GetName() << endl; */
     io_fmt(canvas_pad);
     canvas_pad->Draw();
 

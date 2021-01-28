@@ -1,12 +1,21 @@
 #include "io_fnc.h"
 
 const char* ioUniqueName(int i) {
+    /* cout << " IN IT: " <<( gDirectory->FindObjectAny("unique_name__1") == nullptr )<< endl; */
+    /* cout << " uni : " << i << endl; */
     while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;
+    /* while (true) { */
+        /* cout << " i: " << i <<  "  " << gDirectory->FindObjectAny(Form("unique_name__%i",i)) */
+            /* << "  " << (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) << endl; */
+        /* if (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i; */
+        /* else break; */
+    /* } */
+    /* cout << "--" << Form("unique_name__%i",i) << endl; */
     return Form("unique_name__%i",i);
 };
 
 void ioWaitPrimitive(int i)  {
-    TCanvas* c = new TCanvas( ioUniqueName(i), "", 500,500);
+    TCanvas* c = new TCanvas( ioUniqueName(i+100), ioUniqueName(i+100), 500,500);
     c->WaitPrimitive();
 };
 

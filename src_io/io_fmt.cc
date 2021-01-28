@@ -33,7 +33,7 @@ ioOptMap io_fmt__hg_dict() {
 
         "yAxisTitleFont", 43,
         "yAxisTitleSize", 22,
-        "yAxisTitleOffset", 1.25 ,
+        "yAxisTitleOffset", 1.85 ,
 
         "yAxisLabelFont", 43,
         "yAxisLabelSize", 18,
@@ -247,7 +247,7 @@ TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
     }
 
     // Set titles
-    if (dict("Title")) hg->SetTitle(dict["SetTitle"]);
+    if (dict("Title")) hg->SetTitle(dict["Title"]);
     if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
     if (dict("yAxisTitle")) hg->GetYaxis()->SetTitle(dict["yAxisTitle"]);
 
@@ -347,7 +347,7 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
     }
 
     // Set titles
-    if (dict("Title")) hg->SetTitle(dict["SetTitle"]);
+    if (dict("Title")) hg->SetTitle(dict["Title"]);
     if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
     if (dict("yAxisTitle")) hg->GetYaxis()->SetTitle(dict["yAxisTitle"]);
 
