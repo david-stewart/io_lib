@@ -17,7 +17,7 @@ done < oi_lib_list
 
 # Make the src_io files
 while read line; do
-    root -l<<EOF
+    root -l -b<<EOF
         gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");
         .L src_io/io${line}.cc+
 EOF
