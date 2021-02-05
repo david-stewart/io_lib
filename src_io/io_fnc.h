@@ -11,6 +11,7 @@
 #include "io_fmt.h"
 #include "TH2D.h"
 #include "TPRegexp.h"
+#include "TF1.h"
 
 #include "ioOptMap.h"
 
@@ -80,5 +81,17 @@ vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow=false);
 int    io_geant05(int geantid);
 const char* io_geant05_ascii(int geantid);
 const char* io_geant05_greek(int geantid);
+
+// get dAu_200_Tsallis and pp_200_Tsallic Fn fits
+// Fit for 
+TF1*  io_TsallisFit(double m0, double A, double T, double n,  double x_min=0.1, double x_max=10.);
+TF1*  io_dAu_200GeV_TsallisFit(const char* name, double x_min=0.1, double x_max=10.);
+TF1*  io_pp_200GeV_TsallisFit (const char* name, double x_min=0.1, double x_max=10.);
+
+void io_apply_prior(TF1*, TH1D*); // weight TH1D* by intergral of TF1*
+// weight TH2D* by (y-axis) by TH1D*/THF* (per bin)
+void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false); 
+
+TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
 
 #endif

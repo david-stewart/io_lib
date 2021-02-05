@@ -1,4 +1,6 @@
 #include "io_fnc.h"
+#include "RooUnfoldBayes.h"
+#include "RooUnfoldResponse.h"
 
 const char* ioUniqueName(int i) {
     /* cout << " IN IT: " <<( gDirectory->FindObjectAny("unique_name__1") == nullptr )<< endl; */
@@ -336,4 +338,109 @@ const char* io_geant05_greek(int geantid) {
         case 5: return "#bar{p}";
     }
     return "none";
+};
+
+
+TF1*  io_TsallisFit(double m0, double A, double T, double n, double x_min, double x_max) {
+    TF1* fun = new TF1( ioUniqueName(), "[0] / TMath::Power((1.+"
+            "(TMath::Sqrt(x*x+[1]*[1])-[1])/([2]*[3])), [3])", x_min, x_max);
+    fun->SetParameter(0, A);
+    fun->SetParameter(1, m0);
+    fun->SetParameter(2, T);
+    fun->SetParameter(3, n);
+    return fun;
+};
+TF1* io_dAu_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
+    if ("pi") return io_TsallisFit( 0.135, 13.62511532585, 
+            0.1505198389696, 10.0949606259, x_min, x_max);
+    else if (!strcmp(name,"antipi")) return io_TsallisFit( 0.135, 13.62511532585, 
+                0.1505198389696, 10.0949606259, x_min, x_max);
+    else if (!strcmp(name,"p")) return io_TsallisFit( 0.938272, 0.2873036847272, 
+            0.2114254602693, 11.44109908352, x_min, x_max);
+    else if (!strcmp(name,"pbar")) return io_TsallisFit( 0.938272, 0.2257531137243, 
+            0.2195209346999, 13.02603055528, x_min, x_max);
+    else if (!strcmp(name,"K")) return io_TsallisFit( 0.493677, 0.461550522549, 
+            0.2215729988205, 11.61375838522, x_min, x_max);
+    else if (!strcmp(name,"antiK")) return io_TsallisFit( 0.493677, 0.4675391506256, 
+            0.2192846302987, 11.44758460939, x_min, x_max);
+    else {
+        cout << "fatal error: particle name \"" << name << "\" not valid." << endl;
+        throw std::runtime_error("Particle name must be pi, antipi, p, pbar, K, antiK");
+        return nullptr;
+    }
+};
+TF1* io_pp_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
+    if (!strcmp(name,"pi")) return io_TsallisFit( 0.135, 5.503706201866,
+        0.1277746601471, 9.759524221237, x_min, x_max);
+    else if (!strcmp(name,"antipi")) return io_TsallisFit( 0.135, 5.58650216135,
+        0.1270067076772, 9.73258646095,  x_min, x_max);
+    else if (!strcmp(name,"p")) return io_TsallisFit( 0.938272, 0.07499819855665,
+        0.1758814595453, 10.54524945929, x_min, x_max);
+    else if (!strcmp(name,"pbar")) return io_TsallisFit( 0.938272, 0.06427254263927,
+        0.1691919676508, 10.06359691238, x_min, x_max);
+    else if (!strcmp(name,"K")) return io_TsallisFit( 0.493677, 0.06934945866744,
+        0.1929677543032, 11.82478291302, x_min, x_max);
+    else if (!strcmp(name,"antiK")) return io_TsallisFit( 0.493677, 0.06934945866744,
+        0.1929677543032, 11.82478291302, x_min, x_max);
+    else {
+        cout << "fatal error: particle name \"" << name << "\" not valid." << endl;
+        throw std::runtime_error("Particle name must be pi, antipi, p, pbar, K, antiK");
+        return nullptr;
+    }
+};
+void io_apply_prior(TF1* fn, TH1D* T) {
+    // respone: x-axis=Meas. y-axis=True
+    // Note: x-axis underflow may contain all the misses
+    /* TH1D* T = response->ProjectionY(); */
+    TAxis* Y_ax = T->GetXaxis();
+    /* TAxis* X_ax = MT->GetXaxis(); */
+    for (int y=0; y<Y_ax->GetNbins()+2; ++y){
+        if (T->GetBinContent(y) == 0) continue;
+        double w = fn->Integral(Y_ax->GetBinLowEdge(y), Y_ax->GetBinUpEdge(y)) /
+                T->GetBinContent(y);
+            double val = T->GetBinContent(y)*w;
+            double err = T->GetBinError(y)*w;
+            T->SetBinContent(y,val);
+            T->SetBinError(y,err);
+    };
+};
+void io_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
+    // Note: this only applies the prior to MT, NOT to T
+    // respone: x-axis=Meas. y-axis=True
+    // NB: assumed that the x-axis underflow bin contains all the misses
+    /* TH1D* T = response->ProjectionY(); */
+    TAxis* Y_ax = MT->GetYaxis();
+    TAxis* X_ax = MT->GetXaxis();
+
+    for (int y=0; y<Y_ax->GetNbins()+2; ++y){
+        if (T->GetBinContent(y) == 0) continue;
+        double w = fn->Integral(Y_ax->GetBinLowEdge(y), Y_ax->GetBinUpEdge(y)) /
+                T->GetBinContent(y);
+        for (int x = 0; x<X_ax->GetNbins()+2; ++x) {
+            double val = MT->GetBinContent(x,y) * w;
+            double err = MT->GetBinError(x,y) * w;
+            MT->SetBinContent(x,y,val);
+            MT->SetBinError(x,y,err);
+        }
+        if (both) {
+            double val = T->GetBinContent(y)*w;
+            double err = T->GetBinError(y)*w;
+            T->SetBinContent(y,val);
+            T->SetBinError(y,err);
+        }
+    };
+};
+
+TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) {
+    // return data unfolded with response matrix R
+    // note that truth T is included for misses, and if present
+    // M will include fakes
+    if (M==nullptr) M = R->ProjectionX(ioUniqueName());
+    RooUnfoldResponse* rooUnfRes = new RooUnfoldResponse (M,T,R,ioUniqueName());
+    RooUnfoldBayes*    bayes     = new RooUnfoldBayes(rooUnfRes, data, iRepUnfold);
+    TH1D* unfolded = (TH1D*) bayes->Hreco();
+    unfolded->SetName(ioUniqueName());
+    delete rooUnfRes;
+    delete bayes;
+    return unfolded;
 };
