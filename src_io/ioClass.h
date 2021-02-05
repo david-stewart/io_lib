@@ -16,6 +16,8 @@
 #include "io_fnc.h"
 #include "io_fmt.h"
 
+#include <iostream>
+
 class ioGetter{
     public:
     map<string, vector<TObject*> > got {};

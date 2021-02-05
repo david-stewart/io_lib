@@ -94,4 +94,6 @@ void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false);
 
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
 
+TLegend* ioNewTLegend();
+
 #endif

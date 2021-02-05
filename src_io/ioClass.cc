@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "TString.h" // not used, but present for some header 
 #include "TMath.h"
+#include <iostream>
 
 using namespace std;
 
@@ -95,7 +96,7 @@ ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
 {
     if (_canvas_width)  canvas_width  = _canvas_width;
     if (_canvas_height) canvas_height = _canvas_height;
-    init();
+    /* init(); */
 };
 ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
     if (_pad_dim.size() % 2 != 0) {
@@ -110,7 +111,7 @@ ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
     };
     if (c_wide) canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
-    init();
+    /* init(); */
 };
 ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) {
     if (x_dim.size()==1) {
@@ -136,7 +137,7 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
     nCol = x_dim.size();
     if (c_wide) canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
-    init();
+    /* init(); */
 };
 ioPads::ioPads(int nPads, int c_wide, int c_high){
     if (nPads==2) {
@@ -151,9 +152,10 @@ ioPads::ioPads(int nPads, int c_wide, int c_high){
     } else {
         throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2");
     }
-    init();
+    /* init(); */
 };
 TPad* ioPads::operator()(int row, int col) {
+
     if (pads.size() == 0) init();
     int i_pad = row+col*nCol;
     if (i_pad >= (int)pads.size()) {
@@ -192,33 +194,43 @@ TPad* ioPads::operator()(int row, int col) {
 
 void ioPads::init() {
     // make and stylize the TCanvas and pads currently in the list
-    int i{0};
-    canvas = new TCanvas(ioUniqueName(),ioUniqueName(),canvas_width, canvas_height);
+    
+    const char* t_name = Form("canv_%s",ioUniqueName(101));
+    canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
+    /* cout << " a0 " << endl; */
+    io_fmt(canvas);
+    /* cout << " a1 " << endl; */
     canvas->Draw();
-    /* cout << " is it: " <<( gDirectory->FindObjectAny(canvas->GetName()) == nullptr )<< endl; */
-    /* cout << " is it: " <<( gDirectory->FindObjectAny("unique_name__1") == nullptr )<< endl; */
-    /* cout << " name " << canvas->GetName() << endl; */
-    io_fmt(this->canvas);
+    /* cout << " a2 " << endl; */
+    canvas->cd();
+    /* cout << " a3 " << endl; */
 
-    i=0;
-    canvas_pad = new TPad(ioUniqueName(),ioUniqueName(),0.,0.,1.,1.);
-    /* cout << " name Pad " << canvas_pad->GetName() << endl; */
-    io_fmt(canvas_pad);
-    canvas_pad->Draw();
 
     // add all pads
     add_pad(pad_dimensions);
+
+    canvas->cd();
+    /* canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.); */
+    /* io_fmt(canvas_pad); */
+    /* canvas_pad->Draw(); */
 };
 
 
 void ioPads::add_pad(pair<ioPadDim,ioPadDim>& coord){
     canvas->cd();
 
+    if (pads.size()==0) {
+        canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.);
+        io_fmt(canvas_pad);
+        canvas_pad->Draw();
+        canvas->cd();
+    }
+
     const ioPadDim x { coord.first };
     const ioPadDim y { coord.second };
     int i{0};
-    while (gDirectory->FindObjectAny(Form("%s_%i",canvas_pad->GetName(),i))) { ++i; }
-    TPad* p = new TPad(Form("%s_%i",canvas_pad->GetName(),i),"",x.low,y.low,x.up,y.up);
+    while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; }
+    TPad* p = new TPad(Form("loc_pad_%i",i),"",x.low,y.low,x.up,y.up);
 
     // set the boundaries left(l), right(r), top(t), bottom(b)
     p->SetLeftMargin(x.low_margin());

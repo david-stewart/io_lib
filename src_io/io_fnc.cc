@@ -444,3 +444,9 @@ TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) {
     delete bayes;
     return unfolded;
 };
+
+TLegend* ioNewTLegend() {
+    TLegend *leg = new TLegend(0.6455533,0.6332006,0.8911167,0.8938613,NULL,"brNDC");
+    io_fmt(leg);
+    return leg;
+};
