@@ -15,6 +15,10 @@
 
 #include "ioOptMap.h"
 
+#define IO_pi      3.14159265
+#define IO_twopi   6.28318531
+#define IO_piless1 2.14159265
+
 using std::pair;
 
 TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm=false);
@@ -95,5 +99,10 @@ void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false);
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
 
 TLegend* ioNewTLegend();
+
+float io_dphi(float phi0, float phi1);
+bool io_AbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound=IO_piless1);
+float io_02pi(float &phi);
+float io_02pi(float  phi);
 
 #endif

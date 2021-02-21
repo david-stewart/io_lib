@@ -2,17 +2,9 @@
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldResponse.h"
 
+
 const char* ioUniqueName(int i) {
-    /* cout << " IN IT: " <<( gDirectory->FindObjectAny("unique_name__1") == nullptr )<< endl; */
-    /* cout << " uni : " << i << endl; */
     while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;
-    /* while (true) { */
-        /* cout << " i: " << i <<  "  " << gDirectory->FindObjectAny(Form("unique_name__%i",i)) */
-            /* << "  " << (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) << endl; */
-        /* if (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i; */
-        /* else break; */
-    /* } */
-    /* cout << "--" << Form("unique_name__%i",i) << endl; */
     return Form("unique_name__%i",i);
 };
 
@@ -449,4 +441,27 @@ TLegend* ioNewTLegend() {
     TLegend *leg = new TLegend(0.6455533,0.6332006,0.8911167,0.8938613,NULL,"brNDC");
     io_fmt(leg);
     return leg;
+};
+
+float io_dphi(float phi0, float phi1) {
+    float rval = phi1-phi0;
+    while (rval < -IO_pi) rval += IO_twopi;
+    while (rval >  IO_pi) rval -= IO_twopi;
+    return rval;
+};
+
+bool io_AbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){
+    float dphi = TMath::Abs(io_dphi(phi0,phi1));
+    return (dphi>=lo_bound && dphi<=hi_bound);
+};
+
+float io_02pi(float &phi){
+    while (phi<0)       phi += IO_twopi;
+    while (phi>IO_twopi) phi -= IO_twopi;
+    return phi;
+};
+float io_02pi(float  phi){
+    while (phi<0)        phi += IO_twopi;
+    while (phi>IO_twopi) phi -= IO_twopi;
+    return phi;
 };
