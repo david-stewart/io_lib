@@ -12,6 +12,7 @@
 #include <string>
 #include "TLine.h"
 #include "TGraph.h"
+#include "TTree.h"
 
 #include "io_fnc.h"
 #include "io_fmt.h"
@@ -154,6 +155,23 @@ struct ioHgStats {
     int count_points();
     vector<int> bin_indices();
 };
+
+// ioMsgTree:
+// Used to write messages to a MsgTree in the local file, and read from it
+class ioMsgTree {
+    private:
+        string b_msg;
+        TTree tree;
+    public:
+        ioMsgTree(bool set_echo=true);
+        static void read_messages(const char* f_name);
+        void msg(string msg);                  // write a message
+        void msg(vector<string> messages);     // *ditto*
+        void write(); // write to tree
+        void dash();  // write dashes to tree
+        bool echo_to_cout {false};
+};
+
 
 
 #endif

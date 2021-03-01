@@ -7,6 +7,8 @@
 #include "TString.h" // not used, but present for some header 
 #include "TMath.h"
 #include <iostream>
+#include <string>
+#include "TTreeReader.h"
 
 using namespace std;
 
@@ -527,4 +529,56 @@ ioHgStats& ioHgStats::cut_zeros() {
     }
     calc_stats();
     return *this;
+};
+
+// ------------------------------------------------------
+// | Implementation of ioMsgTree                        |
+// ------------------------------------------------------
+ioMsgTree::ioMsgTree(bool set_echo) : 
+    b_msg{""}, 
+    tree{"Messages", "Tree of messages"}
+{
+    tree.Branch("messages", &b_msg);
+    dash();
+    msg(" Start of msg tree ");
+    dash();
+    echo_to_cout = set_echo;
+};
+void ioMsgTree::msg(string msg) {
+    b_msg = msg;
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void ioMsgTree::msg(vector<string> messages) {
+    for (auto& msg : messages) {
+        b_msg = msg;
+        if (echo_to_cout) cout << b_msg << endl;
+        tree.Fill();
+    }
+};
+void ioMsgTree::dash() {
+    b_msg = "---------------";
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void ioMsgTree::write(){
+    tree.Write();
+};
+void ioMsgTree::read_messages(const char* f_name){
+    cout << " Reading file: " << f_name << endl;
+    /* TTree *tree; */
+    TFile* fin  = new TFile(f_name, "read");
+    if (!fin->IsOpen()) {
+        cout << " Input file: " << f_name << " is not open." << endl;
+        delete fin;
+        return;
+    }
+    TTreeReader myReader("Messages",fin);
+    TTreeReaderValue<string> msg(myReader, "messages");
+    cout << "  Contents of TFile(\""<<f_name<<"\") TTree(\"Messages\"):" << endl;
+    while (myReader.Next()) cout << " " << *msg << endl;
+    fin->Close();
+    delete fin;
+    /* } */
+
 };

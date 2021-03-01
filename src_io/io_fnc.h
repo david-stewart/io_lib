@@ -100,9 +100,9 @@ TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nul
 
 TLegend* ioNewTLegend();
 
-float io_dphi(float phi0, float phi1);
-bool io_AbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound=IO_piless1);
-float io_02pi(float &phi);
-float io_02pi(float  phi);
+float io_dphi(float phi0, float phi1); // phi1 - phi0, returns in range (-pi,pi)
+bool  io_AbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound=IO_piless1); // checks if is transverse to pi
+float io_02pi(float &phi); // puts phi in range [0,2pi]
+float io_02pi(float  phi); // same as above
 
 #endif
