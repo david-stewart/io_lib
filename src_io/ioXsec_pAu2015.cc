@@ -70,10 +70,16 @@ double ioXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
 };
 
 double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
+
 	const static double Xsec[9] {
-		0.10849815,      0.019171747,  0.0047063602,
-	    0.0020085739,  0.00035981473, 9.6174432e-06,
-		4.722213e-07,  2.6900098e-08, 1.3887308e-09 };
+        // these versions were pulled from the actual embedding files
+        0.107509,   0.0190967,  0.00475202,
+      0.00198812, 0.000361282, 9.65463E-06,
+     4.71077E-07, 2.68464E-08, 1.38211E-09 };
+    // The following values were generated independently running Pythia6
+		/* 0.10849815,      0.019171747,  0.0047063602, */
+	    /* 0.0020085739,  0.00035981473, 9.6174432e-06, */
+		/* 4.722213e-07,  2.6900098e-08, 1.3887308e-09 }; */
     const static int nEvents[9] { // for my trees
         375735, 217715, 110680,
         168886, 518397, 177438,
