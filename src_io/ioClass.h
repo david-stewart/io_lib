@@ -118,33 +118,29 @@ struct ioIntMap {
             vector<int> skip_vals={}
     );
     ioIntMap(const char* file_name, 
-            int index_column=0, 
-            int data_column =1,
-            bool echo_print=true,
+            int index_column,
+            int data_column,
+            bool echo_print,
             ofstream& log,
             vector<int> skip_vals={}
     );
     private:
-    ioIntMap_constructor(const char* file_name, 
+    string ioIntMap_constructor(const char* file_name, 
             int index_column, 
             int data_column,
             bool echo_print,
             vector<int> skip_vals={}
     );
-
     public:
 
     /* map<int,double> map_id;  // runid -> map_id */
     map<int,int>    data_map; // runid -> duration
     bool   has_key(int);
-    int    operator()(int key); // get data_map[key]; if false, returns 0. as default
-    double operator[](int key); // same as (double) operator()(int key)
+    int    operator[](int key); // get data_map[key]; if false, returns 0. as default
     int    last_val; // last val returned
     int    size();   // size of map
 };
 
-/* vector<pair<ioPadDim,ioPadDim>> ioPadDimGrid( */ 
-        /* vector<ioPadDim> x_coord, vector<ioPadDim> y_coord, bool by_rows = true); */
 
 struct ioRunListId {
     public:

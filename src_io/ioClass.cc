@@ -8,6 +8,7 @@
 #include "TMath.h"
 #include <iostream>
 #include <string>
+#include <set>
 #include "TTreeReader.h"
 
 using namespace std;
@@ -292,67 +293,6 @@ bool ioIntList::operator()(int val) {
 bool ioIntList::has(int val) { return this->operator()(val); };
 bool ioIntList::has_not(int val) { return !(this->operator()(val)); };
 
-// Implementation of ioIntMap
-ioIntMap(const char* file,
-        int index_column=0, 
-        int data_column =1,
-        bool echo_print=true,
-        vector<int> skip_vals={}
-) {
-/* string ioIntMap::make(const char* in_file, bool print) { */
-    ostringstream msg;
-    ifstream file;
-    file.open(in_file);
-    if (!file.is_open()) {
-        msg << "Could not open int list \"" << in_file << "\". No entries entered." << endl;
-        cout << msg.str() << endl;
-        return msg.str();
-    }
-    string line;
-    while (getline(file,line)) {
-        line.append(" ");
-        stringstream words(line);
-        TString word;
-        while (words >> word) {
-            if (word.BeginsWith("//") || word.BeginsWith("#")) break;
-            list.push_back(word.Atoi());
-        }
-    }
-    sort(list.begin(),list.end());
-    file.close();
-    msg << " Successfully read in integer list from \"" << in_file << "\"";
-    if (print) msg << ". Values: ";
-    msg << endl;
-    if (print) {
-        for (auto& i : list) msg << "  " << i << endl;
-    }
-    cout << msg.str();
-    return msg.str();
-};
-
-// run list id
-
-ioRunListId::ioRunListId(const char* file_name, bool skip_127053_138064) {
-    // skip_after_mid_comment for two 
-    ifstream file;
-    file.open(file_name);
-    if (!file.is_open()){
-        cout << "fatal error, couldn't open input file \""<< file_name <<"\"" << endl;
-        exit(2);
-    }
-    string line;
-    while (getline(file,line)){
-        if (line.substr(0,1)=="#") continue;
-        int id, runid, sec;
-        stringstream words(line);
-        words >> id >> runid >> sec;
-        if (skip_127053_138064) {
-            if (runid == 16127053 || runid == 16138064) continue;
-        }
-        map_id [runid] = static_cast<double>(id);
-        run_sec[runid] = sec;
-    }
-};
 
 bool ioRunListId::has_run(int id) {
     return static_cast<bool>(map_id.count(id));
@@ -373,6 +313,107 @@ double ioRunListId::set_id(int run_id) {
     }
     return id;
 };
+
+// Implementation of ioIntMap
+ioIntMap::ioIntMap(const char* file,
+        int index_column, 
+        int data_column,
+        bool echo_print,
+        vector<int> skip_vals
+) {
+   ioIntMap_constructor(file, index_column, data_column, 
+           echo_print, skip_vals);
+};
+ioIntMap::ioIntMap(const char* file,
+        int index_column, 
+        int data_column,
+        bool echo_print,
+        ofstream& log,
+        vector<int> skip_vals
+) {
+   log << ioIntMap_constructor(file, index_column, data_column, 
+           echo_print, skip_vals);
+};
+string ioIntMap::ioIntMap_constructor (
+        const char* in_file,
+        int index_column, 
+        int data_column,
+        bool echo_print,
+        vector<int> skip_vals
+) {
+    set<int> skip_val_set;
+    for (auto& v : skip_vals) skip_val_set.insert(v);
+/* string ioIntMap::make(const char* in_file, bool print) { */
+    ostringstream msg;
+    ifstream file;
+    file.open(in_file);
+    if (!file.is_open()) {
+        msg << "Could not open int map file \"" << in_file 
+            << "\". No entries entered." << endl;
+        cout << msg.str() << endl;
+        return msg.str();
+    } else {
+        if (echo_print) msg << " Reading file " << in_file << " for map of col("
+            << index_column << ") to col(" << data_column << ")" << endl;
+    }
+    /* int n_req { index_column > data_column ? index_column : data_column }; */
+    string line;
+    while (getline(file,line)) {
+        line.append(" ");
+        stringstream words(line);
+        TString word;
+        bool has_index { false };
+        bool has_data  { false };
+        int  val_index;
+        int  val_data;
+        int i {0};
+        while (words >> word) {
+            if (word.BeginsWith("//") || word.BeginsWith("#")) break;
+            if (i == index_column) {
+                has_index = true;
+                val_index = word.Atoi();
+                if (skip_val_set.count(val_index)) continue;
+            } else if ( i == data_column) {
+                has_data = true;
+                val_data = true;
+            }
+            if (has_index && has_data) break;
+        }
+        if (!has_index || !has_data) {
+            /* ostringstream loc_msg; */
+            msg << "fatal error in reading ioIntMap line from file: "
+                << "  -> " << in_file << endl;
+            if (!has_index) 
+                msg << " Couldn't read index column("<<index_column 
+                    <<")" <<endl;
+            if (!has_data) 
+                msg << " Couldn't read data column("<<index_column 
+                    <<")" <<endl;
+            msg << "  from line:" << endl
+                << "  -> " << line << endl;
+            msg << "  Therefore skipping entries on this line." << endl;
+        } else {
+            if (echo_print) msg << "  " << val_index 
+                << " -> " << val_data << endl;
+            data_map[val_index] = val_data;
+        }
+    }
+    file.close();
+    msg << " Done reading columns from file \"" << in_file <<"\"" << endl;
+    cout << msg.str();
+    return msg.str();
+};
+
+bool ioIntMap::has_key(int key) {
+    return (bool) data_map.count(key);
+};
+
+int ioIntMap::operator[](int key) {
+    last_val = data_map[key];
+    return data_map[key];
+};
+
+int ioIntMap::size() { return data_map.size(); };
 
 
 // ioHgStats
