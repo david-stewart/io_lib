@@ -364,21 +364,28 @@ string ioIntMap::ioIntMap_constructor (
         TString word;
         bool has_index { false };
         bool has_data  { false };
-        int  val_index;
-        int  val_data;
+        int  val_index{-1};
+        int  val_data{-1};
         int i {0};
+        bool comment_flag {false};
         while (words >> word) {
-            if (word.BeginsWith("//") || word.BeginsWith("#")) break;
+            if (word.BeginsWith("//") || word.BeginsWith("#")) {
+                comment_flag = true;
+                break;
+            }
             if (i == index_column) {
                 has_index = true;
                 val_index = word.Atoi();
                 if (skip_val_set.count(val_index)) continue;
-            } else if ( i == data_column) {
+            } 
+            if ( i == data_column) {
                 has_data = true;
-                val_data = true;
+                val_data = word.Atoi();
             }
             if (has_index && has_data) break;
+            ++i;
         }
+        if (comment_flag) continue;
         if (!has_index || !has_data) {
             /* ostringstream loc_msg; */
             msg << "fatal error in reading ioIntMap line from file: "
@@ -404,16 +411,20 @@ string ioIntMap::ioIntMap_constructor (
     return msg.str();
 };
 
-bool ioIntMap::has_key(int key) {
+bool ioIntMap::has(int key) {
     return (bool) data_map.count(key);
 };
 
-int ioIntMap::operator[](int key) {
-    last_val = data_map[key];
-    return data_map[key];
-};
+int& ioIntMap::operator[](int key) { return data_map[key]; };
 
 int ioIntMap::size() { return data_map.size(); };
+
+vector<int> ioIntMap::keys() {
+    vector<int> vec;
+    for (auto m : data_map) vec.push_back(m.first);
+    sort(vec.begin(), vec.end());
+    return vec;
+};
 
 
 // ioHgStats
