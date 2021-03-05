@@ -292,6 +292,44 @@ bool ioIntList::operator()(int val) {
 bool ioIntList::has(int val) { return this->operator()(val); };
 bool ioIntList::has_not(int val) { return !(this->operator()(val)); };
 
+// Implementation of ioIntMap
+ioIntMap(const char* file,
+        int index_column=0, 
+        int data_column =1,
+        bool echo_print=true,
+        vector<int> skip_vals={}
+) {
+/* string ioIntMap::make(const char* in_file, bool print) { */
+    ostringstream msg;
+    ifstream file;
+    file.open(in_file);
+    if (!file.is_open()) {
+        msg << "Could not open int list \"" << in_file << "\". No entries entered." << endl;
+        cout << msg.str() << endl;
+        return msg.str();
+    }
+    string line;
+    while (getline(file,line)) {
+        line.append(" ");
+        stringstream words(line);
+        TString word;
+        while (words >> word) {
+            if (word.BeginsWith("//") || word.BeginsWith("#")) break;
+            list.push_back(word.Atoi());
+        }
+    }
+    sort(list.begin(),list.end());
+    file.close();
+    msg << " Successfully read in integer list from \"" << in_file << "\"";
+    if (print) msg << ". Values: ";
+    msg << endl;
+    if (print) {
+        for (auto& i : list) msg << "  " << i << endl;
+    }
+    cout << msg.str();
+    return msg.str();
+};
+
 // run list id
 
 ioRunListId::ioRunListId(const char* file_name, bool skip_127053_138064) {
