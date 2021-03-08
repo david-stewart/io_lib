@@ -101,6 +101,7 @@ struct ioIntList {
     bool has_not(int);
     ioIntList(const char* in_file, ofstream& log, bool print=true);
     ioIntList(const char* in_file, bool print=true);
+    int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
     private:
     string make(const char* in_file, bool print);
 };

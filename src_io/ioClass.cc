@@ -290,6 +290,9 @@ ioIntList::ioIntList(const char* in_file, bool print) { make(in_file, print); };
 bool ioIntList::operator()(int val) {
     return std::binary_search(list.begin(), list.end(), val);
 };
+int ioIntList::operator[](int val) {
+    return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
+};
 bool ioIntList::has(int val) { return this->operator()(val); };
 bool ioIntList::has_not(int val) { return !(this->operator()(val)); };
 
