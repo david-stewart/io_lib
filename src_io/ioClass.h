@@ -132,14 +132,11 @@ struct ioIntMap {
             vector<int> skip_vals={}
     );
     public:
-
-    /* map<int,double> map_id;  // runid -> map_id */
-    map<int,int>    data_map; // runid -> duration
-    bool   has(int);
-    vector<int> keys(); // returns a sorted vector of the keys present
-    int&   operator[](int key); // get data_map[key]; if false, returns 0. as default
-    /* int    last_val; // last val returned */
-    int    size();   // size of map
+    map<int,int> data_map; // runid -> duration
+    bool         has(int);
+    vector<int>  keys(); // returns a sorted vector of the keys present
+    int&         operator[](int key); // get data_map[key]; if false, returns 0. as default
+    int          size();   // size of map
 };
 
 
