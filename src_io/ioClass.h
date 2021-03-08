@@ -202,6 +202,7 @@ class ioMsgTree {
         void write(); // write to tree
         void dash();  // write dashes to tree
         bool echo_to_cout {false};
+        void slurp_file(const char* which_file); // write a given file to input
 };
 
 

@@ -135,7 +135,7 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
     }
     for (auto& x : x_dim) 
         for (auto& y : y_dim)
-            pad_dimensions.push_back({x,y});
+            pad_dimensions.push_back({y,x});
 
     nCol = x_dim.size();
     if (c_wide) canvas_width = c_wide;
@@ -144,13 +144,13 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
 };
 ioPads::ioPads(int nPads, int c_wide, int c_high){
     if (nPads==2) {
-        pad_dimensions.push_back( {{0.,0.12,0.9,0.99},{0.55,0.55,0.95,0.99}} );
-        pad_dimensions.push_back( {{0.,0.12,0.9,0.99},{0.00,0.15,0.55     }} );
-        canvas_width = 800;
+        pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} );
+        pad_dimensions.push_back( {{0.00,0.15,0.55     },{0.,0.15,0.9,0.99}} );
+        canvas_width  = 800;
         canvas_height = 800;
     } else if (nPads ==1) {
-        pad_dimensions.push_back( {{0.,0.12,0.9,0.99},{0.00,0.15,0.95,0.99}} );
-        canvas_width = 800;
+        pad_dimensions.push_back( {{0.00,0.15,0.95,0.99},{0.,0.17,0.9,0.99}} );
+        canvas_width  = 800;
         canvas_height = 800;
     } else {
         throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2");
@@ -229,8 +229,8 @@ void ioPads::add_pad(pair<ioPadDim,ioPadDim>& coord){
         canvas->cd();
     }
 
-    const ioPadDim x { coord.first };
-    const ioPadDim y { coord.second };
+    const ioPadDim x { coord.second };
+    const ioPadDim y { coord.first  };
     int i{0};
     while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; }
     TPad* p = new TPad(Form("loc_pad_%i",i),"",x.low,y.low,x.up,y.up);
@@ -670,5 +670,18 @@ void ioMsgTree::read_messages(const char* f_name){
     fin->Close();
     delete fin;
     /* } */
-
+};
+void ioMsgTree::slurp_file(const char* which_file) {
+    // try and read all lines of which_file into the tree
+    msg(Form("--Begin contents of file \"%s\"",which_file));
+    ifstream f_in {which_file};
+    if (!f_in.is_open()) {
+        msg(Form("  error: couldn't open file \"%s\"",which_file));
+        cout << "  error: couldn't open file \""<<which_file<<"\""<< endl;
+    } else {
+        string line;
+        while (getline(f_in,line)) msg(line);
+    }
+    msg(Form("--End contents of file \"%s\"",which_file));
+    return;
 };

@@ -7,4 +7,4 @@ clear:
 	rm src_io/*.so  || true
 	rm src_io/*.d   || true
 	rm lib/*        || true
-	rm include/*        || true
+	rm include/*    || true
