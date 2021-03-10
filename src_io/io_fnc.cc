@@ -206,6 +206,55 @@ TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm) {
     return ret;
 };
 
+TH2* ioDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols) {
+    int nbins = den->GetXaxis()->GetNbins();
+    if (scale_by_cols) {
+        if (num->GetXaxis()->GetNbins() != nbins) {
+             cout << " error in ioDivideTH2byTH1: TH2->xAxis->nBins="
+             << num->GetXaxis()->GetNbins() << " != TH1->xAxis->nBins="
+             << nbins <<"!" <<endl
+             << "Division not taking place."<<endl;
+             return num;
+        }
+    } else {
+        if (num->GetYaxis()->GetNbins() != nbins) {
+            cout << " error in ioDivideTH2byTH1: TH2->xYxis->nBins="
+             << num->GetYaxis()->GetNbins() << " != TH1->xAxis->nBins="
+             << nbins <<"!" <<endl
+             << "Division not taking place."<<endl;
+            return num;
+        }
+    }
+
+    int n_per_loop = scale_by_cols ? num->GetYaxis()->GetNbins() : num->GetXaxis()->GetNbins();
+    for (int n=0;n<=nbins+1;++n) {
+        double d = den->GetBinContent(n);
+        /* cout << " n: "<<n<<"  -> " << den->GetBinContent(n) << endl; */
+        for (int j=0;j<=n_per_loop+1;++j) {
+            int i;
+            if (n_per_loop) {
+                i=n;
+            } else {
+                i=j;
+                j=n;
+            }
+            double n = num->GetBinContent(i,j);
+            if (n == 0 || d == 0) {
+                num->SetBinContent(i,j,0);
+                num->SetBinError  (i,j,0);
+                continue;
+            } 
+            double n_err = num->GetBinError(i,j);
+            double d_err = den->GetBinError(n)  ;
+            double val = n / d;
+            double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
+            num->SetBinContent(i,j,val);
+            num->SetBinError(i,j,err);
+        }
+    }
+    return num;
+};
+
 void io_scaleByBinWidth(TH1D* hg, double scale_factor) {
     for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
         if (hg->GetBinContent(i)) {

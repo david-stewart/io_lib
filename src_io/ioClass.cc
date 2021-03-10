@@ -116,6 +116,46 @@ ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
     if (c_height) canvas_height = c_height;
     /* init(); */
 };
+/* ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) { */
+ioPads::ioPads ( int nYpads, int nXpads, double y_margin, double x_margin, 
+             int c_wide, int c_height ){ // default of 1 and 2 pad TPad sets
+// make a set of pads with y_margin on bottom, x_margin on left, 0.05 on top and right,
+// and solid packed between
+    vector<ioPadDim> y_dim{};
+    vector<ioPadDim> x_dim{};
+
+    if (nYpads==1) y_dim.push_back({0.,y_margin,0.95,0.99});
+    else {
+        double space { (1.-0.05-y_margin)/nYpads };
+        y_dim.push_back({0.95-space,0.95-space,0.95,0.99});
+        for (int i=1;i<nYpads-1;++i) {
+            double top { 0.95 - i*space };
+            double bottom { top - space };
+            y_dim.push_back({bottom,bottom,top,top});
+        }
+        y_dim.push_back({0.,y_margin,y_margin+space,y_margin+space});
+    }
+
+    if (nXpads==1) x_dim.push_back({0.,x_margin,0.95,0.99});
+    else {
+        double space { (1.-0.05-x_margin)/nXpads };
+        x_dim.push_back({0.,x_margin,x_margin+space,x_margin+space});
+        for (int i=1;i<nXpads-1;++i) {
+            double left  { x_margin + i*space };
+            double right { left + space };
+            x_dim.push_back( {left,left,right,right} );
+        }
+        x_dim.push_back({0.95-space, 0.95-space, 0.95, 0.99});
+    }
+    for (auto& x : x_dim) 
+        for (auto& y : y_dim)
+            pad_dimensions.push_back({y,x});
+
+    nRow = y_dim.size();
+    if (c_wide) canvas_width = c_wide;
+    if (c_height) canvas_height = c_height;
+    /* init(); */
+};
 ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) {
     if (x_dim.size()==1) {
         ioPadDim temp_pad;
@@ -137,30 +177,29 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
         for (auto& y : y_dim)
             pad_dimensions.push_back({y,x});
 
-    nCol = x_dim.size();
-    if (c_wide) canvas_width = c_wide;
+    nRow = x_dim.size();
+    if (c_wide)   canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
     /* init(); */
 };
-ioPads::ioPads(int nPads, int c_wide, int c_high){
-    if (nPads==2) {
-        pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} );
-        pad_dimensions.push_back( {{0.00,0.15,0.55     },{0.,0.15,0.9,0.99}} );
-        canvas_width  = 800;
-        canvas_height = 800;
-    } else if (nPads ==1) {
-        pad_dimensions.push_back( {{0.00,0.15,0.95,0.99},{0.,0.17,0.9,0.99}} );
-        canvas_width  = 800;
-        canvas_height = 800;
-    } else {
-        throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2");
-    }
-    /* init(); */
-};
+/* ioPads::ioPads(int nPads, int c_wide, int c_high){ */
+/*     if (nPads==2) { */
+/*         pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} ); */
+/*         pad_dimensions.push_back( {{0.00,0.15,0.55     },{0.,0.15,0.9,0.99}} ); */
+/*         canvas_width  = 800; */
+/*         canvas_height = 800; */
+/*     } else if (nPads ==1) { */
+/*         pad_dimensions.push_back( {{0.00,0.15,0.95,0.99},{0.,0.17,0.9,0.99}} ); */
+/*         canvas_width  = 800; */
+/*         canvas_height = 800; */
+/*     } else { */
+/*         throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2"); */
+/*     } */
+/*     /1* init(); *1/ */
+/* }; */
 TPad* ioPads::operator()(int row, int col) {
-
     if (pads.size() == 0) init();
-    int i_pad = row+col*nCol;
+    int i_pad = row+col*nRow;
     if (i_pad >= (int)pads.size()) {
         cout << " warning! asking for pad " << i_pad << " in vector of " << pads.size() << "!" << endl;
         cout << "   returning pad[0] instead" << endl;

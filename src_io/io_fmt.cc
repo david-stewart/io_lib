@@ -360,17 +360,11 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetYaxis()->SetTitle("");
     }
 
-    
-
-    // Set axes styles
-
     // x Axis
     if (dict("xAxisTitleFont"))
         hg->GetXaxis()->SetTitleFont(dict["xAxisTitleFont"]);
     if (dict("xAxisTitleSize"))
         hg->GetXaxis()->SetTitleSize(dict["xAxisTitleSize"].val());
-    /* cout << " beta " << endl; */
-    /* if (dict("xAxisTitleOffset")) cout << " Setting xaxistitleoffset " <<  dict["xAxisTitleOffset"].val() << endl; */
     if (dict("xAxisTitleOffset"))
         hg->GetXaxis()->SetTitleOffset(dict["xAxisTitleOffset"].val());
     if (dict("xAxisLabelFont"))
@@ -393,6 +387,159 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetYaxis()->SetLabelSize(dict["yAxisLabelSize"].val());
     if (dict("yAxisLabelOffset"))
         hg->GetYaxis()->SetLabelOffset(dict["yAxisLabelOffset"].val());
+    
+    // Set Axis ranges with {x||y||z}AxisRange{Lo||Hi}
+    if (dict("xAxisRangeLo") || dict("xAxisRangeHi")) {
+        if (!dict("xAxisRangeLo") || !dict("xAxisRangeHi")) {
+            cout << " Warning in io_fmt: has xAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting xAxisRange." << endl;
+        } else {
+            hg->GetXaxis()->SetRangeUser(dict["xAxisRangeLo"].val(), dict["xAxisRangeHi"].val());
+        }
+    }
+    if (dict("yAxisRangeLo") || dict("yAxisRangeHi")) {
+        if (!dict("yAxisRangeLo") || !dict("yAxisRangeHi")) {
+            cout << " Warning in io_fmt: has yAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting yAxisRange." << endl;
+        } else {
+            hg->GetYaxis()->SetRangeUser(dict["yAxisRangeLo"].val(), dict["yAxisRangeHi"].val());
+        }
+    }
+    if (dict("zAxisRangeLo") || dict("zAxisRangeHi")) {
+        if (!dict("zAxisRangeLo") || !dict("zAxisRangeHi")) {
+            cout << " Warning in io_fmt: has zAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting zAxisRange." << endl;
+        } else {
+            hg->GetZaxis()->SetRangeUser(dict["zAxisRangeLo"].val(), dict["zAxisRangeHi"].val());
+        }
+    }
+    // Set Ndivisions
+    if (dict("xAxisNdivisions")) hg->GetXaxis()->SetNdivisions(dict["xAxisNdivisions"]);
+    if (dict("yAxisNdivisions")) hg->GetYaxis()->SetNdivisions(dict["yAxisNdivisions"]);
+    if (dict("zAxisNdivisions")) hg->GetZaxis()->SetNdivisions(dict["zAxisNdivisions"]);
+
+    // z Axis
+    if (dict("zAxisTitleFont"))
+        hg->GetZaxis()->SetTitleFont(dict["zAxisTitleFont"]);
+    if (dict("zAxisTitleSize"))
+        hg->GetZaxis()->SetTitleSize(dict["zAxisTitleSize"].val());
+    if (dict("zAxisTitleOffset"))
+        hg->GetZaxis()->SetTitleOffset(dict["zAxisTitleOffset"].val());
+    if (dict("zAxisLabelFont"))
+        hg->GetZaxis()->SetLabelFont(dict["zAxisLabelFont"]);
+    if (dict("zAxisLabelSize"))
+        hg->GetZaxis()->SetLabelSize(dict["zAxisLabelSize"].val());
+    if (dict("zAxisLabelOffset"))
+        hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
+    /* cout << " MarkerColor: " << hg->GetMarkerColor() << endl; */
+    return hg;
+};
+
+TH2D* io_fmt (TH2D* hg, ioOptMap _override, ioOptMap dict) {
+    /* cout << " alpha " << endl; */
+    dict += _override;
+
+    /* cout << " format " << endl; */
+    /* cout << dict << endl; */
+
+    if (dict("normalize")) hg->Scale(1./hg->Integral());
+    /* if (dict("Rebin"))        hg->Rebin(dict["Rebin"]); */
+
+    /* if (!dict("MarkerAlpha")) dict["MarkerAlpha"] = 1.; */
+    if (dict("noTitle"))      hg->SetTitle("");
+    if (dict("SetStats"))     hg->SetStats(dict["SetStats"]);
+
+
+    /* if (dict("MarkerStyle")) */
+        /* hg->SetMarkerStyle(dict["MarkerStyle"]); */
+    /* if (dict("MarkerColor")) */
+        /* hg->SetMarkerColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val()); */
+    /* if (dict("MarkerSize")) */
+        /* hg->SetMarkerSize(dict["MarkerSize"].val()); */
+
+    /* if (dict("LineWidth")) */
+        /* hg->SetLineWidth(dict["LineWidth"]); */
+    /* if (dict("LineStyle")) */
+        /* hg->SetLineStyle(dict["LineStyle"]); */
+    /* if (dict("MarkerColor")) */
+        /* hg->SetLineColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val()); */
+    
+    /* if (dict("LineColor")) { */
+        /* double LineAlpha = dict("LineAlpha") ? dict["LineAlpha"].val() : dict["MarkerAlpha"].val(); */
+        /* hg->SetLineColorAlpha(dict["LineColor"], LineAlpha); */
+    /* } */
+
+    // Set titles
+    if (dict("Title")) hg->SetTitle(dict["Title"]);
+    if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
+    if (dict("yAxisTitle")) hg->GetYaxis()->SetTitle(dict["yAxisTitle"]);
+
+    if (dict("no-xAxis")) { 
+        hg->GetXaxis()->SetLabelColor(kWhite,0.);
+        hg->GetXaxis()->SetTitle("");
+    }
+    if (dict("no-yAxis")) { 
+        hg->GetYaxis()->SetLabelColor(kWhite,0.);
+        hg->GetYaxis()->SetTitle("");
+    }
+
+    // x Axis
+    if (dict("xAxisTitleFont"))
+        hg->GetXaxis()->SetTitleFont(dict["xAxisTitleFont"]);
+    if (dict("xAxisTitleSize"))
+        hg->GetXaxis()->SetTitleSize(dict["xAxisTitleSize"].val());
+    if (dict("xAxisTitleOffset"))
+        hg->GetXaxis()->SetTitleOffset(dict["xAxisTitleOffset"].val());
+    if (dict("xAxisLabelFont"))
+        hg->GetXaxis()->SetLabelFont(dict["xAxisLabelFont"]);
+    if (dict("xAxisLabelSize"))
+        hg->GetXaxis()->SetLabelSize(dict["xAxisLabelSize"].val());
+    if (dict("xAxisLabelOffset"))
+        hg->GetXaxis()->SetLabelOffset(dict["xAxisLabelOffset"].val());
+
+    // y Axis
+    if (dict("yAxisTitleFont"))
+        hg->GetYaxis()->SetTitleFont(dict["yAxisTitleFont"]);
+    if (dict("yAxisTitleSize"))
+        hg->GetYaxis()->SetTitleSize(dict["yAxisTitleSize"].val());
+    if (dict("yAxisTitleOffset"))
+        hg->GetYaxis()->SetTitleOffset(dict["yAxisTitleOffset"].val());
+    if (dict("yAxisLabelFont"))
+        hg->GetYaxis()->SetLabelFont(dict["yAxisLabelFont"]);
+    if (dict("yAxisLabelSize"))
+        hg->GetYaxis()->SetLabelSize(dict["yAxisLabelSize"].val());
+    if (dict("yAxisLabelOffset"))
+        hg->GetYaxis()->SetLabelOffset(dict["yAxisLabelOffset"].val());
+    
+    // Set Axis ranges with {x||y||z}AxisRange{Lo||Hi}
+    if (dict("xAxisRangeLo") || dict("xAxisRangeHi")) {
+        if (!dict("xAxisRangeLo") || !dict("xAxisRangeHi")) {
+            cout << " Warning in io_fmt: has xAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting xAxisRange." << endl;
+        } else {
+            hg->GetXaxis()->SetRangeUser(dict["xAxisRangeLo"].val(), dict["xAxisRangeHi"].val());
+        }
+    }
+    if (dict("yAxisRangeLo") || dict("yAxisRangeHi")) {
+        if (!dict("yAxisRangeLo") || !dict("yAxisRangeHi")) {
+            cout << " Warning in io_fmt: has yAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting yAxisRange." << endl;
+        } else {
+            hg->GetYaxis()->SetRangeUser(dict["yAxisRangeLo"].val(), dict["yAxisRangeHi"].val());
+        }
+    }
+    if (dict("zAxisRangeLo") || dict("zAxisRangeHi")) {
+        if (!dict("zAxisRangeLo") || !dict("zAxisRangeHi")) {
+            cout << " Warning in io_fmt: has zAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting zAxisRange." << endl;
+        } else {
+            hg->GetZaxis()->SetRangeUser(dict["zAxisRangeLo"].val(), dict["zAxisRangeHi"].val());
+        }
+    }
+    // Set Ndivisions
+    if (dict("xAxisNdivisions")) hg->GetXaxis()->SetNdivisions(dict["xAxisNdivisions"]);
+    if (dict("yAxisNdivisions")) hg->GetYaxis()->SetNdivisions(dict["yAxisNdivisions"]);
+    if (dict("zAxisNdivisions")) hg->GetZaxis()->SetNdivisions(dict["zAxisNdivisions"]);
 
     // z Axis
     if (dict("zAxisTitleFont"))

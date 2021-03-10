@@ -2,6 +2,7 @@
 # define io_fmt__h
 
 #include "TH1D.h"
+#include "TH2D.h"
 #include "ioOptMap.h"
 #include "TCanvas.h"
 #include "TProfile.h"
@@ -30,6 +31,8 @@ TProfile* io_fmt (TProfile* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_
 
 TH1D* io_fmt (TH1D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TH1D* io_fmt (TH1D* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+
+TH2D* io_fmt (TH2D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 
 //repeat of the above, but for TGraph
 TGraph* io_fmt (TGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());

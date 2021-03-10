@@ -75,10 +75,12 @@ struct ioPads {
     // * Add operator()(int,int=0) for accessing y,x pad
     ioPads ( vector<ioPadDim>, int canvas_width, int canv_heigth );
     ioPads ( vector<ioPadDim>y_dim, vector<ioPadDim>x_dim={}, int canvas_width=0, int canv_heigth=0 );
-    ioPads ( int nPads=1, int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets
+    /* ioPads ( int nPads=1, int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets */
+    ioPads ( int nYpads=1, int nXpads=1, double y_margin=0.15, double x_margin=0.17, 
+             int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets
     TPad*  operator()(int col=0, int row=0);
 
-    int nCol{1};
+    int nRow{1};
 
     // must initialize separate from constructor (so that the user has a chance to initialize all the 
     // required options for)

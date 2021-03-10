@@ -23,6 +23,10 @@ using std::pair;
 
 TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm=false);
 
+// Scale a TH2* histogram by columns (or rows) by values in TH1D*
+// dimensions must add up
+TH2* ioDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols=true); //
+
 const char* ioUniqueName(int i=0); // return a unique name to the directory
 
 void ioWaitPrimitive(int i=0);
