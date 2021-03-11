@@ -19,6 +19,14 @@
 
 #include <iostream>
 
+// --------------------------------------------------------------------------------------
+// ioGetter:
+//   Use: 
+//     Easy way to get TObject* from TFiles:
+//   Example:
+//     initialize:  $:   ioGetter got{};
+//     get objects: $:   auto hg = (TH1D*) got("input_file.root","histogram_name");
+// --------------------------------------------------------------------------------------
 class ioGetter{
     public:
     map<string, vector<TObject*> > got {};
@@ -32,6 +40,13 @@ class ioGetter{
     TObject* operator()(string f_name, string object_name);
 };
 
+// --------------------------------------------------------------------------------------
+// ioPadDim:
+//   Use:
+//      Contains four numbers, used for low, low-margin,high,high-margin
+//      for TPad*, for dimensions from left-to-right and bottom-to-top
+//      See notes below.
+// --------------------------------------------------------------------------------------
 struct ioPadDim {
     // a structure to contain the four coordinates requisite for a TPad (in x or y):
     //    low   : left/bottom edge of TPad (outer edge of margin)
@@ -59,6 +74,24 @@ struct ioPadDim {
 };
 
 
+// --------------------------------------------------------------------------------------
+// ioPads:
+//   Use:
+//      Make a TCanvas with various TPads
+//   How:
+//      Initialize:
+//        Default single canvas:
+//          $: ioPads pads{1};
+//        Default double canvas:
+//          $: ioPads pads{2};
+//        Grid of pads (4 rows x 7 cols):
+//          $: auto pads = ioPads{ 4, 8 };
+//        Grid of pads with custom edges:
+//                          {{y dim}  { ydim }       },{{x dim}      {x dim}          width height
+//          $: ioPads pads{ {{.5,.98},{0,0.1,0.5,0.5}},{{0.,0.1,0.4},{0.4,.4,.9,.99}},1200,800}
+//      Use pad <i>:
+//          $: pads(i); // this will activate the given pad
+// --------------------------------------------------------------------------------------
 struct ioPads {
     //internal data
     TCanvas* canvas = nullptr;
@@ -208,6 +241,42 @@ class ioMsgTree {
         void slurp_file(const char* which_file); // write a given file to input
 };
 
+
+// ioIntMapVecBool
+// NOTE: This is not currently implemented, as it is currently lower priority.
+// -------------------------------
+//   Data is a table with
+//            tag1   tag2   tag3
+//   runid.0  true   false  true
+//   runid.1  true   true   true
+//   runid.2  false  false  true
+//   runid.3  true   false  false
+// -------------------------------
+//
+//
+struct ioIntMapVecShort {
+    ioIntMapVecShort( const char* file_name, bool echo_print=true );
+    ioIntMapVecShort( const char* file_name, ofstream& log, bool echo_print=true);
+    string ioIntMapVecShort_constructor( const char* file_name, bool echo_print=true );
+    map<int,vector<short>> data_map {}; // runid -> vector<bool>
+    vector<string> tags {};   // names of all the columns
+    unsigned int   n_tags {0};
+
+    /* string         string(); */
+    int            col {-1};                 // the column in the vectors called
+    bool           has_tag(string tag);
+    int            operator()(string tag, short default_val=-1);  // 1. checks if it has tag  
+                                                          // 2. adds it if not  
+                                                          // 3. sets col to tag; 
+                                                          // 4. if adding tag, set default_val
+    bool           operator()(int key);     // checks if it has key
+    vector<short>& operator[](int key);   // returns the vector at entry
+    vector<int>    keys() const; // returns a sorted vector of the keys present
+    void           write_to_file(const char* file_name, vector<string> comments={});
+    int            size();   // size of map
+    bool           swap_tags(string tag0, string tag1); // swap column locations
+    friend ostream& operator<<(ostream& os, ioIntMapVecShort& dt);
+};
 
 
 #endif

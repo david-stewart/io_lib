@@ -727,3 +727,189 @@ void ioMsgTree::slurp_file(const char* which_file) {
     msg(Form("--End contents of file \"%s\"",which_file));
     return;
 };
+
+ioIntMapVecShort::ioIntMapVecShort( const char* file_name, bool echo_print) 
+{ ioIntMapVecShort_constructor(file_name, echo_print); };
+
+ioIntMapVecShort::ioIntMapVecShort( const char* file_name, ofstream& log, bool echo_print) 
+{ 
+    log << ioIntMapVecShort_constructor(file_name, echo_print); 
+    log << *this;
+};
+
+string ioIntMapVecShort::ioIntMapVecShort_constructor(const char* in_file, bool echo_print) 
+{
+    // first uncommented row with values will hold "word" "tag" "tag" "tag" etc...
+    // After that it is key.0 val val val
+    //                  key.1 val val val
+    //                  key.2 val val val
+    //                  etc...
+    ostringstream msg;
+    ifstream file;
+    file.open(in_file);
+    if (!file.is_open()) {
+        msg << "Could not open int to vector<short> map file \"" << in_file 
+            << "\"." << endl << "  -> No entries entered." << endl;
+        cout << msg.str() << endl;
+        return msg.str();
+    } else {
+        if (echo_print) msg << " Reading file " << in_file << endl;
+    }
+    
+    string line;
+    bool   have_tags {false};
+    while (getline(file,line)) {
+        /* cout << " reading line: " << line << endl; */
+        line.append(" ");
+        stringstream words(line);
+        TString word;
+        unsigned int i {0};
+        int key {0};
+        bool is_comment { false };
+        while (words >> word) {
+            /* cout << " word: " << word << endl; */
+            if (word.BeginsWith("//") || word.BeginsWith("#")){
+                is_comment = true;
+                break;
+            }
+            if (!have_tags) {
+                if (i!=0) {
+                    tags.push_back(word.Data());
+                }
+                i++;
+                continue; // throw away this word
+            }
+            if (i==0) {
+                key = word.Atoi();
+                /* cout << " Key: " << key << endl; */
+                data_map[key] = {};
+            } else {
+                data_map[key].push_back(word.Atoi());
+                if (i>n_tags) {
+                    msg << " fatal error in ioIntMapVecShort:" << endl
+                        << "   more data than columns for entry " << key << endl
+                        << "   -> no further data read." << endl;
+                    cout << msg.str();
+                    return msg.str();
+                }
+            }
+            i++;
+        }
+        if (is_comment || (key==0 && i==0)) continue;
+
+        if (!have_tags && tags.size()!=0) {
+            have_tags = true;
+            n_tags = tags.size();
+            continue;
+        }
+        if (data_map[key].size() != n_tags) {
+            msg << " fatal error in ioIntMapVecShort:" << endl
+                << "   number of columns for entry " << key << " don't match number of tags" << endl
+                << "   -> no further data read." << endl;
+            cout << msg.str();
+            return msg.str();
+        }
+    }
+    file.close();
+    msg << " Done reading columns from file \"" << in_file <<"\"" << endl;
+    if (echo_print) {
+        cout << msg.str();
+        cout << *this << endl;
+    }
+    /* cout << msg.str(); */
+    return msg.str();
+};
+
+ostream& operator<<(ostream& os, ioIntMapVecShort& io) {
+/* string ioIntMapVecShort::string() { */
+    unsigned int max_char = 2;
+    /* osstringstream msg; */
+    for (auto key : io.keys()) {
+        string temp = Form("%i",key);
+        if (temp.size() > max_char) max_char = temp.size();
+    }
+    os << Form(Form(" %%%is",max_char),"id");
+    vector<string> fmt { Form(" %%%ii",max_char) };
+    for (auto tag : io.tags) {
+        max_char = tag.size();
+        if (max_char < 2) max_char = 2;
+        fmt.push_back(Form(" %%%ii",max_char));
+        os << Form(Form(" %%%is",max_char),tag.c_str());
+    }
+    os << endl;
+    for (auto key : io.keys()) {
+        os << Form(fmt[0].c_str(),key); 
+        int i {0};
+        for (auto val : io.data_map[key]) os << Form(fmt[++i].c_str(),val);
+        os << endl;
+    }
+    os << endl;
+    return os;
+};
+
+bool ioIntMapVecShort::swap_tags(string tag0, string tag1) {
+    // find the two tags among tags
+    auto it0 = std::find(tags.begin(), tags.end(), tag0);
+    if (it0 == tags.end()) {
+        cout << "fatal error in ioIntMapVecShort::swap_tags "
+             << "could not find tag \"" << tag0 << "\"" << endl;
+        return false;
+    }
+    int i0 = (int) (it0-tags.begin());
+
+    auto it1 = std::find(tags.begin(), tags.end(), tag1);
+    if (it1 == tags.end()) {
+        cout << "fatal error in ioIntMapVecShort::swap_tags "
+             << "could not find tag \"" << tag1 << "\"" << endl;
+        return false;
+    }
+    int i1 = (int) (it1-tags.begin());
+
+    for (auto& set : data_map) {
+        auto temp = set.second[i0];
+        set.second[i0] = set.second[i1];
+        set.second[i1] = temp;
+    }
+    tags[i0] = tag1;
+    tags[i1] = tag0;
+    return true;
+};
+
+bool ioIntMapVecShort::has_tag(string tag) {
+    auto it = std::find(tags.begin(), tags.end(), tag);
+    return (it != tags.end());
+};
+
+int ioIntMapVecShort::operator()(string tag, short def_val) {
+    if (has_tag(tag)) {
+        return (int)(std::find(tags.begin(), tags.end(), tag)-tags.begin());
+    } else {
+        tags.push_back(tag);
+        cout << " Adding tag: " << tag << endl;
+        for (auto key : keys()) data_map[key].push_back(def_val);
+        ++n_tags;
+        return n_tags-1;
+    }
+};
+
+bool ioIntMapVecShort::operator()(int key) { return data_map.count(key) != 0; };
+vector<short>& ioIntMapVecShort::operator[](int key) { return data_map[key]; };
+vector<int> ioIntMapVecShort::keys() const {
+    vector<int> vec;
+    for (auto m : data_map) vec.push_back(m.first);
+    sort(vec.begin(), vec.end());
+    return vec;
+};
+
+void ioIntMapVecShort::write_to_file(const char* which_file, vector<string>comments) {
+    ofstream f_out { which_file };
+    if (!f_out.is_open()) {
+        cout <<  "  fatal error in ioIntMapVecShort::write_to_file : " << endl
+             <<  "    Couldn't open file \""<<which_file<<"\""<< endl
+             <<  "    -> not file being written to " << endl;
+    }
+    for (auto comment : comments) f_out << "// " << comment << endl;
+    f_out << *this;
+    f_out.close();
+};
+
