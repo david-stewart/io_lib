@@ -514,3 +514,28 @@ float io_02pi(float  phi){
     while (phi>IO_twopi) phi -= IO_twopi;
     return phi;
 };
+
+vector<double> ioQuantiles(TH1D* hg, vector<double> percents){
+    cout << hg->GetName() << endl;
+    int n {(int)percents.size()};
+    double *x = new double[n];
+    double *q = new double[n];
+    for (int i{0}; i<n; ++i) x[i] = percents[i];
+    hg->GetQuantiles(n,q,x);
+    vector<double> vec;
+    for (int i{0}; i<n; ++i) vec.push_back(q[i]);
+    delete[] x;
+    delete[] q;
+    return vec;
+};
+string  ioStringVec(vector<double> vec, const char* name, const char* formatter){
+    if (vec.size()==0) return "";
+    ostringstream os;
+    const char* fmt = Form("%%%s",formatter);
+    os << "vector<double> " << name << " {" << Form(fmt,vec[0]);
+    for (int i{1}; i<(int)vec.size();++i) os << ", " << Form(fmt,vec[i]);
+    os << "};";
+    return os.str();
+}
+
+

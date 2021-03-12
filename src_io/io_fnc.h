@@ -109,4 +109,7 @@ bool  io_isAbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound
 float io_02pi(float &phi); // puts phi in range [0,2pi]
 float io_02pi(float  phi); // same as above
 
+vector<double> ioQuantiles(TH1D* hg, vector<double> percents);
+string  ioStringVec(vector<double>, const char* name="vec", const char* fmt="5.2f");
+
 #endif
