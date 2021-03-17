@@ -538,4 +538,13 @@ string  ioStringVec(vector<double> vec, const char* name, const char* formatter)
     return os.str();
 }
 
+int io_count_digits(int n, int min_val) {
+    int cnt = 0;
+    while (n != 0) { 
+        n /= 10;
+        ++cnt;
+    }
+    if (cnt < min_val) cnt = min_val;
+    return cnt;
+};
 

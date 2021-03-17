@@ -304,8 +304,14 @@ string ioIntList::make(const char* in_file, bool print) {
         line.append(" ");
         stringstream words(line);
         TString word;
+        int n_words {0};
         while (words >> word) {
             if (word.BeginsWith("//") || word.BeginsWith("#")) break;
+            // skip lines that start with a non-number (assume it is a header)
+            if (n_words==0) {
+                if (!word.IsAlnum()) break;
+            }
+            ++n_words;
             list.push_back(word.Atoi());
         }
     }
@@ -410,11 +416,15 @@ string ioIntMap::ioIntMap_constructor (
         int  val_data{-1};
         int i {0};
         bool comment_flag {false};
+        int n_words{0};
         while (words >> word) {
             if (word.BeginsWith("//") || word.BeginsWith("#")) {
                 comment_flag = true;
                 break;
             }
+            // ignore columns that start with a non-number word
+            if (n_words == 0 && !word.IsAlnum()) break;
+            ++n_words;
             if (i == index_column) {
                 has_index = true;
                 val_index = word.Atoi();
@@ -459,14 +469,13 @@ bool ioIntMap::has(int key) {
 
 int& ioIntMap::operator[](int key) { return data_map[key]; };
 
-int ioIntMap::size() { return data_map.size(); };
-
 vector<int> ioIntMap::keys() {
     vector<int> vec;
     for (auto m : data_map) vec.push_back(m.first);
     sort(vec.begin(), vec.end());
     return vec;
 };
+int ioIntMap::size() { return data_map.size(); };
 
 
 // ioHgStats
@@ -606,6 +615,34 @@ ioHgStats& ioHgStats::cut_below(double cut, bool cut_times_sigma) {
     calc_stats();
     return *this;
 };
+ioHgStats& ioHgStats::cut_mask(vector<bool>& mask, bool mask_keep_true) {
+    if ((int)mask.size() != nbins) {
+        cout << " error in ioHgStats::cut_mask " << endl
+             << " There are " << nbins << " bins, but only " << mask.size()
+             << " points in in put mask " << endl << endl
+             << " Therefore mask is not applied." << endl;
+        return *this;
+    }
+    for (int i{0}; i<nbins; ++i) {
+        if (mask[i] == mask_keep_true) weight[i] = 0.;
+        calc_stats();
+    }
+    return *this;
+};
+ioHgStats& ioHgStats::cut_mask(vector<int>& mask, bool mask_keep_true) {
+    if ((int)mask.size() != nbins) {
+        cout << " error in ioHgStats::cut_mask " << endl
+             << " There are " << nbins << " bins, but only " << mask.size()
+             << " points in in put mask " << endl << endl
+             << " Therefore mask is not applied." << endl;
+        return *this;
+    }
+    for (int i{0}; i<nbins; ++i) {
+        if (mask_keep_true == (mask[i] != 0)) weight[i] = 0.;
+        calc_stats();
+    }
+    return *this;
+};
 ioHgStats& ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
     // count how many points are above
     double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut;
@@ -728,183 +765,348 @@ void ioMsgTree::slurp_file(const char* which_file) {
     return;
 };
 
-ioIntMapVecShort::ioIntMapVecShort( const char* file_name, bool echo_print) 
-{ ioIntMapVecShort_constructor(file_name, echo_print); };
+ioIntVec::ioIntVec( const char* file_name, bool echo_print, vector<string>_tags) 
+{ ioIntVec_constructor(file_name, echo_print, _tags); };
 
-ioIntMapVecShort::ioIntMapVecShort( const char* file_name, ofstream& log, bool echo_print) 
+ioIntVec::ioIntVec( const char* file_name, ofstream& log, 
+                         bool echo_print, vector<string>_tags) 
 { 
-    log << ioIntMapVecShort_constructor(file_name, echo_print); 
+    log << ioIntVec_constructor(file_name, echo_print, _tags); 
     log << *this;
 };
 
-string ioIntMapVecShort::ioIntMapVecShort_constructor(const char* in_file, bool echo_print) 
+string ioIntVec::ioIntVec_constructor(const char* in_file, 
+        bool echo_print, vector<string>tags_requested) 
 {
-    // first uncommented row with values will hold "word" "tag" "tag" "tag" etc...
-    // After that it is key.0 val val val
-    //                  key.1 val val val
-    //                  key.2 val val val
-    //                  etc...
+    // read until the tag line is read
+    // if given input tags, check they are all present, and use them in that order
+    // 
+
     ostringstream msg;
     ifstream file;
     file.open(in_file);
     if (!file.is_open()) {
-        msg << "Could not open int to vector<short> map file \"" << in_file 
+        msg << "Could not open int to vector<int> map file \"" << in_file 
             << "\"." << endl << "  -> No entries entered." << endl;
         cout << msg.str() << endl;
         return msg.str();
     } else {
         if (echo_print) msg << " Reading file " << in_file << endl;
     }
-    
+
+    // Read until get the column tags (first uncommented line)
+
     string line;
-    bool   have_tags {false};
+    /* vector<string> tags_read; */
     while (getline(file,line)) {
         /* cout << " reading line: " << line << endl; */
         line.append(" ");
         stringstream words(line);
         TString word;
-        unsigned int i {0};
-        int key {0};
-        bool is_comment { false };
+        bool is_key_tag {true};
         while (words >> word) {
-            /* cout << " word: " << word << endl; */
             if (word.BeginsWith("//") || word.BeginsWith("#")){
-                is_comment = true;
                 break;
             }
-            if (!have_tags) {
-                if (i!=0) {
-                    tags.push_back(word.Data());
-                }
-                i++;
-                continue; // throw away this word
-            }
-            if (i==0) {
-                key = word.Atoi();
-                /* cout << " Key: " << key << endl; */
-                data_map[key] = {};
+            if (is_key_tag) {
+                is_key_tag = false;
             } else {
-                data_map[key].push_back(word.Atoi());
-                if (i>n_tags) {
-                    msg << " fatal error in ioIntMapVecShort:" << endl
-                        << "   more data than columns for entry " << key << endl
-                        << "   -> no further data read." << endl;
-                    cout << msg.str();
-                    return msg.str();
-                }
+                tags.push_back(word.Data());
             }
-            i++;
         }
-        if (is_comment || (key==0 && i==0)) continue;
+        if (tags.size() != 0) break;
+    }
+    if (tags_requested.size() == 0) {
+        tags_requested = tags;
+    } 
+    auto read_cols = tag_cols(tags_requested);
+    int max_col = 0;
+    for (auto val : read_cols) if (val > max_col) max_col = val;
+    tags = tags_requested;
 
-        if (!have_tags && tags.size()!=0) {
-            have_tags = true;
-            n_tags = tags.size();
-            continue;
+    // read all remaining lines into data
+    vector<pair<int,vector<int>>> data_in;
+    while(getline(file,line)) {
+        vector<int> c_vec;
+        int key;
+        bool has_key {false};
+
+        line.append(" ");
+        stringstream words(line);
+        TString word;
+        while (words >> word) {
+            if (word.BeginsWith("//") || word.BeginsWith("#")){
+                break;
+            }
+            if (!has_key) {
+                has_key = true;
+                key = word.Atoi();
+            } else {
+                c_vec.push_back(word.Atoi());
+            }
         }
-        if (data_map[key].size() != n_tags) {
-            msg << " fatal error in ioIntMapVecShort:" << endl
-                << "   number of columns for entry " << key << " don't match number of tags" << endl
-                << "   -> no further data read." << endl;
-            cout << msg.str();
-            return msg.str();
+        if (has_key) {
+            data_in.push_back({key,c_vec});
+            if ((int)c_vec.size() < (max_col+1))
+            throw std::runtime_error(
+                Form("In ioIntVec needs at least %i entries (+id) in line \"%s\"",
+                    max_col+1, line.c_str())
+            );
         }
     }
+    std::sort(data_in.begin(), data_in.end());
+
+    for (auto entry : data_in) {
+        keys.push_back(entry.first);
+        vector<int> vec;
+        for (auto i : read_cols) vec.push_back(entry.second[i]);
+        data.push_back(vec);
+    };
+
     file.close();
     msg << " Done reading columns from file \"" << in_file <<"\"" << endl;
     if (echo_print) {
         cout << msg.str();
         cout << *this << endl;
     }
-    /* cout << msg.str(); */
     return msg.str();
 };
 
-ostream& operator<<(ostream& os, ioIntMapVecShort& io) {
-/* string ioIntMapVecShort::string() { */
-    unsigned int max_char = 2;
-    /* osstringstream msg; */
-    for (auto key : io.keys()) {
-        string temp = Form("%i",key);
-        if (temp.size() > max_char) max_char = temp.size();
-    }
-    os << Form(Form(" %%%is",max_char),"id");
-    vector<string> fmt { Form(" %%%ii",max_char) };
-    for (auto tag : io.tags) {
-        max_char = tag.size();
-        if (max_char < 2) max_char = 2;
-        fmt.push_back(Form(" %%%ii",max_char));
-        os << Form(Form(" %%%is",max_char),tag.c_str());
-    }
-    os << endl;
-    for (auto key : io.keys()) {
-        os << Form(fmt[0].c_str(),key); 
-        int i {0};
-        for (auto val : io.data_map[key]) os << Form(fmt[++i].c_str(),val);
-        os << endl;
-    }
-    os << endl;
-    return os;
+int ioIntVec::i_tag(string tag) {
+    auto it = std::find(tags.begin(), tags.end(), tag);
+    if (it == tags.end()) return -1;
+    else return (int)(it-tags.begin());
 };
+vector<int> ioIntVec::tag_cols(vector<string> _tags, const char* name) {
+    vector<int> cols;
+    if (_tags.size()==0) {
+        for (int i{0}; i<(int)_tags.size(); ++i) cols.push_back(i);
+    } else {
+        for (auto& tag : _tags) {
+            int i { i_tag(tag) };
+            if (i==-1) {
+                throw std::runtime_error( 
+                        Form("Could not find tag %s in ioIntVec in routine %s", 
+                            tag.c_str(), name));
+            } else {
+                cols.push_back(i);
+            }
 
-bool ioIntMapVecShort::swap_tags(string tag0, string tag1) {
+        }
+    }
+    return cols;
+};
+bool ioIntVec::has_tag(string tag) {
+    return ( i_tag(tag) != -1 );
+};
+ioIntVec& ioIntVec::swap_tags(string tag0, string tag1) {
     // find the two tags among tags
-    auto it0 = std::find(tags.begin(), tags.end(), tag0);
-    if (it0 == tags.end()) {
-        cout << "fatal error in ioIntMapVecShort::swap_tags "
+    int i0 = i_tag(tag0);
+    if (i0 == -1) { 
+        cout << "fatal error in ioIntVec::swap_tags "
              << "could not find tag \"" << tag0 << "\"" << endl;
-        return false;
+        return *this;
     }
-    int i0 = (int) (it0-tags.begin());
 
-    auto it1 = std::find(tags.begin(), tags.end(), tag1);
-    if (it1 == tags.end()) {
-        cout << "fatal error in ioIntMapVecShort::swap_tags "
+    int i1 = i_tag(tag1);
+    if (i1 == -1) {
+        cout << "fatal error in ioIntVec::swap_tags "
              << "could not find tag \"" << tag1 << "\"" << endl;
-        return false;
+        return *this;
     }
-    int i1 = (int) (it1-tags.begin());
 
-    for (auto& set : data_map) {
-        auto temp = set.second[i0];
-        set.second[i0] = set.second[i1];
-        set.second[i1] = temp;
+    for (auto& vec : data) {
+        auto temp = vec[i0];
+        vec[i0] = vec[i1];
+        vec[i1] = temp;
     }
     tags[i0] = tag1;
     tags[i1] = tag0;
-    return true;
+    return *this;
 };
-
-bool ioIntMapVecShort::has_tag(string tag) {
-    auto it = std::find(tags.begin(), tags.end(), tag);
-    return (it != tags.end());
-};
-
-int ioIntMapVecShort::operator()(string tag, short def_val) {
-    if (has_tag(tag)) {
-        return (int)(std::find(tags.begin(), tags.end(), tag)-tags.begin());
-    } else {
-        tags.push_back(tag);
-        cout << " Adding tag: " << tag << endl;
-        for (auto key : keys()) data_map[key].push_back(def_val);
-        ++n_tags;
-        return n_tags-1;
+ioIntVec& ioIntVec::subset(vector<string> sub_tags) {
+    // cut down the table to only the subset of tags
+    auto keep_cols = tag_cols(sub_tags,"subset");
+    for (auto& vec : data) {
+        vector<int> copy;
+        for (auto& i : keep_cols) {
+            copy.push_back(vec[i]);
+        }
+        vec = copy;
     }
+    tags = sub_tags;
+    return *this;
+};
+ioIntVec& ioIntVec::rm_tags(vector<string> tags) {
+    auto rm_cols = tag_cols(tags,"rm_tags");
+    sort(rm_cols.begin(), rm_cols.end());
+    vector<string> keep_tags {};
+    for (int i{0}; i<(int)tags.size(); ++i) {
+        if (find(rm_cols.begin(), rm_cols.end(), i) == rm_cols.end())
+            keep_tags.push_back(tags[i]);
+    }
+    return subset(tags);
+};
+ioIntVec& ioIntVec::add_tag(string tag, int def_val) {
+    int i_col = i_tag(tag);
+    if (i_col != -1) {
+        cout << " error in ioIntVec::add_tag; added tag " << tag << " already exists! " << endl;
+        return *this;
+    }
+    tags.push_back(tag);
+    cout << " Adding tag: " << tag << endl;
+    for (auto& vec : data) vec.push_back(def_val);
+    /* for (auto key : keys()) data_map[key].push_back(def_val); */
+    return *this;
+};
+void ioIntVec::rename_tag(string tag0, string tag1) {
+    int i = i_tag(tag0);
+    if (i==-1) throw std::runtime_error( 
+        Form("Could not find tag %s in ioIntVec in routine %s", 
+                    tag0.c_str(), "rename_tag")
+    );
+    tags[i] = tag1;
+};
+bool ioIntVec::has_key(int key) { 
+    return binary_search(keys.begin(), keys.end(), key);
+};
+vector<int>& ioIntVec::operator[](int key) { 
+    if (!has_key(key)) {
+        throw std::runtime_error(Form("fatal: no key \"%i\" in ioIntVec",key));
+    }
+    int i = (int)(std::lower_bound(keys.begin(), keys.end(), key) - keys.begin());
+    return data[i];
+};
+/* vector<int>    ioIntVec::keys() const { */
+/*     vector<int> vec; */
+/*     for (auto m : data_map) vec.push_back(m.first); */
+/*     sort(vec.begin(), vec.end()); */
+/*     return vec; */
+/* }; */
+vector<int> ioIntVec::vals(string tag, vector<bool> mask, bool keep_on_true) {
+    if (!has_tag(tag))
+    throw std::runtime_error(
+            Form("fatal error in ioIntVec::vals could not find tag %s ",tag.c_str()));
+    if (mask.size() != data.size())
+    throw std::runtime_error(
+            Form("fatal error in ioIntVec::vals: size of mask and data do not match"));
+
+    int col { i_tag(tag) };
+    vector<int> r_vec {};
+    for (auto i{0}; i<(int)mask.size(); ++i) {
+        if (mask[i] == keep_on_true) r_vec.push_back(data[i][col]);
+    }
+    return r_vec;
+};
+vector<int> ioIntVec::get_keys(vector<bool> mask, bool keep_on_true) {
+    if (mask.size() != data.size())
+    throw std::runtime_error(
+            Form("fatal error in ioIntVec::keys: size of mask and data do not match"));
+
+    vector<int> r_vec {};
+    for (auto i{0}; i<(int)mask.size(); ++i) {
+        if (mask[i] == keep_on_true) r_vec.push_back(keys[i]);
+    }
+    return r_vec;
+};
+vector<bool> ioIntVec::is_any(vector<pair<string,bool>> mask_keep_true) {
+    vector<bool>   v_keep_true;
+    vector<string> v_tags;
+    for (auto mpair : mask_keep_true) {
+        v_keep_true.push_back(mpair.second);
+        v_tags.push_back(mpair.first);
+    }
+    auto cols = tag_cols(v_tags, "is_any");
+    int  n {(int) cols.size()};
+    vector<bool> r_vec {};
+    for (auto& vec : data) {
+        bool keep {false};
+        for (int i{0}; i<n; ++i) {
+            if ( (vec[cols[i]] != 0) == v_keep_true[i]) {
+                keep = true;
+                break;
+            }
+        }
+        r_vec.push_back(keep);
+    }
+    return r_vec;
+};
+vector<bool> ioIntVec::is_all(vector<pair<string,bool>> mask_keep_true) {
+    vector<bool>   v_keep_true;
+    vector<string> v_tags;
+    for (auto mpair : mask_keep_true) {
+        v_keep_true.push_back(mpair.second);
+        v_tags.push_back(mpair.first);
+    }
+    auto cols = tag_cols(v_tags, "is_all");
+    int  n {(int) cols.size()};
+    vector<bool> r_vec {};
+    for (auto& vec : data) {
+        bool keep {true};
+        for (int i{0}; i<n; ++i) {
+            if ( (vec[cols[i]] != 0) != v_keep_true[i]) {
+                keep = false;
+                break;
+            }
+        }
+        r_vec.push_back(keep);
+    }
+    return r_vec;
+};
+ostream& operator<<(ostream& os, ioIntVec& io) {
+    // generate the max charactures needed in each column
+    
+    // max length id line
+    int max_id = 2;
+    for (auto key : io.keys) {
+        int n = io_count_digits(key);
+        if (n > max_id) max_id = n;
+    }
+    os << Form(Form(" %%%is",max_id),"id");
+
+    vector<int> max_chars;
+    for (auto tag : io.tags) {
+        max_chars.push_back(tag.size());
+    }
+    for (auto& vec : io.data) {
+        int i{0};
+        for (auto val : vec) {
+            int n = io_count_digits(val);
+            if (n > max_chars[i]) max_chars[i] = n;
+            ++i;
+        }
+    }
+
+    int i{0};
+    for (auto tag : io.tags) {
+        os << Form(Form(" %%%is",max_chars[i]),tag.c_str());
+        ++i;
+    }
+    os << endl;
+
+    const char* fmt_key = Form(" %%%ii",max_id);
+
+    vector<const char*> this_fmt;
+    for (auto n : max_chars) {
+        this_fmt.push_back(Form(" %%%ii",n));
+    }
+
+    int z { 0};
+    const int n_tags = io.tags.size();
+    for (int i{0}; i<(int)io.keys.size(); ++i) {
+        os << " " << std::right << std::setw(max_id) << io.keys[i];
+        for (int k{0}; k<n_tags; ++k) {
+            os << " " << std::setw(max_chars[k]) << io.data[i][k];
+        }
+        os << endl;
+    }
+    return os;
 };
 
-bool ioIntMapVecShort::operator()(int key) { return data_map.count(key) != 0; };
-vector<short>& ioIntMapVecShort::operator[](int key) { return data_map[key]; };
-vector<int> ioIntMapVecShort::keys() const {
-    vector<int> vec;
-    for (auto m : data_map) vec.push_back(m.first);
-    sort(vec.begin(), vec.end());
-    return vec;
-};
-
-void ioIntMapVecShort::write_to_file(const char* which_file, vector<string>comments) {
+void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
     ofstream f_out { which_file };
     if (!f_out.is_open()) {
-        cout <<  "  fatal error in ioIntMapVecShort::write_to_file : " << endl
+        cout <<  "  fatal error in ioIntVec::write_to_file : " << endl
              <<  "    Couldn't open file \""<<which_file<<"\""<< endl
              <<  "    -> not file being written to " << endl;
     }

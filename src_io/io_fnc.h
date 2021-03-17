@@ -112,4 +112,6 @@ float io_02pi(float  phi); // same as above
 vector<double> ioQuantiles(TH1D* hg, vector<double> percents);
 string  ioStringVec(vector<double>, const char* name="vec", const char* fmt="5.2f");
 
+int io_count_digits(int i, int min_val=1); // returns number of digits in int; for 12->2; for 102311->6
+
 #endif
