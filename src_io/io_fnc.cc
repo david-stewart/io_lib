@@ -2,6 +2,8 @@
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldResponse.h"
 
+#include <numeric>
+
 
 const char* ioUniqueName(int i) {
     while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;
@@ -89,6 +91,33 @@ void ioDrawTLineBox(double x0, double y0, double x1, double y1,
     ioDrawTLine( x1, y0, x1, y1, options);
     ioDrawTLine( x1, y1, x0, y1, options);
     ioDrawTLine( x0, y1, x0, y0, options);
+};
+
+double ioPadxRat(double x_in){
+    /* cout << " x_in " << x_in << endl; */
+    double x0 = gPad->GetUxmin();
+    double x1 = gPad->GetUxmax();
+    /* cout << " x0 " << x0 << endl; */
+    /* cout << " x1 " << x1 << endl; */
+    return x0+x_in*(x1-x0);
+};
+double ioPadyRat(double y_in){
+    double y0 = gPad->GetUymin();
+    double y1 = gPad->GetUymax();
+    return y0+y_in*(y1-y0);
+};
+
+
+void ioDrawTLineHorizontal(double y, ioOptMap options) {
+    double x0 = gPad->GetUxmin();
+    double x1 = gPad->GetUxmax();
+    ioDrawTLine(x0,y,x1,y,options);
+};
+
+void ioDrawTLineVertical(double x, ioOptMap options) {
+    double y0 = gPad->GetUymin();
+    double y1 = gPad->GetUymax();
+    ioDrawTLine(x,y0,x,y1,options);
 };
 
 double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q){
@@ -547,4 +576,6 @@ int io_count_digits(int n, int min_val) {
     if (cnt < min_val) cnt = min_val;
     return cnt;
 };
+int ioSum(const vector<int> vec)  { return std::accumulate(vec.begin(), vec.end(), 0); };
+int ioSum(const vector<bool> vec) { return std::accumulate(vec.begin(), vec.end(), 0); };
 

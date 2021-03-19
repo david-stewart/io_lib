@@ -16,6 +16,7 @@
 
 #include "io_fnc.h"
 #include "io_fmt.h"
+#include "io_operators.h"
 
 #include <iostream>
 
@@ -197,6 +198,7 @@ struct ioHgStats {
     TAxis* axis;
 
     /* vector<bool>   cut ; // points that are cut */
+    vector<double> unmasked_vals();
     vector<double> vals;
     vector<double> errs;
     vector<double> weight;
@@ -215,8 +217,8 @@ struct ioHgStats {
     ioHgStats& cut_below(double cut, bool cut_times_sigma=false);
     ioHgStats& cut_zeros();
     ioHgStats& cut_to_range(double cut0, double cut1, bool cut_times_sigma=false);
-    ioHgStats& cut_mask(vector<bool>& mask, bool mask_keep_true=false); // mask all points in vector which are TRUE
-    ioHgStats& cut_mask(vector<int>&  mask, bool mask_keep_true=false);
+    ioHgStats& mask(const vector<bool>  mask); // mask all points in vector which are TRUE
+    /* ioHgStats& mask(vector<int>&  mask); */
     ioHgStats& restore_points();
 
     ioHgStats(TH1D* hg, bool cut_zeros=false);
@@ -256,6 +258,48 @@ class ioMsgTree {
 // -------------------------------
 //
 //
+/* struct ioIntVec { */
+/*     // constructors and ostream */
+/*     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} ); */
+/*     ioIntVec( const char* file_name, ofstream& log, bool echo_print=true, vector<string>_tags={}); */
+/*     string ioIntVec_constructor( const char* file_name, bool echo_print, vector<string>_tags={} ); */
+
+
+/*     // data members */
+/*     /1* map<int,vector<int>> data_map {}; // runid -> vector<bool> *1/ */
+
+/*     vector<int> keys; */
+/*     vector<vector<int>> data; */
+
+/*     vector<string> tags {};   // names of all the columns */
+
+/*     // access data and manipulate data */
+/*     int             i_tag(string tag); // returns column value of tag */
+/*     vector<int>     tag_cols(vector<string> _tags, const char* err_msg_name=""); */
+/*     bool            has_tag(string tag); */
+/*     ioIntVec&       swap_tags(string tag0, string tag1); // swap column locations */
+/*     ioIntVec&       subset(vector<string> tag); */
+/*     ioIntVec&       rm_tags(vector<string> tag); */
+/*     ioIntVec&       add_tag(string tag, int default_val=-1); */ 
+/*     void            rename_tag(string, string); */
+/*     bool            has_key(int key);     // checks if it has key */
+/*     vector<int>&    operator[](int key);   // returns the vector at entry */
+/*     int             size();   // size of map */
+
+/*     vector<int>     vals(string tag, vector<bool> mask={}, bool keep_on_true=true); // keep all values */
+
+/*     vector<int>     vals(string tag, string mask); // keep all values */
+/*     vector<int>     vals(string tag, vector<string> mask); // TODO [ ] new */
+/*     vector<int>     vals(string tag, vector<bool>); // TODO [ ] new */
+
+/*     vector<int>     get_keys(vector<bool> mask, bool keep_on_true=true); // keep all values */
+/*                     // from mask */
+/*     vector<bool>    is_any(vector<pair<string,bool>> mask_keep_true); // per row, see if any match bool */
+/*     vector<bool>    is_all(vector<pair<string,bool>> mask_keep_true); // per row, see if all match bool */
+
+/*     friend ostream& operator<<(ostream& os, ioIntVec& dt); */
+/*     void            write_to_file(const char* file_name, vector<string> comments={}); */
+/* }; */
 struct ioIntVec {
     // constructors and ostream
     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} );
@@ -283,12 +327,18 @@ struct ioIntVec {
     bool            has_key(int key);     // checks if it has key
     vector<int>&    operator[](int key);   // returns the vector at entry
     int             size();   // size of map
-    vector<int>     vals(string tag, vector<bool> mask, bool keep_on_true=true); // keep all values
+    vector<int>     vals(string tag); // column of data under "tag"
+    vector<int>     vals(string tag, vector<bool> mask);// column of data under "tag" where mask is True
     vector<int>     get_keys(vector<bool> mask, bool keep_on_true=true); // keep all values
-                    // from mask
-    vector<bool>    is_any(vector<pair<string,bool>> mask_keep_true); // per row, see if any match bool
-    vector<bool>    is_all(vector<pair<string,bool>> mask_keep_true); // per row, see if all match bool
+    vector<bool>    mask(string tag,const char* module="mask");
+    vector<bool>    is_any(vector<string> tag);
+    vector<bool>    is_all(vector<string> tag);
 
+    private:
+    bool flip_tag(string& tag); // tag starts with "!" then strip it and return false, else return true;
+    void assert_tag(string tag, const char* routine=""); // fail is tag not in tags
+
+    public:
     friend ostream& operator<<(ostream& os, ioIntVec& dt);
     void            write_to_file(const char* file_name, vector<string> comments={});
 };

@@ -615,34 +615,41 @@ ioHgStats& ioHgStats::cut_below(double cut, bool cut_times_sigma) {
     calc_stats();
     return *this;
 };
-ioHgStats& ioHgStats::cut_mask(vector<bool>& mask, bool mask_keep_true) {
+vector<double> ioHgStats::unmasked_vals() {
+    vector<double> r_vec;
+    for (auto i{0}; i<nbins; ++i) {
+        if (weight[i]!=0.) r_vec.push_back(vals[i]);
+    }
+    return r_vec;
+};
+ioHgStats& ioHgStats::mask(const vector<bool>  mask) {
     if ((int)mask.size() != nbins) {
-        cout << " error in ioHgStats::cut_mask " << endl
+        cout << " error in ioHgStats::mask " << endl
              << " There are " << nbins << " bins, but only " << mask.size()
              << " points in in put mask " << endl << endl
              << " Therefore mask is not applied." << endl;
         return *this;
     }
     for (int i{0}; i<nbins; ++i) {
-        if (mask[i] == mask_keep_true) weight[i] = 0.;
+        if (!mask[i]) weight[i] = 0.;
         calc_stats();
     }
     return *this;
 };
-ioHgStats& ioHgStats::cut_mask(vector<int>& mask, bool mask_keep_true) {
-    if ((int)mask.size() != nbins) {
-        cout << " error in ioHgStats::cut_mask " << endl
-             << " There are " << nbins << " bins, but only " << mask.size()
-             << " points in in put mask " << endl << endl
-             << " Therefore mask is not applied." << endl;
-        return *this;
-    }
-    for (int i{0}; i<nbins; ++i) {
-        if (mask_keep_true == (mask[i] != 0)) weight[i] = 0.;
-        calc_stats();
-    }
-    return *this;
-};
+/* ioHgStats& ioHgStats::mask(vector<int>& mask, bool mask_keep_true) { */
+/*     if ((int)mask.size() != nbins) { */
+/*         cout << " error in ioHgStats::mask " << endl */
+/*              << " There are " << nbins << " bins, but only " << mask.size() */
+/*              << " points in in put mask " << endl << endl */
+/*              << " Therefore mask is not applied." << endl; */
+/*         return *this; */
+/*     } */
+/*     for (int i{0}; i<nbins; ++i) { */
+/*         if ((mask[i] == 0)) weight[i] = 0.; */
+/*         calc_stats(); */
+/*     } */
+/*     return *this; */
+/* }; */
 ioHgStats& ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) {
     // count how many points are above
     double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut;
@@ -765,6 +772,62 @@ void ioMsgTree::slurp_file(const char* which_file) {
     return;
 };
 
+vector<int> ioIntVec::vals(string tag) {
+    assert_tag(tag,"vals");
+    int col { i_tag(tag) };
+    vector<int> r_vec {};
+    for (auto i{0}; i<size(); ++i) r_vec.push_back(data[i][col]);
+    return r_vec;
+};
+
+vector<int> ioIntVec::vals(string tag, vector<bool> mask) {
+    assert_tag(tag,"vals");
+    int col { i_tag(tag) };
+
+    if (mask.size() != data.size())
+    throw std::runtime_error(
+            Form("fatal error in ioIntVec::vals: size of mask and data do not match"));
+
+    vector<int> r_vec {};
+    for (auto i{0}; i<(int)mask.size(); ++i) if (mask[i]) r_vec.push_back(data[i][col]);
+    return r_vec;
+};
+
+bool ioIntVec::flip_tag(string& tag) {
+    int t_size = tag.size();
+    if (t_size==0) return true;
+    if (tag.substr(0,1)=="!") {
+        tag = tag.substr(1,t_size-1);
+        return false;
+    }
+    return true;
+};
+
+vector<bool> ioIntVec::mask(string tag, const char* module) {
+    bool on_true = flip_tag(tag);
+    assert_tag(tag,module);
+    int col { i_tag(tag) };
+    vector<bool> r_vec;
+    for (auto& vec : data) r_vec.push_back((vec[col]!=0) == on_true);
+    return r_vec;
+};
+
+vector<bool> ioIntVec::is_any(vector<string> _tags){
+    int s = _tags.size();
+    if (!s) return {};
+    auto r_vec = mask(_tags[0]);
+    for (int i{1}; i<s; ++i) r_vec = r_vec || mask(_tags[i],"is_any");
+    return r_vec;
+};
+vector<bool> ioIntVec::is_all(vector<string> _tags){
+    int s = _tags.size();
+    if (!s) return {};
+    auto r_vec = mask(_tags[0]);
+    for (int i{1}; i<s; ++i) r_vec = r_vec && mask(_tags[i],"is_all");
+    return r_vec;
+};
+
+
 ioIntVec::ioIntVec( const char* file_name, bool echo_print, vector<string>_tags) 
 { ioIntVec_constructor(file_name, echo_print, _tags); };
 
@@ -877,21 +940,19 @@ int ioIntVec::i_tag(string tag) {
     if (it == tags.end()) return -1;
     else return (int)(it-tags.begin());
 };
+
+void ioIntVec::assert_tag(string tag, const char* module) {
+    if (!has_tag(tag)) 
+    throw std::runtime_error(Form("fatal in ioIntVec::%s, couldn't find tag \"%s\"",module,tag.c_str()));
+};
 vector<int> ioIntVec::tag_cols(vector<string> _tags, const char* name) {
     vector<int> cols;
     if (_tags.size()==0) {
         for (int i{0}; i<(int)_tags.size(); ++i) cols.push_back(i);
     } else {
         for (auto& tag : _tags) {
-            int i { i_tag(tag) };
-            if (i==-1) {
-                throw std::runtime_error( 
-                        Form("Could not find tag %s in ioIntVec in routine %s", 
-                            tag.c_str(), name));
-            } else {
-                cols.push_back(i);
-            }
-
+            assert_tag(tag,"tag_cols");
+            cols.push_back(i_tag(tag));
         }
     }
     return cols;
@@ -960,12 +1021,8 @@ ioIntVec& ioIntVec::add_tag(string tag, int def_val) {
     return *this;
 };
 void ioIntVec::rename_tag(string tag0, string tag1) {
-    int i = i_tag(tag0);
-    if (i==-1) throw std::runtime_error( 
-        Form("Could not find tag %s in ioIntVec in routine %s", 
-                    tag0.c_str(), "rename_tag")
-    );
-    tags[i] = tag1;
+    assert_tag(tag0,"rename_tag");
+    tags[i_tag(tag0)] = tag1;
 };
 bool ioIntVec::has_key(int key) { 
     return binary_search(keys.begin(), keys.end(), key);
@@ -983,21 +1040,6 @@ vector<int>& ioIntVec::operator[](int key) {
 /*     sort(vec.begin(), vec.end()); */
 /*     return vec; */
 /* }; */
-vector<int> ioIntVec::vals(string tag, vector<bool> mask, bool keep_on_true) {
-    if (!has_tag(tag))
-    throw std::runtime_error(
-            Form("fatal error in ioIntVec::vals could not find tag %s ",tag.c_str()));
-    if (mask.size() != data.size())
-    throw std::runtime_error(
-            Form("fatal error in ioIntVec::vals: size of mask and data do not match"));
-
-    int col { i_tag(tag) };
-    vector<int> r_vec {};
-    for (auto i{0}; i<(int)mask.size(); ++i) {
-        if (mask[i] == keep_on_true) r_vec.push_back(data[i][col]);
-    }
-    return r_vec;
-};
 vector<int> ioIntVec::get_keys(vector<bool> mask, bool keep_on_true) {
     if (mask.size() != data.size())
     throw std::runtime_error(
@@ -1009,50 +1051,51 @@ vector<int> ioIntVec::get_keys(vector<bool> mask, bool keep_on_true) {
     }
     return r_vec;
 };
-vector<bool> ioIntVec::is_any(vector<pair<string,bool>> mask_keep_true) {
-    vector<bool>   v_keep_true;
-    vector<string> v_tags;
-    for (auto mpair : mask_keep_true) {
-        v_keep_true.push_back(mpair.second);
-        v_tags.push_back(mpair.first);
-    }
-    auto cols = tag_cols(v_tags, "is_any");
-    int  n {(int) cols.size()};
-    vector<bool> r_vec {};
-    for (auto& vec : data) {
-        bool keep {false};
-        for (int i{0}; i<n; ++i) {
-            if ( (vec[cols[i]] != 0) == v_keep_true[i]) {
-                keep = true;
-                break;
-            }
-        }
-        r_vec.push_back(keep);
-    }
-    return r_vec;
-};
-vector<bool> ioIntVec::is_all(vector<pair<string,bool>> mask_keep_true) {
-    vector<bool>   v_keep_true;
-    vector<string> v_tags;
-    for (auto mpair : mask_keep_true) {
-        v_keep_true.push_back(mpair.second);
-        v_tags.push_back(mpair.first);
-    }
-    auto cols = tag_cols(v_tags, "is_all");
-    int  n {(int) cols.size()};
-    vector<bool> r_vec {};
-    for (auto& vec : data) {
-        bool keep {true};
-        for (int i{0}; i<n; ++i) {
-            if ( (vec[cols[i]] != 0) != v_keep_true[i]) {
-                keep = false;
-                break;
-            }
-        }
-        r_vec.push_back(keep);
-    }
-    return r_vec;
-};
+/* vector<bool> ioIntVec::is_any(vector<pair<string,bool>> mask_keep_true) { */
+/*     vector<bool>   v_keep_true; */
+/*     vector<string> v_tags; */
+/*     for (auto mpair : mask_keep_true) { */
+/*         v_keep_true.push_back(mpair.second); */
+/*         v_tags.push_back(mpair.first); */
+/*     } */
+/*     auto cols = tag_cols(v_tags, "is_any"); */
+/*     int  n {(int) cols.size()}; */
+/*     vector<bool> r_vec {}; */
+/*     for (auto& vec : data) { */
+/*         bool keep {false}; */
+/*         for (int i{0}; i<n; ++i) { */
+/*             if ( (vec[cols[i]] != 0) == v_keep_true[i]) { */
+/*                 keep = true; */
+/*                 break; */
+/*             } */
+/*         } */
+/*         r_vec.push_back(keep); */
+/*     } */
+/*     return r_vec; */
+/* }; */
+int ioIntVec::size(){ return (int)keys.size(); };
+/* vector<bool> ioIntVec::is_all(vector<pair<string,bool>> mask_keep_true) { */
+/*     vector<bool>   v_keep_true; */
+/*     vector<string> v_tags; */
+/*     for (auto mpair : mask_keep_true) { */
+/*         v_keep_true.push_back(mpair.second); */
+/*         v_tags.push_back(mpair.first); */
+/*     } */
+/*     auto cols = tag_cols(v_tags, "is_all"); */
+/*     int  n {(int) cols.size()}; */
+/*     vector<bool> r_vec {}; */
+/*     for (auto& vec : data) { */
+/*         bool keep {true}; */
+/*         for (int i{0}; i<n; ++i) { */
+/*             if ( (vec[cols[i]] != 0) != v_keep_true[i]) { */
+/*                 keep = false; */
+/*                 break; */
+/*             } */
+/*         } */
+/*         r_vec.push_back(keep); */
+/*     } */
+/*     return r_vec; */
+/* }; */
 ostream& operator<<(ostream& os, ioIntVec& io) {
     // generate the max charactures needed in each column
     
@@ -1112,6 +1155,7 @@ void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
     }
     for (auto comment : comments) f_out << "// " << comment << endl;
     f_out << *this;
+    cout << " Write table to file: " << which_file << endl;
     f_out.close();
 };
 

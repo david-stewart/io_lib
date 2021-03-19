@@ -54,6 +54,12 @@ void ioDrawTLine(double x0, double y0, double x1, double y1,
 void ioDrawTLineBox(double x0, double y0, double x1, double y1, 
         ioOptMap options={});
 
+double ioPadxRat(double x_in); // get x-coordinatio of ratio x_in
+double ioPadyRat(double y_in); // get y-coordinatio of ratio y_in
+
+void ioDrawTLineHorizontal(double y, ioOptMap options={});
+void ioDrawTLineVertical(double x, ioOptMap options={});
+
 double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q);
 
 vector<double> io_vec_BinContent(TH1* hg, bool under_over_flow=false);
@@ -113,5 +119,7 @@ vector<double> ioQuantiles(TH1D* hg, vector<double> percents);
 string  ioStringVec(vector<double>, const char* name="vec", const char* fmt="5.2f");
 
 int io_count_digits(int i, int min_val=1); // returns number of digits in int; for 12->2; for 102311->6
+int ioSum(const vector<int>);
+int ioSum(const vector<bool>);
 
 #endif
