@@ -1,6 +1,6 @@
 root -l<<EOF
     .x io_loadlibs.C
-    ioIntList badruns { "bad_run_v1.list", false };
+    ioIntList badruns { "bad_run_0.list", false };
     ioIntMap  id_time  { "run_id.list", 1, 2, false };
 
     ofstream fout { "good_run_id.list" };
