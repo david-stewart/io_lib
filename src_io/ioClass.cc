@@ -1160,7 +1160,7 @@ void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
 };
 
 ioMinMax::ioMinMax(string _name) : name{_name} {};
-long long int ioMinMax::operator()(double val) {
+long long int ioMinMax::fill(double val) {
     if (n_entries == 0) {
         min = val;
         max = val;
@@ -1180,6 +1180,15 @@ ioMinMax::ioMinMax(unsigned int& ptr, string _name) :
 ioMinMax::ioMinMax(short& ptr, string _name) : 
     name{_name}, fill_option{7}, ptr_short{&ptr} {};
 
+ioMinMax::ioMinMax(double* ptr, string _name) : 
+    name{_name}, fill_option{8}, ptr_double{ptr} {};
+ioMinMax::ioMinMax(int* ptr, string _name) : 
+    name{_name}, fill_option{9}, ptr_int{ptr} {};
+ioMinMax::ioMinMax(unsigned int* ptr, string _name) : 
+    name{_name}, fill_option{10}, ptr_uint{ptr} {};
+ioMinMax::ioMinMax(short* ptr, string _name) : 
+    name{_name}, fill_option{11}, ptr_short{ptr} {};
+
 ioMinMax::ioMinMax(double* ptr, int& _index, string _name) : 
     name{_name}, fill_option{0}, ptr_double{ptr}, index{&_index} {};
 ioMinMax::ioMinMax(int* ptr, int& _index, string _name) : 
@@ -1191,23 +1200,37 @@ ioMinMax::ioMinMax(short* ptr, int& _index, string _name) :
 long long int ioMinMax::operator()() {
     switch (fill_option) {
         case 0:
-            return (*this)(ptr_double[*index]);
+            return fill(ptr_double[*index]);
         case 1:
-            return (*this)(ptr_int[*index]);
+            return fill(ptr_int[*index]);
         case 2:
-            return (*this)(ptr_uint[*index]);
+            return fill(ptr_uint[*index]);
         case 3:
-            return (*this)(ptr_short[*index]);
+            return fill(ptr_short[*index]);
         case 4:
-            return (*this)(*ptr_double);
+            return fill(*ptr_double);
         case 5:
-            return (*this)(*ptr_int);
+            return fill(*ptr_int);
         case 6:
-            return (*this)(*ptr_uint);
+            return fill(*ptr_uint);
         case 7:
-            return (*this)(*ptr_short);
+            return fill(*ptr_short);
         default:
             throw std::runtime_error("ioMinMax::operator()() called with no pointer set");
+    }
+};
+long long int ioMinMax::operator()(int index) {
+    switch (fill_option) {
+        case 8:
+            return fill(ptr_double[index]);
+        case 9:
+            return fill(ptr_int[index]);
+        case 10:
+            return fill(ptr_uint[index]);
+        case 11:
+            return fill(ptr_short[index]);
+        default:
+            throw std::runtime_error("ioMinMax::operator()(int) called with no pointer set");
     }
 };
 int ioMinMax::nbins() { return (int)(max-min)+1; };

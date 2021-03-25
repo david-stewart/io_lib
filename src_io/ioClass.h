@@ -346,6 +346,11 @@ struct ioIntVec {
 struct ioMinMax {
     ioMinMax(string _name="");
 
+    ioMinMax(double*,       string _name="");
+    ioMinMax(int*,          string _name="");
+    ioMinMax(unsigned int*, string _name="");
+    ioMinMax(short*,        string _name="");
+
     ioMinMax(double*,       int& _index, string _name="");
     ioMinMax(int*,          int& _index, string _name="");
     ioMinMax(unsigned int*, int& _index, string _name="");
@@ -362,8 +367,9 @@ struct ioMinMax {
     double min{0.};
     double max{0.};
     int    nbins(); // return (int)(max-min)+1
-    long long int operator()(double);
     long long int operator()();
+    long long int operator()(int); // to fill an array then
+    long long int fill(double val);
 
     double* ptr_double{nullptr}; // option 0
     int*    ptr_int{nullptr};    // option 1
