@@ -343,5 +343,26 @@ struct ioIntVec {
     void            write_to_file(const char* file_name, vector<string> comments={});
 };
 
+struct ioMinMax {
+    ioMinMax(string _name="");
+    ioMinMax(double&, string _name="");
+    ioMinMax(int&, string _name="");
+    ioMinMax(unsigned int&, string _name="");
+    ioMinMax(short&, string _name="");
+    int fill_option{-1};
+    string name;
+    long long int n_entries{0};
+    long long int size(); // return n_entries
+    double min{0.};
+    double max{0.};
+    long long int operator()(double);
+    long long int operator()();
 
+    double* ptr_double{nullptr}; // option 0
+    int*    ptr_int{nullptr};    // option 1
+    unsigned int* ptr_uint{nullptr};   // option 2
+    short*  ptr_short{nullptr};  // option 3
+
+    friend ostream& operator<<(ostream& os, ioMinMax& self);
+};
 #endif
