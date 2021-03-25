@@ -1172,22 +1172,26 @@ long long int ioMinMax::fill(double val) {
     return n_entries;
 };
 ioMinMax::ioMinMax(double& ptr, string _name) : 
-    name{_name}, fill_option{4}, ptr_double{&ptr} {};
+    name{_name}, fill_option{5}, ptr_double{&ptr} {};
 ioMinMax::ioMinMax(int& ptr, string _name) : 
-    name{_name}, fill_option{5}, ptr_int{&ptr} {};
+    name{_name}, fill_option{6}, ptr_int{&ptr} {};
 ioMinMax::ioMinMax(unsigned int& ptr, string _name) : 
-    name{_name}, fill_option{6}, ptr_uint{&ptr} {};
+    name{_name}, fill_option{7}, ptr_uint{&ptr} {};
 ioMinMax::ioMinMax(short& ptr, string _name) : 
-    name{_name}, fill_option{7}, ptr_short{&ptr} {};
+    name{_name}, fill_option{8}, ptr_short{&ptr} {};
+ioMinMax::ioMinMax(char& ptr, string _name) : 
+    name{_name}, fill_option{9}, ptr_char{&ptr} {};
 
 ioMinMax::ioMinMax(double* ptr, string _name) : 
-    name{_name}, fill_option{8}, ptr_double{ptr} {};
+    name{_name}, fill_option{10}, ptr_double{ptr} {};
 ioMinMax::ioMinMax(int* ptr, string _name) : 
-    name{_name}, fill_option{9}, ptr_int{ptr} {};
+    name{_name}, fill_option{11}, ptr_int{ptr} {};
 ioMinMax::ioMinMax(unsigned int* ptr, string _name) : 
-    name{_name}, fill_option{10}, ptr_uint{ptr} {};
+    name{_name}, fill_option{12}, ptr_uint{ptr} {};
 ioMinMax::ioMinMax(short* ptr, string _name) : 
-    name{_name}, fill_option{11}, ptr_short{ptr} {};
+    name{_name}, fill_option{13}, ptr_short{ptr} {};
+ioMinMax::ioMinMax(char* ptr, string _name) : 
+    name{_name}, fill_option{14}, ptr_char{ptr} {};
 
 ioMinMax::ioMinMax(double* ptr, int& _index, string _name) : 
     name{_name}, fill_option{0}, ptr_double{ptr}, index{&_index} {};
@@ -1197,6 +1201,9 @@ ioMinMax::ioMinMax(unsigned int* ptr, int& _index, string _name) :
     name{_name}, fill_option{2}, ptr_uint{ptr}, index{&_index} {};
 ioMinMax::ioMinMax(short* ptr, int& _index, string _name) : 
     name{_name}, fill_option{3}, ptr_short{ptr}, index{&_index} {};
+ioMinMax::ioMinMax(char* ptr, int& _index, string _name) : 
+    name{_name}, fill_option{4}, ptr_char{ptr}, index{&_index} {};
+
 long long int ioMinMax::operator()() {
     switch (fill_option) {
         case 0:
@@ -1208,27 +1215,34 @@ long long int ioMinMax::operator()() {
         case 3:
             return fill(ptr_short[*index]);
         case 4:
-            return fill(*ptr_double);
+            return fill(ptr_char[*index]);
+
         case 5:
-            return fill(*ptr_int);
+            return fill(*ptr_double);
         case 6:
-            return fill(*ptr_uint);
+            return fill(*ptr_int);
         case 7:
+            return fill(*ptr_uint);
+        case 8:
             return fill(*ptr_short);
+        case 9:
+            return fill(*ptr_char);
         default:
             throw std::runtime_error("ioMinMax::operator()() called with no pointer set");
     }
 };
 long long int ioMinMax::operator()(int index) {
     switch (fill_option) {
-        case 8:
-            return fill(ptr_double[index]);
-        case 9:
-            return fill(ptr_int[index]);
         case 10:
-            return fill(ptr_uint[index]);
+            return fill(ptr_double[index]);
         case 11:
+            return fill(ptr_int[index]);
+        case 12:
+            return fill(ptr_uint[index]);
+        case 13:
             return fill(ptr_short[index]);
+        case 14:
+            return fill(ptr_char[index]);
         default:
             throw std::runtime_error("ioMinMax::operator()(int) called with no pointer set");
     }
