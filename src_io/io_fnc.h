@@ -57,6 +57,9 @@ void ioDrawTLineBox(double x0, double y0, double x1, double y1,
 double ioPadxRat(double x_in); // get x-coordinatio of ratio x_in
 double ioPadyRat(double y_in); // get y-coordinatio of ratio y_in
 
+/* double io_yPadPerc(double); */
+/* double io_xPadPerc(double); */
+
 void ioDrawTLineHorizontal(double y, ioOptMap options={});
 void ioDrawTLineVertical(double x, ioOptMap options={});
 

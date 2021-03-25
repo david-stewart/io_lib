@@ -94,6 +94,7 @@ void ioDrawTLineBox(double x0, double y0, double x1, double y1,
 };
 
 double ioPadxRat(double x_in){
+    gPad->Update();
     /* cout << " x_in " << x_in << endl; */
     double x0 = gPad->GetUxmin();
     double x1 = gPad->GetUxmax();
@@ -102,6 +103,7 @@ double ioPadxRat(double x_in){
     return x0+x_in*(x1-x0);
 };
 double ioPadyRat(double y_in){
+    gPad->Update();
     double y0 = gPad->GetUymin();
     double y1 = gPad->GetUymax();
     return y0+y_in*(y1-y0);
@@ -109,14 +111,16 @@ double ioPadyRat(double y_in){
 
 
 void ioDrawTLineHorizontal(double y, ioOptMap options) {
-    double x0 = gPad->GetUxmin();
-    double x1 = gPad->GetUxmax();
+    gPad->Update();
+    double x0 { ioPadxRat(0.) };
+    double x1 { ioPadxRat(1.) };
     ioDrawTLine(x0,y,x1,y,options);
 };
 
 void ioDrawTLineVertical(double x, ioOptMap options) {
-    double y0 = gPad->GetUymin();
-    double y1 = gPad->GetUymax();
+    gPad->Update();
+    double y0 { ioPadyRat(0.) };
+    double y1 { ioPadyRat(1.) };
     ioDrawTLine(x,y0,x,y1,options);
 };
 
