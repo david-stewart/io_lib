@@ -345,10 +345,17 @@ struct ioIntVec {
 
 struct ioMinMax {
     ioMinMax(string _name="");
-    ioMinMax(double&, string _name="");
-    ioMinMax(int&, string _name="");
+
+    ioMinMax(double*,       int& _index, string _name="");
+    ioMinMax(int*,          int& _index, string _name="");
+    ioMinMax(unsigned int*, int& _index, string _name="");
+    ioMinMax(short*,        int& _index, string _name="");
+
+    ioMinMax(double&,       string _name="");
+    ioMinMax(int&,          string _name="");
     ioMinMax(unsigned int&, string _name="");
-    ioMinMax(short&, string _name="");
+    ioMinMax(short&,        string _name="");
+
     int fill_option{-1};
     string name;
     long long int n_entries{0};
@@ -362,6 +369,7 @@ struct ioMinMax {
     int*    ptr_int{nullptr};    // option 1
     unsigned int* ptr_uint{nullptr};   // option 2
     short*  ptr_short{nullptr};  // option 3
+    int* index{nullptr};
 
     friend ostream& operator<<(ostream& os, ioMinMax& self);
 };
