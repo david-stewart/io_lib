@@ -1161,7 +1161,6 @@ void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
 
 ioMinMax::ioMinMax(string _name) : name{_name} {};
 long long int ioMinMax::operator()(double val) {
-    ++n_entries;
     if (n_entries == 0) {
         min = val;
         max = val;
@@ -1169,6 +1168,7 @@ long long int ioMinMax::operator()(double val) {
         if (val < min) min = val;
         if (val > max) max = val;
     }
+    ++n_entries;
     return n_entries;
 };
 ioMinMax::ioMinMax(double& ptr, string _name) : 
@@ -1193,6 +1193,7 @@ long long int ioMinMax::operator()() {
             throw std::runtime_error("ioMinMax::operator()() called with no pointer set");
     }
 };
+int ioMinMax::nbins() { return (int)(max-min)+1; };
 ostream& operator<<(ostream& os, ioMinMax& self) {
     if (self.name != "") cout << self.name << ": ";
     os << self.min << " " << self.max;

@@ -352,9 +352,9 @@ struct ioMinMax {
     int fill_option{-1};
     string name;
     long long int n_entries{0};
-    long long int size(); // return n_entries
     double min{0.};
     double max{0.};
+    int    nbins(); // return (int)(max-min)+1
     long long int operator()(double);
     long long int operator()();
 
