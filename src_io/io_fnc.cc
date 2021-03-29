@@ -3,6 +3,9 @@
 #include "RooUnfoldResponse.h"
 
 #include <numeric>
+#include <iostream>
+#include <fstream>
+
 
 
 const char* ioUniqueName(int i) {
@@ -108,7 +111,6 @@ double ioPadyRat(double y_in){
     double y1 = gPad->GetUymax();
     return y0+y_in*(y1-y0);
 };
-
 
 void ioDrawTLineHorizontal(double y, ioOptMap options) {
     gPad->Update();
@@ -582,4 +584,102 @@ int io_count_digits(int n, int min_val) {
 };
 int ioSum(const vector<int> vec)  { return std::accumulate(vec.begin(), vec.end(), 0); };
 int ioSum(const vector<bool> vec) { return std::accumulate(vec.begin(), vec.end(), 0); };
+
+vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_commas) {
+    vector<int> vec;
+    ifstream file;
+    file.open(in_file);
+    ostringstream msg;
+    if (!file.is_open()) {
+        msg << "fatal error: could not open int map file \"" 
+            << in_file << " in ioReadIntVec" << endl;
+        throw std::runtime_error(msg.str());
+    }
+    /* int n_req { index_column > data_column ? index_column : data_column }; */
+    string line;
+    bool   read_all_cols = (col==-1);
+    while (getline(file,line)) {
+        line.append(" ");
+        if (strip_commas && (line.find(",") != string::npos)) {
+            TString trans = line;
+            trans.ReplaceAll(","," ");
+            line = trans;
+        }
+        stringstream words(line);
+        TString word;
+        int i {-1};
+        bool found_val  {false};
+        bool is_comment {false};
+        while (words >> word) {
+            ++i;
+            if (!word.IsDigit()) {
+                is_comment = true;
+                break;
+            }
+            if (read_all_cols) vec.push_back(word.Atoi());
+            if (i == col) {
+                found_val = true;
+                vec.push_back(word.Atoi());
+                break;
+            }
+        }
+        if (is_comment || found_val || read_all_cols) continue;
+        msg << "fatal error: could not read col " << col << endl
+            << "  in input line \""<<line<<"\""  << endl
+            << "  in input file \"" << in_file <<"\" in ioReadIntVec" << endl;
+        throw std::runtime_error(msg.str());
+    }
+    file.close();
+    if (sort) std::sort(vec.begin(), vec.end());
+    return vec;
+};
+
+vector<double> ioReadFloatVec(const char* in_file, int col, bool sort, bool strip_commas) {
+    vector<double> vec;
+    ifstream file;
+    file.open(in_file);
+    ostringstream msg;
+    if (!file.is_open()) {
+        msg << "fatal error: could not open int map file \"" 
+            << in_file << " in ioReadIntVec" << endl;
+        throw std::runtime_error(msg.str());
+    }
+    /* int n_req { index_column > data_column ? index_column : data_column }; */
+    string line;
+    bool   read_all_cols = (col==-1);
+    while (getline(file,line)) {
+        line.append(" ");
+        if (strip_commas && (line.find(",") != string::npos)) {
+            TString trans = line;
+            trans.ReplaceAll(","," ");
+            line = trans;
+        }
+        stringstream words(line);
+        TString word;
+        int i {-1};
+        bool found_val  {false};
+        bool is_comment {false};
+        while (words >> word) {
+            ++i;
+            if (!word.IsFloat()) {
+                is_comment = true;
+                break;
+            }
+            if (read_all_cols) vec.push_back(word.Atof());
+            if (i == col) {
+                found_val = true;
+                vec.push_back(word.Atof());
+                break;
+            }
+        }
+        if (is_comment || found_val || read_all_cols) continue;
+        msg << "fatal error: could not read col " << col << endl
+            << "  in input line \""<<line<<"\""  << endl
+            << "  in input file \"" << in_file <<"\" in ioReadIntVec" << endl;
+        throw std::runtime_error(msg.str());
+    }
+    file.close();
+    if (sort) std::sort(vec.begin(), vec.end());
+    return vec;
+};
 

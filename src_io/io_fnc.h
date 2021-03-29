@@ -125,4 +125,12 @@ int io_count_digits(int i, int min_val=1); // returns number of digits in int; f
 int ioSum(const vector<int>);
 int ioSum(const vector<bool>);
 
+vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip_commas=true);
+// notes: (1) all lines that start with a non-numeric word are treated as comments
+//        (2) if col == -1, then read all values
+
+vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=true, bool strip_commas=true);
+// notes: (1) all lines that start with a non-numeric word are treated as comments
+//        (2) if col == -1, then read all values
+
 #endif

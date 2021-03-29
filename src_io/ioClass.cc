@@ -423,7 +423,7 @@ string ioIntMap::ioIntMap_constructor (
                 break;
             }
             // ignore columns that start with a non-number word
-            if (n_words == 0 && !word.IsAlnum()) break;
+            if (n_words == 0 && !word.IsAlnum()) { comment_flag = true; break; }
             ++n_words;
             if (i == index_column) {
                 has_index = true;
@@ -446,7 +446,7 @@ string ioIntMap::ioIntMap_constructor (
                 msg << " Couldn't read index column("<<index_column 
                     <<")" <<endl;
             if (!has_data) 
-                msg << " Couldn't read data column("<<index_column 
+                msg << " Couldn't read data column("<<data_column 
                     <<")" <<endl;
             msg << "  from line:" << endl
                 << "  -> " << line << endl;
@@ -1254,3 +1254,40 @@ ostream& operator<<(ostream& os, ioMinMax& self) {
     return os;
 };
 
+ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) {
+    ostringstream msg;
+    if (print) {
+        msg << " Reading following values from col " << col << " from " << in_file << endl;
+    }
+    try {
+        bool add_data = (list.size() != 0);
+        auto new_data = ioReadIntVec(in_file, col, true, strip_commas);
+        for (int i{0}; i<(int)new_data.size(); ++i) {
+            if (i>0 && new_data[i] == new_data[i-1]) continue;
+            if (add_data && has(new_data[i])) continue;
+            if (print) msg << " set add " << new_data[i] << endl;
+            list.push_back(new_data[i]);
+        }
+        if (add_data) sort(list.begin(), list.end());
+        cout << " Done reading col " << col << " from " << in_file << endl;
+        if (print) cout << " Done reading col " << col << " from " << in_file << endl;
+    }
+    catch (std::runtime_error err) {
+        cerr << " fatal error in ioIntSet::read_file " << endl;
+        cerr << err.what() << endl;
+        /* cout << err << endl; */
+    }
+    return msg;
+};
+ioIntSet::ioIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) {
+    log << read_file(in_file, col, print, strip_commas).str() << endl;
+};
+ioIntSet::ioIntSet(const char* in_file, int col, bool print, bool strip_commas) {
+    read_file(in_file, col, print, strip_commas);
+};
+bool ioIntSet::operator()(int val) {
+    return std::binary_search(list.begin(), list.end(), val);
+};
+int ioIntSet::operator[](int val) {
+    return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
+};

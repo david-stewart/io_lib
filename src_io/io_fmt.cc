@@ -246,6 +246,11 @@ TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
         hg->SetLineColorAlpha(dict["LineColor"], LineAlpha);
     }
 
+    if (dict("FillColor")) {
+        double FillAlpha = dict("FillAlpha") ? dict["FillAlpha"].val() : dict["MarkerAlpha"].val();
+        hg->SetFillColorAlpha(dict["FillColor"], FillAlpha);
+    }
+
     // Set titles
     if (dict("Title")) hg->SetTitle(dict["Title"]);
     if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
@@ -346,6 +351,11 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->SetLineColorAlpha(dict["LineColor"], LineAlpha);
     }
 
+    if (dict("FillColor")) {
+        double FillAlpha = dict("FillAlpha") ? dict["FillAlpha"].val() : dict["MarkerAlpha"].val();
+        hg->SetFillColorAlpha(dict["FillColor"], FillAlpha);
+    }
+
     // Set titles
     if (dict("Title")) hg->SetTitle(dict["Title"]);
     if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
@@ -399,7 +409,7 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
     }
     if (dict("yAxisRangeLo") || dict("yAxisRangeHi")) {
         if (!dict("yAxisRangeLo") || !dict("yAxisRangeHi")) {
-            cout << " Warning in io_fmt: has yAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " Warning in io_fmt: has yAxisRange{Lo||Hi} but not both. Needs both."<<endl;
             cout << " -> Not setting yAxisRange." << endl;
         } else {
             hg->GetYaxis()->SetRangeUser(dict["yAxisRangeLo"].val(), dict["yAxisRangeHi"].val());

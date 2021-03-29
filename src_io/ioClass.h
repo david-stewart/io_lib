@@ -130,6 +130,19 @@ struct ioPads {
 
 };
 
+struct ioIntSet {
+    vector<int> list {};
+    bool operator()(int); // check if argument is in the list
+    /* bool add_data(const ioIntSet&); // union with a second set */
+    bool has(int);
+    ioIntSet(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
+    ioIntSet(const char* in_file, ofstream& log, int col=0, bool print=true, bool strip_commas=true);
+    ostringstream read_file(const char* in_file, int col, bool print, bool strip_commas);
+    int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
+                          // warning: may not be meaningful with sort, and existence
+
+};
+
 struct ioIntList {
     vector<int> list;
     bool operator()(int); // check if argument is in the list
