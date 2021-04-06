@@ -13,11 +13,13 @@ using std::vector;
 
 struct __oiJetMaker_Jet {
     __oiJetMaker_Jet(double _pT,double _eta, double _phi);
-    double pT, eta, phi;
+    __oiJetMaker_Jet(double _pT,double _eta, double _phi, double _area);
+    double pT, eta, phi, area;
 };
 
 class oiJetMaker {
-    static constexpr double pi0mass {0.13498};
+    static constexpr double PI0MASS {0.13498};
+    static constexpr double PIPLUS_MASS {0.136957};
 
     public:
     ioOptMap opt;
@@ -26,6 +28,9 @@ class oiJetMaker {
     const fastjet::JetDefinition jet_def; // {antikt,kt,cambridge}_algorithm
     const fastjet::Selector      jet_selection; // default to not_pure_ghost && jetrap
     const double min_jet_pt;
+    bool  calc_areas;
+    double ghost_max_rap;
+    double ghost_R;
 
     // set the values for const members in the constructor
     oiJetMaker(ioOptMap options={},
@@ -33,7 +38,10 @@ class oiJetMaker {
             "jet_R",  0.4, 
             "jetrap",  -1, // if -1. will default to 1 - jetR
             "jet_def", "antikt",
-            "min_jet_pt", 0.2
+            "min_jet_pt", 0.2,
+            "calc_areas", 0,
+            "ghost_max_rap", 4.,   // 1 for true, 0 for false
+            "ghost_R",  0.01
         }}
     );
 

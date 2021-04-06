@@ -4,6 +4,9 @@ oiJetMaker::oiJetMaker(ioOptMap _opt, ioOptMap _defaults) :
     opt    { _defaults+_opt },
     jet_R  { opt["jet_R"]() },
     jetrap { opt["jetrap"]() == -1 ? (1.-jet_R) : opt["jetrap"]() },
+    calc_areas { opt["calc_areas"]() == 1 },
+    ghost_max_rap { opt["ghost_max_rap"]() },
+    ghost_R       { opt["ghost_R"]() },
     jet_def { opt["jet_def"] == "antikt"    ? fastjet::antikt_algorithm
             : opt["jet_def"] == "kt"        ? fastjet::kt_algorithm
             : opt["jet_def"] == "cambridge" ? fastjet::cambridge_algorithm 
@@ -15,7 +18,7 @@ oiJetMaker::oiJetMaker(ioOptMap _opt, ioOptMap _defaults) :
 
 void oiJetMaker::add_particle(double pt, double eta, double phi){
     particles.push_back(PseudoJet());
-    particles[n_particles++].reset_PtYPhiM( pt, eta, phi, pi0mass );
+    particles[n_particles++].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
 };
 
 void oiJetMaker::reset() {
@@ -43,16 +46,31 @@ bool oiJetMaker::next() {
 };
 
 int oiJetMaker::cluster_jets() {
-
-    fastjet::ClusterSequence clustSeq(particles, jet_def);
-    pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
-    njets = pseudo_jets.size();
-    while (next()) {
-        jets.push_back(
-            {pseudo_jets[n_next].perp(), 
-             pseudo_jets[n_next].eta(), 
-             pseudo_jets[n_next].phi()});
-    };
+    if (calc_areas) {
+        fastjet::AreaDefinition area_def( 
+            fastjet::active_area_explicit_ghosts, 
+            fastjet::GhostedAreaSpec(ghost_max_rap, 1, ghost_R)
+        );
+        fastjet::ClusterSequenceArea clustSeq(particles, jet_def, area_def);
+        pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
+        while (next()) {
+            jets.push_back(
+                    {pseudo_jets[n_next].perp(), 
+                    pseudo_jets[n_next].eta(), 
+                    pseudo_jets[n_next].phi(),
+                    pseudo_jets[n_next].area()});
+        };
+    } else {
+        fastjet::ClusterSequence clustSeq(particles, jet_def);
+        pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
+        while (next()) {
+            jets.push_back(
+                    {pseudo_jets[n_next].perp(), 
+                    pseudo_jets[n_next].eta(), 
+                    pseudo_jets[n_next].phi()});
+        };
+    }
+    njets = jets.size();
     return njets;
 };
 double oiJetMaker::pT(int i) {
@@ -70,5 +88,7 @@ double oiJetMaker::phi(int i) {
 /* oiJetMaker::~oiJetMaker(){}; */
 
 __oiJetMaker_Jet::__oiJetMaker_Jet(double _pT,double _eta, double _phi) :
-    pT{_pT}, eta{_eta}, phi{_phi} {};
+    pT{_pT}, eta{_eta}, phi{_phi}, area{0.} {};
+__oiJetMaker_Jet::__oiJetMaker_Jet(double _pT,double _eta, double _phi, double _area) :
+    pT{_pT}, eta{_eta}, phi{_phi}, area{_area} {};
 
