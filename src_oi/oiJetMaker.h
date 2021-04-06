@@ -61,6 +61,7 @@ class oiJetMaker {
     double pt(int i=-1);  // get current jet pt
     double eta(int i=-1); // get current jet eta
     double phi(int i=-1); // get current jet phi
+    double area(int i=-1); // get current jet phi
 
     vector<PseudoJet> pseudo_jets {};
     vector<__oiJetMaker_Jet> jets {}; // filled from pseudo_jets

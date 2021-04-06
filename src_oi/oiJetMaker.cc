@@ -81,6 +81,10 @@ double oiJetMaker::pt(int i) {
     if (i == -1) return jets[n_next].pt;
     return jets[i].pt;
 };
+double oiJetMaker::area(int i) {
+    if (i == -1) return jets[n_next].area;
+    return jets[i].area;
+};
 double oiJetMaker::eta(int i) {
     if (i == -1) return jets[n_next].eta;
     return jets[i].eta;
