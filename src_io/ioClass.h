@@ -48,6 +48,7 @@ class ioGetter{
 //      for TPad*, for dimensions from left-to-right and bottom-to-top
 //      See notes below.
 // --------------------------------------------------------------------------------------
+
 struct ioPadDim {
     // a structure to contain the four coordinates requisite for a TPad (in x or y):
     //    low   : left/bottom edge of TPad (outer edge of margin)
@@ -73,6 +74,14 @@ struct ioPadDim {
     double up_margin () const;
     bool operator==(ioPadDim& b) const; 
 };
+vector<ioPadDim> ioPadDimSet(int nPads, double left_margin, double right_margin=0.005,
+        double overall_left=0.01, double overall_right=0.01);
+// make a set of nPad diminsions, each with left_margin, right_margin, with
+// overall_left on the left, and overall_right on the right, with all remaining space
+// in the plots
+// example:   ioPadDimSet(2,0.1) results 2 pads, both with left margin of 0.1, right margin
+// of 0.01; there is 0.01 to the left and right of both of these; all remaining space is in
+// the pads
 
 
 // --------------------------------------------------------------------------------------
@@ -135,12 +144,16 @@ struct ioIntSet {
     bool operator()(int); // check if argument is in the list
     /* bool add_data(const ioIntSet&); // union with a second set */
     bool has(int);
-    ioIntSet(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
+    ioIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
     ioIntSet(const char* in_file, ofstream& log, int col=0, bool print=true, bool strip_commas=true);
-    ostringstream read_file(const char* in_file, int col, bool print, bool strip_commas);
+    ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
                           // warning: may not be meaningful with sort, and existence
-
+    ioIntSet& operator+=(const ioIntSet& rhs);
+    ioIntSet& operator*=(const ioIntSet& rhs); // get the union
+    friend ostream& operator<<(ostream& os, ioIntSet& dt);
+    int size();
+    void clear();
 };
 
 struct ioIntList {

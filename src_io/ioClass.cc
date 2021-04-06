@@ -93,6 +93,22 @@ bool ioPadDim::operator==(ioPadDim& B) const {
         && up    == B.up;
 };
 
+vector<ioPadDim> ioPadDimSet(int nPads, double left_margin, double right_margin,
+        double overall_left, double overall_right){
+    vector<ioPadDim> vec;
+    double space = {(1.-(left_margin+right_margin)*nPads-overall_left-overall_right)/nPads};
+    if (space<=0) throw std::runtime_error(
+        "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
+    double left = overall_left;
+    for (int i{0}; i<nPads; ++i) {
+        /* cout << "i: " << i << endl; */
+        vec.push_back( {left,left+left_margin, 
+                left+left_margin+space, left+left_margin+space+right_margin});
+        left += left_margin+space+right_margin;
+    }
+    return vec;
+};
+
 ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
         _canvas_width, int _canvas_height) :
     pad_dimensions{ _pad_dimensions }
@@ -1254,22 +1270,53 @@ ostream& operator<<(ostream& os, ioMinMax& self) {
     return os;
 };
 
+ioIntSet& ioIntSet::operator+=(const ioIntSet& rhs) {
+    vector<int> new_vals;
+    for (auto val : rhs.list) {
+        if (!binary_search(list.begin(),list.end(),val)) {
+            new_vals.push_back(val);
+        }
+    }
+    for (auto v : new_vals) list.push_back(v);
+    sort(list.begin(),list.end());
+    return *this;
+};
+ioIntSet& ioIntSet::operator*=(const ioIntSet& sec) {
+    vector<int> new_list;
+    for (auto val : sec.list)
+        if (binary_search(list.begin(),list.end(),val)) 
+            new_list.push_back(val);
+    list = new_list;
+    return *this;
+};
+
+
+int ioIntSet::size() { return list.size(); };
+void ioIntSet::clear() { list.clear(); };
 ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) {
     ostringstream msg;
+    if (!strcmp(in_file,"")) return msg;
     if (print) {
         msg << " Reading following values from col " << col << " from " << in_file << endl;
     }
     try {
-        bool add_data = (list.size() != 0);
         auto new_data = ioReadIntVec(in_file, col, true, strip_commas);
-        for (int i{0}; i<(int)new_data.size(); ++i) {
-            if (i>0 && new_data[i] == new_data[i-1]) continue;
-            if (add_data && has(new_data[i])) continue;
-            if (print) msg << " set add " << new_data[i] << endl;
-            list.push_back(new_data[i]);
+        if (list.size()>0) {
+            vector<int> add_vals{};
+            for (int i{0}; i<(int)new_data.size(); ++i) {
+                if (i>0 && new_data[i] == new_data[i-1]) continue;
+                if (has(new_data[i])) continue;
+                if (print) msg << " set add " << new_data[i] << endl;
+                add_vals.push_back(new_data[i]);
+            }
+            for (auto v : add_vals) list.push_back(v);
+        } else {
+            for (int i{0}; i<(int)new_data.size(); ++i) {
+                if (i>0 && new_data[i] == new_data[i-1]) continue;
+                list.push_back(new_data[i]);
+            }
         }
-        if (add_data) sort(list.begin(), list.end());
-        cout << " Done reading col " << col << " from " << in_file << endl;
+        sort(list.begin(), list.end());
         if (print) cout << " Done reading col " << col << " from " << in_file << endl;
     }
     catch (std::runtime_error err) {
@@ -1279,15 +1326,18 @@ ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool
     }
     return msg;
 };
+ostream& operator<<(ostream& os, ioIntSet& dt) { 
+    for (auto& v : dt.list) cout << v << endl;
+    return os;
+};
 ioIntSet::ioIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) {
     log << read_file(in_file, col, print, strip_commas).str() << endl;
 };
 ioIntSet::ioIntSet(const char* in_file, int col, bool print, bool strip_commas) {
     read_file(in_file, col, print, strip_commas);
 };
-bool ioIntSet::operator()(int val) {
-    return std::binary_search(list.begin(), list.end(), val);
-};
+bool ioIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); };
+bool ioIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };
 int ioIntSet::operator[](int val) {
     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
 };

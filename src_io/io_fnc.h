@@ -133,4 +133,7 @@ vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=true, bool 
 // notes: (1) all lines that start with a non-numeric word are treated as comments
 //        (2) if col == -1, then read all values
 
+TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y);
+TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
+
 #endif

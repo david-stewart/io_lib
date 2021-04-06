@@ -3,10 +3,26 @@
 
 #include "TGraph.h"
 #include "TH2D.h"
+#include "ioOptMap.h"
 
 float ioTowerEta(int);
 float ioTowerPhi(int);
-TGraph* ioTowerLoc_TGraph(vector<int> i_towers); // return TGraph of tower locations
+
+struct ioTowerLocator {
+    ioTowerLocator();
+    array<float, 41>  _eta_bounds;
+    array<float, 121> _phi_bounds;
+    pair<float,float> eta_bounds(int i_tower);
+    pair<float,float> phi_bounds(int i_tower);
+    float eta(int i_tower);
+    float phi(int i_tower);
+    float eta(int i_tower, double ratio);
+    float phi(int i_tower, double ratio);
+};
+
+void ioDrawTowerLocBoundaryTLines(ioOptMap opt={}, ioOptMap def={{"LineWidth",1,"LineStyle",1,"LineColor",kGray}});
+
+TGraph* ioTowerLoc_TGraph(vector<int> i_towers, double x_offset=0.5, double y_offset=0.5); // return TGraph of tower locations
 
 TH2D* ioTowerLoc_TH2D(); // return TH2D with bins surrounding each tower point
 
