@@ -12,9 +12,9 @@ using fastjet::PseudoJet;
 using std::vector;
 
 struct __oiJetMaker_Jet {
-    __oiJetMaker_Jet(double _pT,double _eta, double _phi);
-    __oiJetMaker_Jet(double _pT,double _eta, double _phi, double _area);
-    double pT, eta, phi, area;
+    __oiJetMaker_Jet(double _pt,double _eta, double _phi);
+    __oiJetMaker_Jet(double _pt,double _eta, double _phi, double _area);
+    double pt, eta, phi, area;
 };
 
 class oiJetMaker {
@@ -48,21 +48,23 @@ class oiJetMaker {
     // add options in the future to jet jet areas with ghost_particles
 
     vector<PseudoJet> particles {};
-    void add_particle(double pT, double eta, double phi);
+    void add_particle(double pt, double eta, double phi);
     int  cluster_jets(); // returns how many jets
     void reset();      // reset both jets and particles
     void reset_jets(); // reset only jets (in order to add more particles)
 
     int    n_particles{0};
     int    njets{0};
+    int    size();
     int    n_next{-1};
     bool   next(); // used to loop through all data using n_next and njets
-    double pT(int i=-1);  // get current jet pT
+    double pt(int i=-1);  // get current jet pt
     double eta(int i=-1); // get current jet eta
     double phi(int i=-1); // get current jet phi
 
     vector<PseudoJet> pseudo_jets {};
     vector<__oiJetMaker_Jet> jets {}; // filled from pseudo_jets
+    __oiJetMaker_Jet& operator[](int);
 
     /* ~oiJetMaker(); */
 };

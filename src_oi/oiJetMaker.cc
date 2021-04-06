@@ -45,6 +45,10 @@ bool oiJetMaker::next() {
     }
 };
 
+int oiJetMaker::size() { return njets; };
+
+__oiJetMaker_Jet& oiJetMaker::operator[](int i) { return jets[i]; };
+
 int oiJetMaker::cluster_jets() {
     if (calc_areas) {
         fastjet::AreaDefinition area_def( 
@@ -73,9 +77,9 @@ int oiJetMaker::cluster_jets() {
     njets = jets.size();
     return njets;
 };
-double oiJetMaker::pT(int i) {
-    if (i == -1) return jets[n_next].pT;
-    return jets[i].pT;
+double oiJetMaker::pt(int i) {
+    if (i == -1) return jets[n_next].pt;
+    return jets[i].pt;
 };
 double oiJetMaker::eta(int i) {
     if (i == -1) return jets[n_next].eta;
@@ -87,8 +91,8 @@ double oiJetMaker::phi(int i) {
 };
 /* oiJetMaker::~oiJetMaker(){}; */
 
-__oiJetMaker_Jet::__oiJetMaker_Jet(double _pT,double _eta, double _phi) :
-    pT{_pT}, eta{_eta}, phi{_phi}, area{0.} {};
-__oiJetMaker_Jet::__oiJetMaker_Jet(double _pT,double _eta, double _phi, double _area) :
-    pT{_pT}, eta{_eta}, phi{_phi}, area{_area} {};
+__oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi) :
+    pt{_pt}, eta{_eta}, phi{_phi}, area{0.} {};
+__oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi, double _area) :
+    pt{_pt}, eta{_eta}, phi{_phi}, area{_area} {};
 
