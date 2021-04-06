@@ -57,21 +57,22 @@ int oiJetMaker::cluster_jets() {
         );
         fastjet::ClusterSequenceArea clustSeq(particles, jet_def, area_def);
         pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
-        while (next()) {
+        for (auto& jet : pseudo_jets) {
+        /* while (next()) { */
             jets.push_back(
-                    {pseudo_jets[n_next].perp(), 
-                    pseudo_jets[n_next].eta(), 
-                    pseudo_jets[n_next].phi(),
-                    pseudo_jets[n_next].area()});
+                    {jet.perp(), 
+                    jet.eta(), 
+                    jet.phi(),
+                    jet.area()});
         };
     } else {
         fastjet::ClusterSequence clustSeq(particles, jet_def);
         pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
-        while (next()) {
+        for (auto& jet : pseudo_jets) {
             jets.push_back(
-                    {pseudo_jets[n_next].perp(), 
-                    pseudo_jets[n_next].eta(), 
-                    pseudo_jets[n_next].phi()});
+                    {jet.perp(), 
+                    jet.eta(), 
+                    jet.phi()});
         };
     }
     njets = jets.size();
