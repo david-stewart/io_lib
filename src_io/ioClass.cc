@@ -434,12 +434,14 @@ string ioIntMap::ioIntMap_constructor (
         bool comment_flag {false};
         int n_words{0};
         while (words >> word) {
+            cout << " Line: " << line << "  ->(word): " << word << "  IsAlnum: " << word.IsAlnum()<< endl;
+            cout << " word: " << word << endl;
             if (word.BeginsWith("//") || word.BeginsWith("#")) {
                 comment_flag = true;
                 break;
             }
             // ignore columns that start with a non-number word
-            if (n_words == 0 && !word.IsAlnum()) { comment_flag = true; break; }
+            if (n_words == 0 && !word.IsDigit()) { comment_flag = true; break; }
             ++n_words;
             if (i == index_column) {
                 has_index = true;
