@@ -98,6 +98,6 @@ double oiJetMaker::phi(int i) {
 
 __oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi) :
     pt{_pt}, eta{_eta}, phi{_phi}, area{0.} {};
-__oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi, double _area) :
-    pt{_pt}, eta{_eta}, phi{_phi}, area{_area} {};
+__oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi,  double _area) :
+    pt{_pt}, eta{_eta}, phi{_phi},  area{_area} {};
 

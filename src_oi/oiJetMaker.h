@@ -18,7 +18,7 @@ struct __oiJetMaker_Jet {
 };
 
 class oiJetMaker {
-    static constexpr double PI0MASS {0.13498};
+    static constexpr double PI0MASS     {0.13498};
     static constexpr double PIPLUS_MASS {0.136957};
 
     public:

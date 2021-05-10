@@ -49,8 +49,6 @@ while read line; do
 done < ../io_lib_list
 cd ..
 
-
-
 # make the src_oi files
 while read line; do
     make -f src_oi/Makefile lib/liboi${line}.so
@@ -60,3 +58,7 @@ while read line; do
         cd ..
     fi
 done < oi_lib_list
+
+# also do the pAu2015_common libraries
+cd pAu2015_common
+./make.sh
