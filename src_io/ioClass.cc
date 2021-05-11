@@ -1343,3 +1343,40 @@ bool ioIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };
 int ioIntSet::operator[](int val) {
     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
 };
+
+ioIntBinCnt::ioIntBinCnt(const char* name, vector<int> x_dim, const char* title) :
+    ioIntBinCnt{name, x_dim, {}, title} {};
+ioIntBinCnt::ioIntBinCnt(const char* name, vector<int> x_dim, 
+        vector<int> y_dim, const char* title) {
+    if (y_dim.size()>0) {
+        is2D = true;
+        const char* use_title = (strcmp(title,"")) ? name : title;
+        hg2 = new TH2D(name, use_title, x_dim.size(), ax_doubleptr(x_dim),
+                y_dim.size(), ax_doubleptr(y_dim));
+    } else {
+        const char* use_title = (strcmp(title,"")) ? name : title;
+        hg1 = new TH1D(name,use_title, x_dim.size(), ax_doubleptr(x_dim));
+    }
+};
+double ioIntBinCnt::getval(TH1D* hg, int i) {
+    int i_bin = hg->FindBin((double)i);
+    return hg->GetBinContent(i_bin);
+};
+double ioIntBinCnt::getval(TH2D* hg, int i, int j) {
+    int i_bin = hg->FindBin((double)i,(double)j);
+    return hg->GetBinContent(i_bin);
+};
+void ioIntBinCnt::fill(int i, double weight){
+    hg1->Fill( (double)i,  weight);
+};
+void ioIntBinCnt::fill(int i, int j, double weight){
+    if (!is2D) {
+        cout << " Error: only 1D counter generated " << endl;
+        return;
+    }
+    hg2->Fill( (double)i, (double)j, weight);
+};
+void ioIntBinCnt::write() {
+    if (is2D) hg2->Write();
+    else hg1->Write();
+};

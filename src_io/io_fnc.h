@@ -141,6 +141,8 @@ int iowhichbin0(double val, vector<double>&); // return which bin (starting from
 int iowhichbin0(double val, TH1D*); // remember that the first bin is zero-indexed
 int iowhichbin1(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 int iowhichbin1(double val, TH1D*); // remember that the first bin is zero-indexed
+
+double* ax_doubleptr(vector<int> vec);
 /* int iowhichbin(double val, int nBec, double*); */
 /* int iowhichbin(double val, vector<double>&, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
 /* int iowhichbin(double val, int, double*,   vector<int> remap); */
