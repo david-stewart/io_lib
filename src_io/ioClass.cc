@@ -1358,11 +1358,11 @@ ioIntBinCnt::ioIntBinCnt(const char* name, vector<int> x_dim,
         hg1 = new TH1D(name,use_title, x_dim.size(), ax_doubleptr(x_dim));
     }
 };
-double ioIntBinCnt::getval(TH1D* hg, int i) {
+double ioIntBinCnt::getcnt(TH1D* hg, int i) {
     int i_bin = hg->FindBin((double)i);
     return hg->GetBinContent(i_bin);
 };
-double ioIntBinCnt::getval(TH2D* hg, int i, int j) {
+double ioIntBinCnt::getcnt(TH2D* hg, int i, int j) {
     int i_bin = hg->FindBin((double)i,(double)j);
     return hg->GetBinContent(i_bin);
 };

@@ -419,8 +419,8 @@ struct ioIntBinCnt {
     bool is2D{false};
     void fill(int i, double weight=1.);
     void fill(int i, int j, double weight=1.);
-    static double getval(TH1D* hg, int i);
-    static double getval(TH2D* hg, int i, int j);
+    static double getcnt(TH1D* hg, int i);
+    static double getcnt(TH2D* hg, int i, int j);
     void write();
     ioIntBinCnt(const char* name, vector<int> x_dim, const char* title);
     ioIntBinCnt(const char* name, vector<int> x_dim, vector<int> y_dim={}, const char* title="");
