@@ -722,6 +722,23 @@ int iowhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));
 } ;
 
+double* ax_doubleptr(vector<int> vals) {
+    sort(vals.begin(), vals.end());
+    int size { static_cast<int>(vals.size()) };
+    double* x = new double[size + 1];
+    if (size == 0) return x;
+    if (size == 1) {
+        x[0] = vals[0]-0.5;
+        x[1] = vals[0]+0.5;
+        return x;
+    }
+    x[0] = vals[0] - (vals[1] - vals[0])/2.;
+    for (int i{1}; i<size; ++i) {
+        x[i] = (vals[i]+vals[i-1])/2.;
+    }
+    x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
+    return x;
+};
 
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 /* int iowhichbin(int, double*); */
