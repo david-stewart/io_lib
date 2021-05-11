@@ -327,7 +327,9 @@ class ioMsgTree {
 /*     void            write_to_file(const char* file_name, vector<string> comments={}); */
 /* }; */
 struct ioIntVec {
-    // constructors and ostream
+    // A class that has at it's heart a vector<vector<int>> of data
+    // The first row of data is are the keys of the data, for a kind of data frame table
+    // This is a poorman's implementation
     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} );
     ioIntVec( const char* file_name, ofstream& log, bool echo_print=true, vector<string>_tags={});
     string ioIntVec_constructor( const char* file_name, bool echo_print, vector<string>_tags={} );

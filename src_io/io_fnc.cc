@@ -707,3 +707,24 @@ TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
     }
     return new TGraph(n,xpts,ypts);
 };
+
+// find the bin in a vector
+int iowhichbin0(double val, vector<double>& vec) {
+    return (int)(std::lower_bound(vec.begin(), vec.end(), val) - vec.begin());
+} ;
+int iowhichbin0(double val, TH1D* hg) {
+    return (int)(hg->GetXaxis()->FindBin(val)-1);
+} ;
+int iowhichbin1(double val, vector<double>& vec) {
+    return (int)(std::lower_bound(vec.begin(), vec.end(), val) - vec.begin())+1;
+} ;
+int iowhichbin1(double val, TH1D* hg) {
+    return (int)(hg->GetXaxis()->FindBin(val));
+} ;
+
+
+// return which bin (starting from 0) the data is in: lower bound <= val < upper bound
+/* int iowhichbin(int, double*); */
+/* int iowhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
+/* int iowhichbin(int, double*,   vector<int> remap); */
+

@@ -136,4 +136,13 @@ vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=true, bool 
 TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y);
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
 
+// find the bin in a vector
+int iowhichbin0(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
+int iowhichbin0(double val, TH1D*); // remember that the first bin is zero-indexed
+int iowhichbin1(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
+int iowhichbin1(double val, TH1D*); // remember that the first bin is zero-indexed
+/* int iowhichbin(double val, int nBec, double*); */
+/* int iowhichbin(double val, vector<double>&, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
+/* int iowhichbin(double val, int, double*,   vector<int> remap); */
+
 #endif
