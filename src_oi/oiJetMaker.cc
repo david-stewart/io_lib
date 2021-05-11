@@ -20,18 +20,60 @@ void oiJetMaker::add_particle(double pt, double eta, double phi){
     particles.push_back(PseudoJet());
     particles[n_particles++].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
 };
+void oiJetMaker::add_particle(double pt, double eta, double phi, int index, bool is_neutral){
+    particles.push_back(PseudoJet());
+    particles[n_particles].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
+    if (is_neutral) index = -index-1;
+    particles[n_particles].set_user_index(index);
+    n_particles++;
+};
+
+vector<int> oiJetMaker::get_indices(PseudoJet& jet) {
+    // get the indicess of all the sub-jets
+    vector<int> indices;
+    for (auto& P : jet.constituents()) {
+        if (P.is_pure_ghost()) continue;
+        indices.push_back(P.user_index()); 
+    }
+    return indices;
+};
+
+vector<int> oiJetMaker::get_pos_indices(PseudoJet& jet) {
+    // get the indicess of all the sub-jets
+    vector<int> indices;
+    for (auto& P : jet.constituents()) {
+        if (P.is_pure_ghost()) continue;
+        int index{P.user_index()};
+        if (index>=0) indices.push_back(index); 
+    }
+    return indices;
+};
+
+vector<int> oiJetMaker::get_neg_indices(PseudoJet& jet) {
+    // get the indicess of all the sub-jets
+    vector<int> indices;
+    for (auto& P : jet.constituents()) {
+        if (P.is_pure_ghost()) continue;
+        int index{P.user_index()};
+        if (index<0) {
+            index = -(index+1);
+            indices.push_back(P.user_index()); 
+        }
+    }
+    return indices;
+};
 
 void oiJetMaker::reset() {
     particles.clear();
     jets.clear();
-    pseudo_jets.clear();
+    pseudojets.clear();
     n_particles = 0;
     njets = 0;
     n_next = -1;
 };
 void oiJetMaker::reset_jets() {
     jets.clear();
-    pseudo_jets.clear();
+    pseudojets.clear();
     njets = 0;
     n_next = -1;
 };
@@ -56,8 +98,8 @@ int oiJetMaker::cluster_jets() {
             fastjet::GhostedAreaSpec(ghost_max_rap, 1, ghost_R)
         );
         fastjet::ClusterSequenceArea clustSeq(particles, jet_def, area_def);
-        pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
-        for (auto& jet : pseudo_jets) {
+        pseudojets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
+        for (auto& jet : pseudojets) {
         /* while (next()) { */
             jets.push_back(
                     {jet.perp(), 
@@ -67,8 +109,8 @@ int oiJetMaker::cluster_jets() {
         };
     } else {
         fastjet::ClusterSequence clustSeq(particles, jet_def);
-        pseudo_jets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
-        for (auto& jet : pseudo_jets) {
+        pseudojets = sorted_by_pt( jet_selection( clustSeq.inclusive_jets(min_jet_pt) ));
+        for (auto& jet : pseudojets) {
             jets.push_back(
                     {jet.perp(), 
                     jet.eta(), 

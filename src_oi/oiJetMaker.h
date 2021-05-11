@@ -49,6 +49,14 @@ class oiJetMaker {
 
     vector<PseudoJet> particles {};
     void add_particle(double pt, double eta, double phi);
+    void add_particle(double pt, double eta, double phi, int index, bool is_neutral=false);
+
+    // get the indices in the jets:
+    static vector<int> get_indices(PseudoJet&); // return a vector of indicess of a givne PseudoJet
+    static vector<int> get_pos_indices(PseudoJet&); // only positive indices
+    static vector<int> get_neg_indices(PseudoJet&); // return each negative index (i)-> -i-1
+
+
     int  cluster_jets(); // returns how many jets
     void reset();      // reset both jets and particles
     void reset_jets(); // reset only jets (in order to add more particles)
@@ -63,8 +71,8 @@ class oiJetMaker {
     double phi(int i=-1); // get current jet phi
     double area(int i=-1); // get current jet phi
 
-    vector<PseudoJet> pseudo_jets {};
-    vector<__oiJetMaker_Jet> jets {}; // filled from pseudo_jets
+    vector<PseudoJet> pseudojets {};
+    vector<__oiJetMaker_Jet> jets {}; // filled from pseudojets
     __oiJetMaker_Jet& operator[](int);
 
     /* ~oiJetMaker(); */
