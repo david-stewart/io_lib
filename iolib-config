@@ -10,6 +10,9 @@ elif [ $1 = "-L" ]; then
             str="${str} -l${io}${line}"
         done < ${lib_path}/${io}_lib_list
     done
+    while read line; do
+        str="${str} -lio${line}"
+    done < ${lib_path}/pAu2015_common/src_list
     echo ${str}
 fi
 
