@@ -9,6 +9,8 @@
 #include "ioOptMap.h"
 
 using fastjet::PseudoJet;
+using fastjet::ClusterSequence;
+using fastjet::ClusterSequenceArea;
 using std::vector;
 
 struct __oiJetMaker_Jet {
@@ -72,6 +74,12 @@ class oiJetMaker {
     double area(int i=-1); // get current jet phi
 
     vector<PseudoJet> pseudojets {};
+
+    ClusterSequence*     cseq     {nullptr};
+    ClusterSequenceArea* cseqarea {nullptr};
+    
+    
+
     vector<__oiJetMaker_Jet> jets {}; // filled from pseudojets
     __oiJetMaker_Jet& operator[](int);
 
