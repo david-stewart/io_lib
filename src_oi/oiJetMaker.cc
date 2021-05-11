@@ -57,7 +57,7 @@ vector<int> oiJetMaker::get_neg_indices(PseudoJet& jet) {
         int index{P.user_index()};
         if (index<0) {
             index = -(index+1);
-            indices.push_back(P.user_index()); 
+            indices.push_back(index); 
         }
     }
     return indices;

@@ -434,8 +434,8 @@ string ioIntMap::ioIntMap_constructor (
         bool comment_flag {false};
         int n_words{0};
         while (words >> word) {
-            cout << " Line: " << line << "  ->(word): " << word << "  IsAlnum: " << word.IsAlnum()<< endl;
-            cout << " word: " << word << endl;
+            /* cout << " Line: " << line << "  ->(word): " << word << "  IsAlnum: " << word.IsAlnum()<< endl; */
+            /* cout << " word: " << word << endl; */
             if (word.BeginsWith("//") || word.BeginsWith("#")) {
                 comment_flag = true;
                 break;
