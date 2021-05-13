@@ -54,6 +54,8 @@ class oiJetMaker {
     void add_particle(double pt, double eta, double phi, int index, bool is_neutral=false);
 
     // get the indices in the jets:
+    static bool has_N_index(PseudoJet& jet, int index); // see if part. is in jet
+    static bool has_C_index(PseudoJet& jet, int index); // " ditto 
     static vector<int> get_indices(PseudoJet&); // return a vector of indicess of a givne PseudoJet
     static vector<int> get_pos_indices(PseudoJet&); // only positive indices
     static vector<int> get_neg_indices(PseudoJet&); // return each negative index (i)-> -i-1

@@ -141,8 +141,23 @@ double oiJetMaker::phi(int i) {
 };
 /* oiJetMaker::~oiJetMaker(){}; */
 
+bool oiJetMaker::has_N_index(PseudoJet& jet, int index) {
+    for (auto& i : oiJetMaker::get_neg_indices(jet)) {
+        if (i == index) return true;
+    }
+    return false;
+};
+
+bool oiJetMaker::has_C_index(PseudoJet& jet, int index) {
+    for (auto& i : oiJetMaker::get_pos_indices(jet)) {
+        if (i == index) return true;
+    }
+    return false;
+};
+
 __oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi) :
     pt{_pt}, eta{_eta}, phi{_phi}, area{0.} {};
 __oiJetMaker_Jet::__oiJetMaker_Jet(double _pt,double _eta, double _phi,  double _area) :
     pt{_pt}, eta{_eta}, phi{_phi},  area{_area} {};
+
 
