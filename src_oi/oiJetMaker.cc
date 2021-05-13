@@ -23,7 +23,7 @@ void oiJetMaker::add_particle(double pt, double eta, double phi){
 void oiJetMaker::add_particle(double pt, double eta, double phi, int index, bool is_neutral){
     particles.push_back(PseudoJet());
     particles[n_particles].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
-    if (is_neutral) index = -index-1;
+    if (is_neutral) index = -index-2; // must preserve -1 for ghost particles
     particles[n_particles].set_user_index(index);
     n_particles++;
 };
@@ -32,7 +32,8 @@ vector<int> oiJetMaker::get_indices(PseudoJet& jet) {
     // get the indicess of all the sub-jets
     vector<int> indices;
     for (auto& P : jet.constituents()) {
-        if (P.is_pure_ghost()) continue;
+        if (P.user_index()==-1) continue;
+        /* if (P.is_pure_ghost()) continue; */
         indices.push_back(P.user_index()); 
     }
     return indices;
@@ -42,7 +43,7 @@ vector<int> oiJetMaker::get_pos_indices(PseudoJet& jet) {
     // get the indicess of all the sub-jets
     vector<int> indices;
     for (auto& P : jet.constituents()) {
-        if (P.is_pure_ghost()) continue;
+        /* if (P.is_pure_ghost()) continue; */
         int index{P.user_index()};
         if (index>=0) indices.push_back(index); 
     }
@@ -50,13 +51,20 @@ vector<int> oiJetMaker::get_pos_indices(PseudoJet& jet) {
 };
 
 vector<int> oiJetMaker::get_neg_indices(PseudoJet& jet) {
+    /* cout << " b0 " << endl; */
     // get the indicess of all the sub-jets
     vector<int> indices;
+    // /*junk*/ cout << " b1 " << endl;
     for (auto& P : jet.constituents()) {
-        if (P.is_pure_ghost()) continue;
+        /* cout << " index: " << jet.user_index() << endl; */
+    // /*junk*/ cout << " b2 " << endl;
+        /* if (P.user_index()==-2) continue; */
+    // /*junk*/ cout << " b3 " << endl;
         int index{P.user_index()};
+        if (index ==-1) continue;
+    // /*junk*/ cout << " b4 " << endl;
         if (index<0) {
-            index = -(index+1);
+            index = -(index+2);
             indices.push_back(index); 
         }
     }
@@ -70,8 +78,8 @@ void oiJetMaker::reset() {
     n_particles = 0;
     njets = 0;
     n_next = -1;
-    if (cseq) delete cseq;
-    if (cseqarea) delete cseqarea;
+    /* if (cseq) delete cseq; */
+    /* if (cseqarea) delete cseqarea; */
 };
 void oiJetMaker::reset_jets() {
     jets.clear();

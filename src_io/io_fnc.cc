@@ -739,6 +739,8 @@ double* ax_doubleptr(vector<int> vals) {
     x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
     return x;
 };
+double io_R(double x0,double y0,double x1,double y1) 
+{ return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
 
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 /* int iowhichbin(int, double*); */

@@ -147,4 +147,6 @@ double* ax_doubleptr(vector<int> vec);
 /* int iowhichbin(double val, vector<double>&, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
 /* int iowhichbin(double val, int, double*,   vector<int> remap); */
 
+double io_R(double x0,double y0,double x1,double y1);
+
 #endif
