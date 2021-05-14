@@ -78,8 +78,12 @@ void oiJetMaker::reset() {
     n_particles = 0;
     njets = 0;
     n_next = -1;
-    /* if (cseq) delete cseq; */
-    /* if (cseqarea) delete cseqarea; */
+    /* cout << " cseq == nullptr " << (cseq==nullptr) <<  endl; */
+    /* if (cseq!=nullptr) delete cseq; */
+    if (calc_areas) {
+        cout << " cseqarea == nullptr " << (cseqarea==nullptr) <<  endl;
+        if (cseqarea!=nullptr) delete cseqarea;
+    }
 };
 void oiJetMaker::reset_jets() {
     jets.clear();
@@ -119,6 +123,7 @@ int oiJetMaker::cluster_jets() {
                     jet.area()});
         };
     } else {
+        if (cseq!=nullptr) delete cseq;
         cseq = new fastjet::ClusterSequence(particles, jet_def);
         pseudojets = sorted_by_pt( jet_selection( cseq->inclusive_jets(min_jet_pt) ));
         for (auto& jet : pseudojets) {

@@ -747,3 +747,15 @@ double io_R(double x0,double y0,double x1,double y1)
 /* int iowhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
 /* int iowhichbin(int, double*,   vector<int> remap); */
 
+double ioRatCircleOverLine (double R, double d) {
+    R = TMath::Abs(R);
+    d = TMath::Abs(d);
+    if (R <= d) return 0.;
+    return TMath::ACos(d/R)/IO_pi;
+};
+double ioRatCircleInTwoParallelLines (const double d0,const double d1,double C,double R) {
+    if (C<d0) C = d0;
+    if (C>d1) C = d1;
+    return 1 - ioRatCircleOverLine(R,C-d0)
+             - ioRatCircleOverLine(R,d1-C);
+};

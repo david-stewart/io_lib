@@ -149,4 +149,8 @@ double* ax_doubleptr(vector<int> vec);
 
 double io_R(double x0,double y0,double x1,double y1);
 
+// return the ratio of a circle of radius R outside of a line distance d away 
+double ioRatCircleOverLine (double R, double d);
+double ioRatCircleInTwoParallelLines (const double d0,const double d1, double C, double R);
+
 #endif
