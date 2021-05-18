@@ -507,6 +507,13 @@ void io_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
     };
 };
 
+TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold) {
+    RooUnfoldBayes*    bayes     = new RooUnfoldBayes(response, data, iRepUnfold);
+    TH1D* unfolded = (TH1D*) bayes->Hreco();
+    unfolded->SetName(ioUniqueName());
+    return unfolded;
+};
+
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) {
     // return data unfolded with response matrix R
     // note that truth T is included for misses, and if present

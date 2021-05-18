@@ -92,8 +92,7 @@ bool ioPadDim::operator==(ioPadDim& B) const {
         && p_up  == B.p_up
         && up    == B.up;
 };
-
-vector<ioPadDim> ioPadDimSet(int nPads, double left_margin, double right_margin,
+vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin,
         double overall_left, double overall_right){
     vector<ioPadDim> vec;
     double space = {(1.-(left_margin+right_margin)*nPads-overall_left-overall_right)/nPads};
@@ -106,6 +105,48 @@ vector<ioPadDim> ioPadDimSet(int nPads, double left_margin, double right_margin,
                 left+left_margin+space, left+left_margin+space+right_margin});
         left += left_margin+space+right_margin;
     }
+    return vec;
+};
+
+vector<ioPadDim> ioPadDimSet(
+        int nPads, 
+        double leftM,  // first left margin
+        bool b_reverse, // swap the ordering (for y it's nice to go from top to bottom)
+        double rightM, // last right margin
+        double left_margin, // how far in on the canvas pad
+        double right_margin, // how far in on the canvas pad
+        double left_in, // inner left margins
+        double right_in // inner right margins
+        ){
+    vector<ioPadDim> vec;
+    double space = {(1.-(left_in+right_in)*(nPads-1)
+            -left_margin-right_margin-leftM-rightM)/nPads};
+    /* double space = {(1.-(left_in+right_in)*(nPads-1) */
+            /* -left_margin-right_margin-left_in-right_in)/nPads}; */
+    if (space<=0) throw std::runtime_error(
+        "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
+
+    if (nPads == 1) {
+        vec.push_back( {
+                left_margin, 
+                left_margin+leftM, 
+                left_margin+leftM+space, 
+                left_margin+leftM+space+right_margin});
+        return vec;
+    }
+    vec.push_back( {
+            left_margin, 
+            left_margin+leftM, 
+            left_margin+leftM+space, 
+            left_margin+leftM+space+right_in});
+    double left = left_margin+leftM+space+right_in;
+    for (int i{1}; i<nPads-1; ++i) {
+        vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_in} );
+        left=left+left_in+space+right_in;
+    }
+    vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_margin} );
+
+    if (b_reverse) reverse(vec.begin(), vec.end());
     return vec;
 };
 

@@ -14,6 +14,7 @@
 #include "TF1.h"
 
 #include "ioOptMap.h"
+#include "RooUnfoldResponse.h"
 
 #define IO_pi      3.14159265
 #define IO_twopi   6.28318531
@@ -110,6 +111,7 @@ void io_apply_prior(TF1*, TH1D*); // weight TH1D* by intergral of TF1*
 void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false); 
 
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
+TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold=3);
 
 TLegend* ioNewTLegend();
 
