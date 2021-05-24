@@ -74,8 +74,18 @@ struct ioPadDim {
     double up_margin () const;
     bool operator==(ioPadDim& b) const; 
 };
-vector<ioPadDim> ioPadDimSet(int nPads, double left_margin, double right_margin=0.005,
+vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin=0.005,
         double overall_left=0.01, double overall_right=0.01);
+vector<ioPadDim> ioPadDimSet(
+        int nPads, 
+        double left=0.15,  // first left margin
+        bool reverse=false, // swap the ordering (for y it's nice to go from top to bottom)
+        double right=0.01, // last right margin
+        double left_margin=0.05, // how far in on the canvas pad
+        double right_margin=0.05, // how far in on the canvas pad
+        double left_in=0.001, // inner left margins
+        double right_in=0.001 // inner right margins
+        );
 // make a set of nPad diminsions, each with left_margin, right_margin, with
 // overall_left on the left, and overall_right on the right, with all remaining space
 // in the plots
@@ -425,8 +435,6 @@ struct ioIntBinCnt {
     ioIntBinCnt(const char* name, vector<int> x_dim, const char* title);
     ioIntBinCnt(const char* name, vector<int> x_dim, vector<int> y_dim={}, const char* title="");
 };
-
-
 
 #endif
 

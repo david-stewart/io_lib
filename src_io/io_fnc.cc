@@ -507,6 +507,13 @@ void io_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
     };
 };
 
+TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold) {
+    RooUnfoldBayes*    bayes     = new RooUnfoldBayes(response, data, iRepUnfold);
+    TH1D* unfolded = (TH1D*) bayes->Hreco();
+    unfolded->SetName(ioUniqueName());
+    return unfolded;
+};
+
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) {
     // return data unfolded with response matrix R
     // note that truth T is included for misses, and if present
@@ -741,6 +748,90 @@ double* ax_doubleptr(vector<int> vals) {
 };
 double io_R(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
+
+
+
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+     int nbins, double lo_bin, double hi_bin, 
+     const char* tag, const char* title
+) {
+    const char* this_tag {
+        (strcmp(tag,"")==0)
+            ? ioUniqueName()
+            : tag 
+    };
+    TH1D truth {
+            Form("%s_truth",this_tag),
+            Form("%s;truth;N",title),
+            nbins, lo_bin, hi_bin };
+    TH1D measured {
+            Form("%s_measured",this_tag),
+            Form("%s;measured;N",title),
+            nbins, lo_bin, hi_bin };
+    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+};
+
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+     int nbins, double* edges, 
+     const char* tag, const char* title
+) {
+    const char* this_tag {
+        (strcmp(tag,"")==0)
+            ? ioUniqueName()
+            : tag 
+    };
+    TH1D truth {
+            Form("%s_truth",this_tag),
+            Form("%s;truth;N",title),
+            nbins, edges };
+    TH1D measured {
+            Form("%s_measured",this_tag),
+            Form("%s;measured;N",title),
+            nbins,  edges };
+    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+};
+
+
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+     int nb_measured, double lo_measured, double hi_measured,
+     int nb_truth, double lo_truth, double hi_truth,
+     const char* tag, const char* title
+) {
+    const char* this_tag {
+        (strcmp(tag,"")==0)
+            ? ioUniqueName()
+            : tag 
+    };
+    TH1D truth{
+            Form("%s_truth",this_tag),
+            Form("%s;truth;N",title),
+            nb_truth, lo_truth, hi_truth };
+    TH1D measured {
+            Form("%s_measured",this_tag),
+            Form("%s;measured;N",title),
+            nb_measured, lo_measured, hi_measured };
+    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+};
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+     int nb_measured, double* edges_measured,
+     int nb_truth, double* edges_truth,
+     const char* tag, const char* title
+) {
+    const char* this_tag {
+        (strcmp(tag,"")==0)
+            ? ioUniqueName()
+            : tag 
+    };
+    TH1D truth {
+            Form("%s_truth",this_tag),
+            Form("%s;truth;N",title),
+            nb_truth, edges_truth};
+    TH1D measured {
+            Form("%s_measured",this_tag),
+            Form("%s;measured;N",title),
+            nb_measured, edges_measured};
+    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+};
 
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 /* int iowhichbin(int, double*); */

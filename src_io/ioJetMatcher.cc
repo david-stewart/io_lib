@@ -32,74 +32,20 @@ bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
     { return L.pT > R.pT; };
 
-ioJetMatcher::ioJetMatcher(const char* _tag, int nbins, double lo_bin, double hi_bin, float _jet_R) {
-    tag = _tag;
-    /* cout << " making tag: " << _tag << endl; */
-    /* double* edges = new double(nbins+1); */
-    /* double wide  = (hi_bin-lo_bin)/nbins; */
-    /* for (int i{0};i<=nbins;++i) edges[i] = lo_bin + i*wide; */
-    hg_MC  = TH1D( Form("%s_MC",_tag),
-            Form("%s MC jets (includes misses;#it{p}_{T};dN_{jets}/d#it{p}_{T}",_tag),
-            nbins, lo_bin, hi_bin ); 
-    hg_reco  = TH1D ( Form("%s_reco",_tag),
-            Form("%s reco jets (includes fakes;#it{p}_{T};dN_{jets}/d#it{p}_{T}",_tag),
-            nbins, lo_bin, hi_bin ); 
-    hg_response  = TH2D ( Form("%s_responseM",_tag),
-            Form("%s response matrix for matched jets;"
-                 "#it{p}_{T} reco(-nstructed);#it{p}_{T} MC",_tag),
-            nbins, lo_bin, hi_bin, nbins, lo_bin, hi_bin ); 
+ioJetMatcher::ioJetMatcher(
+        RooUnfoldResponse& _response,
+        /* RooUnfoldResponse* _response, */ 
+        float _jet_R
+) : 
+    /* hg_truth{maker.hg_truth()}, */
+    /* hg_measured{maker.hg_measured()}, */
+    /* hg_response{maker.hg_response()}, */
+    response{_response} 
+{
 	jet_R2 = _jet_R*_jet_R;
     data_MC.clear();
     data_reco.clear();
-
-    /* cout << " hg_MC: " << hg_MC.GetXaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_MC.GetXaxis()->GetNbins(); ++i) */ 
-    /*     cout << " ("<<i<<") " << hg_MC.GetXaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
-
-    /* cout << " hg_response: " << hg_response.GetXaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_response.GetXaxis()->GetNbins(); ++i) */ 
-    /*     cout << " ("<<i<<") " << hg_response.GetXaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
-    /* cout << " hg_response: " << hg_response.GetYaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_response.GetYaxis()->GetNbins(); ++i) */ 
-    /*     cout << " ("<<i<<") " << hg_response.GetYaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
 };
-
-ioJetMatcher::ioJetMatcher(const char* _tag, int nbins, double* edges, float _jet_R) :
-    hg_MC { Form("%s_MC",_tag),
-            Form("%s MC jets (includes misses;#it{p}_{T};dN_{jets}/d#it{p}_{T}",_tag),
-            nbins,edges },
-    hg_reco { Form("%s_reco",_tag),
-            Form("%s reco jets (includes fakes;#it{p}_{T};dN_{jets}/d#it{p}_{T}",_tag),
-            nbins,edges },
-    hg_response { Form("%s_responseM",_tag),
-            Form("%s response matrix for matched jets;"
-                 "#it{p}_{T} reco(-nstructed);#it{p}_{T} MC",_tag),
-            nbins,edges,nbins,edges },
-	jet_R2{_jet_R*_jet_R},
-    data_MC{}, data_reco{}, tag{_tag}
-{};
-    /* cout << " making tag: " << tag << endl; */
-    /* cout << " nbins: " << nbins << endl; */
-    /* for (int i{0}; i<=nbins; ++i) cout << " ("<<i<<") " << edges[i]; */
-    /* cout << endl; */
-
-    /* cout << " hg_MC: " << hg_MC.GetXaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_MC.GetXaxis()->GetNbins(); ++i) */ 
-        /* cout << " ("<<i<<") " << hg_MC.GetXaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
-
-    /* cout << " hg_response: " << hg_response.GetXaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_response.GetXaxis()->GetNbins(); ++i) */ 
-        /* cout << " ("<<i<<") " << hg_response.GetXaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
-    /* cout << " hg_response: " << hg_response.GetYaxis()->GetNbins() << endl; */
-    /* for (int i{1}; i<= hg_response.GetYaxis()->GetNbins(); ++i) */ 
-        /* cout << " ("<<i<<") " << hg_response.GetYaxis()->GetBinCenter(i) ; */
-    /* cout << endl; */
-/* }; */
 
 void ioJetMatcher::addjet_MC(float eta, float phi, float pT) {
     data_MC.push_back({eta,phi,pT});
@@ -118,19 +64,24 @@ void ioJetMatcher::do_matching_highfirst(double W) {
         bool found_match {false};
         for (auto& reco : data_reco) {
             if (reco.is_matched) continue;
-            if (MC(reco,0.16)) {
+            if (MC(reco,jet_R2)) {
                 reco.is_matched = true;
-                hg_MC.Fill(MC.pT,W);
-                hg_reco.Fill(reco.pT,W);
-                hg_response.Fill(reco.pT, MC.pT,W);
+                response.Fill(reco.pT, MC.pT, W);
+                /* hg_truth.Fill(MC.pT,W); */
+                /* hg_measured.Fill(reco.pT,W); */
+                /* hg_response.Fill(reco.pT, MC.pT,W); */
                 found_match = true;
                 break;
             }
         }
-        if (!found_match) hg_MC.Fill(MC.pT,W); // enter a miss
+        if (!found_match) {
+            response.Miss(MC.pT,W);
+        }
     }
     for (auto& reco : data_reco) {
-        if (!reco.is_matched) hg_reco.Fill(reco.pT,W); // enter a fake
+        if (!reco.is_matched) {
+            response.Fake(reco.pT,W);
+        }// enter a fake
     }
     reset();
     // algorithm:
@@ -143,32 +94,36 @@ void ioJetMatcher::reset() {
     data_reco.clear();
 };
 void ioJetMatcher::write(bool with_miss_fakes, bool scale_by_bin_width, bool add_unified2D) {
+    response.Write();
+    TH1D* hg_truth    = (TH1D*) response.Htruth();
+    TH1D* hg_measured = (TH1D*) response.Hmeasured();
+    TH2D* hg_response = (TH2D*) response.Hresponse();
     /* cout << " z0 " << endl; */
     if (scale_by_bin_width) {
-        io_scaleByBinWidth(&hg_MC);
-        io_scaleByBinWidth(&hg_reco);
-        io_scaleByBinWidth(&hg_response);
+        io_scaleByBinWidth(hg_truth);
+        io_scaleByBinWidth(hg_measured);
+        io_scaleByBinWidth(hg_response);
     }
-    hg_MC.Write();
-    hg_reco.Write();
-    hg_response.Write();
+    hg_truth->Write();
+    hg_measured->Write();
+    hg_response->Write();
 
     if (with_miss_fakes) {
-        TH1D* miss = (TH1D*) hg_response.ProjectionY(Form("%s_miss",tag.c_str()));
+        TH1D* miss = (TH1D*) hg_response->ProjectionY(Form("%s_miss",tag.c_str()));
         miss->Scale(-1.);
-        miss->Add(&hg_MC);
+        miss->Add(hg_truth);
         miss->Write();
 
-        TH1D* fakes = (TH1D*) hg_response.ProjectionX(Form("%s_fakes",tag.c_str()));
+        TH1D* fakes = (TH1D*) hg_response->ProjectionX(Form("%s_fakes",tag.c_str()));
         fakes->Scale(-1.);
-        fakes->Add(&hg_reco);
+        fakes->Add(hg_measured);
         fakes->Write();
 
     /* cout << " z10 " << endl; */
         if (add_unified2D) { // make a TH2D histogram is misses and face in a new, 
                              // dummy bin to the left and bottem of the TH2D.
-            TAxis *x_axis = hg_response.GetXaxis();
-            TAxis *y_axis = hg_response.GetYaxis();
+            TAxis *x_axis = hg_response->GetXaxis();
+            TAxis *y_axis = hg_response->GetYaxis();
 
             int x_nbins = x_axis->GetNbins();
             int y_nbins = y_axis->GetNbins();
@@ -201,11 +156,13 @@ void ioJetMatcher::write(bool with_miss_fakes, bool scale_by_bin_width, bool add
             }
             for (int ix{1}; ix <=x_nbins; ++ix)
             for (int iy{1}; iy <=y_nbins; ++iy) {
-                unified.SetBinContent(ix+1,iy+1, hg_response.GetBinContent(ix,iy));
-                unified.SetBinError  (ix+1,iy+1, hg_response.GetBinError  (ix,iy));
+                unified.SetBinContent(ix+1,iy+1, hg_response->GetBinContent(ix,iy));
+                unified.SetBinError  (ix+1,iy+1, hg_response->GetBinError  (ix,iy));
             }
             unified.Write();
         }
     }
 };
+
+
 
