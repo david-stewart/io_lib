@@ -151,4 +151,16 @@ double* ax_doubleptr(vector<int> vec);
 
 double io_R(double x0,double y0,double x1,double y1);
 
+RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double lo_bin, double hi_bin, 
+            const char* tag="", const char* title="");
+RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double* edges, 
+        const char* tag="", const char* title="");
+// none-symmetric in truth and measured
+RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double lo_measured, double hi_measured,
+        int nb_truth, double lo_truth, double hi_truth, 
+        const char* tag="", const char* title="");
+RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double* edges_measured, 
+        int nb_truth, double* edges_truth,
+        const char* tag="", const char* title="");
+
 #endif

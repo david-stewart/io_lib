@@ -436,7 +436,5 @@ struct ioIntBinCnt {
     ioIntBinCnt(const char* name, vector<int> x_dim, vector<int> y_dim={}, const char* title="");
 };
 
-
-
 #endif
 

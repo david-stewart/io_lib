@@ -7,6 +7,8 @@
 #include "TH1D.h"
 #include "TH2D.h"
 
+#include "RooUnfoldResponse.h"
+
 using std::vector;
 using std::sort;
 
@@ -27,28 +29,25 @@ struct ioJetMatcher_float {
 struct ioJetMatcher_index {
     // for filling vectors for CGAL matching algorithm
     // will have comparison methods in order to std::sort
-    int i_MC; // index MC jet
+    int i_MC;   // index MC jet
     int i_reco; // index reco jet
-    float dR; // distance between the matches
+    float dR;   // distance between the matches
 };
 
 class ioJetMatcher {
     public:
-    TH1D hg_MC;   // (include misses)
-    TH1D hg_reco; // (include fakes)
-    TH2D hg_response; // y-axis:MC, x-axis:reco, no misses or fakes
-
+    RooUnfoldResponse response;
    
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);
     void do_matching_highfirst(double weight=1.);// Raghav's algorithm
     void do_matching(double weight=1.); // my algorithm
-    ioJetMatcher(const char* tag, int nbins, double* edges, float jet_R=0.4);
-    ioJetMatcher(const char* tag, int nbins, double edge_lo, double edge_hi, float jet_R=0.4);
+
+    ioJetMatcher( RooUnfoldResponse& response, float _jet_R=0.4 );
     void reset();
     void write(bool with_miss_fakes=true, 
                bool scale_by_bin_width=true,
-               bool write_unified2D=true);
+               bool write_unified2D=false);
     std::string tag;
     
     private: //internal data to do the matching
