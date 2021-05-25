@@ -93,76 +93,78 @@ void ioJetMatcher::reset() {
     data_MC.clear();
     data_reco.clear();
 };
-void ioJetMatcher::write(bool with_miss_fakes, bool scale_by_bin_width, bool add_unified2D) {
+void ioJetMatcher::write() {
     response.Write();
-    TH1D* hg_truth    = (TH1D*) response.Htruth();
-    TH1D* hg_measured = (TH1D*) response.Hmeasured();
-    TH2D* hg_response = (TH2D*) response.Hresponse();
-    /* cout << " z0 " << endl; */
-    if (scale_by_bin_width) {
-        io_scaleByBinWidth(hg_truth);
-        io_scaleByBinWidth(hg_measured);
-        io_scaleByBinWidth(hg_response);
-    }
-    hg_truth->Write();
-    hg_measured->Write();
-    hg_response->Write();
-
-    if (with_miss_fakes) {
-        TH1D* miss = (TH1D*) hg_response->ProjectionY(Form("%s_miss",tag.c_str()));
-        miss->Scale(-1.);
-        miss->Add(hg_truth);
-        miss->Write();
-
-        TH1D* fakes = (TH1D*) hg_response->ProjectionX(Form("%s_fakes",tag.c_str()));
-        fakes->Scale(-1.);
-        fakes->Add(hg_measured);
-        fakes->Write();
-
-    /* cout << " z10 " << endl; */
-        if (add_unified2D) { // make a TH2D histogram is misses and face in a new, 
-                             // dummy bin to the left and bottem of the TH2D.
-            TAxis *x_axis = hg_response->GetXaxis();
-            TAxis *y_axis = hg_response->GetYaxis();
-
-            int x_nbins = x_axis->GetNbins();
-            int y_nbins = y_axis->GetNbins();
-
-            double *x_edges = new double [ x_nbins+2 ];
-            double *y_edges = new double [ y_nbins+2 ];
-    /* TH1D* __1unified = new TH1D( "__1name__","title;x;y", 13, 0., 50.); */
-
-    /* cout << " z11 " << endl; */
-            x_edges[0] = x_axis->GetBinLowEdge(1) - x_axis->GetBinWidth(1);
-            for (int i{1}; i<=x_nbins; ++i) x_edges[i] = x_axis->GetBinLowEdge(i);
-            x_edges[x_nbins+1] = x_axis->GetBinUpEdge(x_nbins);
-
-            y_edges[0] = y_axis->GetBinLowEdge(1) - y_axis->GetBinWidth(1);
-            for (int i{1}; i<=y_nbins; ++i) y_edges[i] = y_axis->GetBinLowEdge(i);
-            y_edges[y_nbins+1] = y_axis->GetBinUpEdge(y_nbins);
-
-            TH2D unified { Form("%s_responseFakeMiss",tag.c_str()), 
-                Form("%s;Reconstructed (first row is fake jets);Pythia (first column is misses)",
-                        tag.c_str()), x_nbins+1, x_edges, y_nbins+1, y_edges };
-        /* TH1D* __unified = new TH1D( "name__","title;x;y", 13, 0., 50.); */
-
-            for (int ix{1}; ix <=x_nbins; ++ix) {
-                unified.SetBinContent(ix,1, fakes->GetBinContent(ix));
-                unified.SetBinError  (ix,1, fakes->GetBinError(ix));
-            }
-            for (int iy{1}; iy <=y_nbins; ++iy) {
-                unified.SetBinContent(1,iy, miss->GetBinContent(iy));
-                unified.SetBinError  (1,iy, miss->GetBinError(iy));
-            }
-            for (int ix{1}; ix <=x_nbins; ++ix)
-            for (int iy{1}; iy <=y_nbins; ++iy) {
-                unified.SetBinContent(ix+1,iy+1, hg_response->GetBinContent(ix,iy));
-                unified.SetBinError  (ix+1,iy+1, hg_response->GetBinError  (ix,iy));
-            }
-            unified.Write();
-        }
-    }
 };
+    /* response.Write(); */
+    /* TH1D* hg_truth    = (TH1D*) response.Htruth(); */
+    /* TH1D* hg_measured = (TH1D*) response.Hmeasured(); */
+    /* TH2D* hg_response = (TH2D*) response.Hresponse(); */
+    /* /1* cout << " z0 " << endl; *1/ */
+    /* if (scale_by_bin_width) { */
+    /*     io_scaleByBinWidth(hg_truth); */
+    /*     io_scaleByBinWidth(hg_measured); */
+    /*     io_scaleByBinWidth(hg_response); */
+    /* } */
+    /* hg_truth->Write(); */
+    /* hg_measured->Write(); */
+    /* hg_response->Write(); */
+
+    /* if (with_miss_fakes) { */
+    /*     TH1D* miss = (TH1D*) hg_response->ProjectionY(Form("%s_miss",tag.c_str())); */
+    /*     miss->Scale(-1.); */
+    /*     miss->Add(hg_truth); */
+    /*     miss->Write(); */
+
+    /*     TH1D* fakes = (TH1D*) hg_response->ProjectionX(Form("%s_fakes",tag.c_str())); */
+    /*     fakes->Scale(-1.); */
+    /*     fakes->Add(hg_measured); */
+    /*     fakes->Write(); */
+
+    /* /1* cout << " z10 " << endl; *1/ */
+    /*     if (add_unified2D) { // make a TH2D histogram is misses and face in a new, */ 
+    /*                          // dummy bin to the left and bottem of the TH2D. */
+    /*         TAxis *x_axis = hg_response->GetXaxis(); */
+    /*         TAxis *y_axis = hg_response->GetYaxis(); */
+
+    /*         int x_nbins = x_axis->GetNbins(); */
+    /*         int y_nbins = y_axis->GetNbins(); */
+
+    /*         double *x_edges = new double [ x_nbins+2 ]; */
+    /*         double *y_edges = new double [ y_nbins+2 ]; */
+    /* /1* TH1D* __1unified = new TH1D( "__1name__","title;x;y", 13, 0., 50.); *1/ */
+
+    /* /1* cout << " z11 " << endl; *1/ */
+    /*         x_edges[0] = x_axis->GetBinLowEdge(1) - x_axis->GetBinWidth(1); */
+    /*         for (int i{1}; i<=x_nbins; ++i) x_edges[i] = x_axis->GetBinLowEdge(i); */
+    /*         x_edges[x_nbins+1] = x_axis->GetBinUpEdge(x_nbins); */
+
+    /*         y_edges[0] = y_axis->GetBinLowEdge(1) - y_axis->GetBinWidth(1); */
+    /*         for (int i{1}; i<=y_nbins; ++i) y_edges[i] = y_axis->GetBinLowEdge(i); */
+    /*         y_edges[y_nbins+1] = y_axis->GetBinUpEdge(y_nbins); */
+
+    /*         TH2D unified { Form("%s_responseFakeMiss",tag.c_str()), */ 
+    /*             Form("%s;Reconstructed (first row is fake jets);Pythia (first column is misses)", */
+    /*                     tag.c_str()), x_nbins+1, x_edges, y_nbins+1, y_edges }; */
+    /*     /1* TH1D* __unified = new TH1D( "name__","title;x;y", 13, 0., 50.); *1/ */
+
+    /*         for (int ix{1}; ix <=x_nbins; ++ix) { */
+    /*             unified.SetBinContent(ix,1, fakes->GetBinContent(ix)); */
+    /*             unified.SetBinError  (ix,1, fakes->GetBinError(ix)); */
+    /*         } */
+    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
+    /*             unified.SetBinContent(1,iy, miss->GetBinContent(iy)); */
+    /*             unified.SetBinError  (1,iy, miss->GetBinError(iy)); */
+    /*         } */
+    /*         for (int ix{1}; ix <=x_nbins; ++ix) */
+    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
+    /*             unified.SetBinContent(ix+1,iy+1, hg_response->GetBinContent(ix,iy)); */
+    /*             unified.SetBinError  (ix+1,iy+1, hg_response->GetBinError  (ix,iy)); */
+    /*         } */
+    /*         unified.Write(); */
+    /*     } */
+    /* } */
+/* }; */
 
 
 

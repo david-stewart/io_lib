@@ -45,9 +45,10 @@ class ioJetMatcher {
 
     ioJetMatcher( RooUnfoldResponse& response, float _jet_R=0.4 );
     void reset();
-    void write(bool with_miss_fakes=true, 
-               bool scale_by_bin_width=true,
-               bool write_unified2D=false);
+    void write();
+    /* void write(bool with_miss_fakes=true, */ 
+               /* bool scale_by_bin_width=true, */
+               /* bool write_unified2D=false); */
     std::string tag;
     
     private: //internal data to do the matching

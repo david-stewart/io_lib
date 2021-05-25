@@ -81,8 +81,8 @@ void oiJetMaker::reset() {
     /* cout << " cseq == nullptr " << (cseq==nullptr) <<  endl; */
     /* if (cseq!=nullptr) delete cseq; */
     if (calc_areas) {
+        cout << " cseqarea == nullptr " << (cseqarea==nullptr) <<  endl;
         if (cseqarea!=nullptr) delete cseqarea;
-        /* cout << " cseqarea == nullptr " << (cseqarea==nullptr) <<  endl; */
     }
 };
 void oiJetMaker::reset_jets() {
