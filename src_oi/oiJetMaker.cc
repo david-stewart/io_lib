@@ -81,6 +81,7 @@ void oiJetMaker::reset() {
     /* cout << " cseq == nullptr " << (cseq==nullptr) <<  endl; */
     /* if (cseq!=nullptr) delete cseq; */
     if (calc_areas) {
+        /* cout << " calc: area" << endl; */
         if (cseqarea!=nullptr) delete cseqarea;
         /* cout << " cseqarea == nullptr " << (cseqarea==nullptr) <<  endl; */
     }
