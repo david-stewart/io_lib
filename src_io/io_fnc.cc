@@ -768,7 +768,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins, lo_bin, hi_bin };
-    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+    return {&measured, &truth, Form("%s_response",this_tag), title};
 };
 
 RooUnfoldResponse ioMakeRooUnfoldResponse(
@@ -788,7 +788,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins,  edges };
-    return {&measured, &truth, Form("%s_reponse",this_tag), title};
+    return {&measured, &truth, Form("%s_response",this_tag), title};
 };
 
 
