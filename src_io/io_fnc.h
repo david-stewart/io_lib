@@ -12,6 +12,7 @@
 #include "TH2D.h"
 #include "TPRegexp.h"
 #include "TF1.h"
+#include "TProfile2D.h"
 
 #include "ioOptMap.h"
 #include "RooUnfoldResponse.h"
@@ -65,6 +66,8 @@ void ioDrawTLineHorizontal(double y, ioOptMap options={});
 void ioDrawTLineVertical(double x, ioOptMap options={});
 
 double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q);
+double io_get_box_integral(TProfile* hg, pair<double,double>p={0.,0.}, pair<double,double>q={0.,0.});
+double io_get_box_mean(TProfile2D* hg, pair<double,double>p={0.,0.}, pair<double,double>q={0.,0.});
 
 vector<double> io_vec_BinContent(TH1* hg, bool under_over_flow=false);
 
@@ -131,7 +134,7 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 // notes: (1) all lines that start with a non-numeric word are treated as comments
 //        (2) if col == -1, then read all values
 
-vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=true, bool strip_commas=true);
+vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=false, bool strip_commas=true);
 // notes: (1) all lines that start with a non-numeric word are treated as comments
 //        (2) if col == -1, then read all values
 
@@ -166,5 +169,6 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double lo_measured, d
 RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double* edges_measured, 
         int nb_truth, double* edges_truth,
         const char* tag="", const char* title="");
+
 
 #endif
