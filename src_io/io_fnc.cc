@@ -1,6 +1,7 @@
 #include "io_fnc.h"
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldResponse.h"
+#include "TProfile2D.h"
 
 #include <numeric>
 #include <iostream>
@@ -126,12 +127,24 @@ void ioDrawTLineVertical(double x, ioOptMap options) {
     ioDrawTLine(x,y0,x,y1,options);
 };
 
-double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q){
-    int x0 { hg->GetXaxis()->FindBin(p[0])};
-    int x1 { hg->GetXaxis()->FindBin(q[0])};
-    int y0 { hg->GetXaxis()->FindBin(p[1])};
-    int y1 { hg->GetXaxis()->FindBin(q[1])};
+double io_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
+    int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
+    int x1 { (p.first==0  && q.first==0)  ? hg->GetXaxis()->GetNbins() : hg->GetXaxis()->FindBin(q.first)};
+    int y0 { (p.second==0 && q.second==0) ? 1 : hg->GetYaxis()->FindBin(p.second)};
+    int y1 { (p.second==0 && q.second==0) ? hg->GetYaxis()->GetNbins() : hg->GetYaxis()->FindBin(q.second)};
     return hg->Integral(x0,x1,y0,y1);
+};
+double io_get_box_integral(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
+    int x0 { (p.first==0  && q.first==0)  ? 1 : pr->GetXaxis()->FindBin(p.first)};
+    int x1 { (p.first==0  && q.first==0)  ? pr->GetXaxis()->GetNbins() : pr->GetXaxis()->FindBin(q.first)};
+    int y0 { (p.second==0 && q.second==0) ? 1 : pr->GetYaxis()->FindBin(p.second)};
+    int y1 { (p.second==0 && q.second==0) ? pr->GetYaxis()->GetNbins() : pr->GetYaxis()->FindBin(q.second)};
+    return pr->Integral(x0,x1,y0,y1);
+};
+double io_get_box_mean(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
+    if (p.first  != 0 || q.first != 0)  pr->GetXaxis()->SetRangeUser(p.first, q.first );
+    if (p.second != 0 || q.second != 0) pr->GetYaxis()->SetRangeUser(p.second,q.second);
+    return pr->GetMean(3);
 };
 
     
