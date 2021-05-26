@@ -863,3 +863,7 @@ double ioRatCircleInTwoParallelLines (const double d0,const double d1,double C,d
     return 1 - ioRatCircleOverLine(R,C-d0)
              - ioRatCircleOverLine(R,d1-C);
 };
+double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p){
+    return p[0]      + p[1]*x[0] + p[2]*x[0]*x[0]
+                     + p[3]*x[1] + p[4]*x[1]*x[1] + p[5]*x[0]*x[1];
+};

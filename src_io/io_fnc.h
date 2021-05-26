@@ -170,5 +170,6 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double* edges_measure
         int nb_truth, double* edges_truth,
         const char* tag="", const char* title="");
 
+double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p);
 
 #endif

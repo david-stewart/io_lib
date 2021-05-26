@@ -1422,5 +1422,19 @@ void ioIntBinCnt::write() {
     else hg1->Write();
 };
 
+ioFnCaller::ioFnCaller(const char* file_data, double(&_fn)(double*,double*)) :
+    fn{_fn}, x{new double[2]}
+{
+    auto p_vals = ioReadFloatVec(file_data);
+    p = new double[p_vals.size()];
+    int i{0};
+    for (auto val : p_vals) p[i++] = val;
+};
+double ioFnCaller::operator()(double x0, double x1){
+    x[0] = x0;
+    x[1] = x1;
+    return fn(x,p);
+};
+
 //-------------------------------------------------
 

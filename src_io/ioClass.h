@@ -436,5 +436,13 @@ struct ioIntBinCnt {
     ioIntBinCnt(const char* name, vector<int> x_dim, vector<int> y_dim={}, const char* title="");
 };
 
+struct ioFnCaller{
+    ioFnCaller(const char* file_data, double(&_fn)(double*,double*));
+    double (&fn) (double*, double*);
+    double operator()(double,double);
+    double *p; // fit parameters, read from data_file
+    double *x;
+};
+
 #endif
 
