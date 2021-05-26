@@ -1,0 +1,11 @@
+# Values from running /mnt/c/Users/dsjoh/Documents/pc2021/w2021/pico-to-tree/EA_scope/v3
+# fit to 500206, BBC to Vz in range -10. to 10., and without limit on ZDCx
+#mean: 
+23438.7
+#parameters: 
+14364.7
+68.191
+-0.516096
+1.00511
+-2.4768e-05
+0.000328192
