@@ -34,25 +34,27 @@ bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 
 // constructors: either provide a RooUnfoldResponse to copy, 
 // or provide enough information for them to be constructed
+void ioJetMatcher::init(float _jet_R) {
+	jet_R2 = _jet_R*_jet_R; 
+    data_MC.clear(); 
+    data_reco.clear();
+    cout << " name: " << response.GetName() << endl; 
+    response_A = (RooUnfoldResponse*) response.Clone(Form("%s_A",response.GetName()));
+    response_B = (RooUnfoldResponse*) response.Clone(Form("%s_B",response.GetName()));
+}
 ioJetMatcher::ioJetMatcher( RooUnfoldResponse _response, float _jet_R) :
     response{_response }
-{
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
-};
+{ init(_jet_R); };
 // construct with new RooUnfoldResponse
 ioJetMatcher::ioJetMatcher( int nbins, double lo_bin, double hi_bin, 
     const char* tag, const char* title, float _jet_R) :
     response{ ioMakeRooUnfoldResponse(nbins, lo_bin, hi_bin, tag, title) }
-{
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
-};
+{ init(_jet_R); };
 // construct with new RooUnfoldResponse
 ioJetMatcher::ioJetMatcher( int nbins, double* edges,
     const char* tag, const char* title, float _jet_R) :
     response{ ioMakeRooUnfoldResponse(nbins, edges, tag, title) }
-{
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
-};
+{ init(_jet_R); };
 // construct with new RooUnfoldResponse
 ioJetMatcher::ioJetMatcher(
         int nb_measured, double lo_measured, double hi_measured,
@@ -60,9 +62,7 @@ ioJetMatcher::ioJetMatcher(
         const char* tag, const char* title, float _jet_R) :
     response{ ioMakeRooUnfoldResponse(nb_measured, lo_measured, hi_measured,
             nb_truth, lo_truth, hi_truth, tag, title) }
-{
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
-};
+{ init(_jet_R); };
 // construct with new RooUnfoldResponse
 ioJetMatcher::ioJetMatcher(
         int nb_measured, double* edge_measured,
@@ -70,9 +70,7 @@ ioJetMatcher::ioJetMatcher(
         const char* tag, const char* title, float _jet_R) :
     response{ ioMakeRooUnfoldResponse(nb_measured, edge_measured,
             nb_truth, edge_truth, tag, title) }
-{
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
-};
+{ init(_jet_R); };
 // construct with new RooUnfoldResponse
 ioJetMatcher::ioJetMatcher( 
         const char* edge_file, 
@@ -88,7 +86,7 @@ ioJetMatcher::ioJetMatcher(
             meas_bins.first-1, meas_bins.second,
             truth_bins.first-1, truth_bins.second,
             name_tag, title);
-	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+    init(_jet_R);
 };
 
 void ioJetMatcher::addjet_MC(float eta, float phi, float pT) {
@@ -104,6 +102,7 @@ void ioJetMatcher::do_matching_highfirst(double W) {
     /* std::sort(data_MC.begin(), data_MC.end(), std::greater<ioJetMatcher_float>()); */
     /* std::sort(data_reco.begin(), data_reco.end(), std::greater<ioJetMatcher_float>()); */
 
+    half_switch = !half_switch;
     for (auto& MC : data_MC) {
         bool found_match {false};
         for (auto& reco : data_reco) {
@@ -111,20 +110,23 @@ void ioJetMatcher::do_matching_highfirst(double W) {
             if (MC(reco,jet_R2)) {
                 reco.is_matched = true;
                 response.Fill(reco.pT, MC.pT, W);
-                /* hg_truth.Fill(MC.pT,W); */
-                /* hg_measured.Fill(reco.pT,W); */
-                /* hg_response.Fill(reco.pT, MC.pT,W); */
+                if (half_switch) response_A->Fill(reco.pT, MC.pT, W);
+                else             response_B->Fill(reco.pT, MC.pT, W);
                 found_match = true;
                 break;
             }
         }
         if (!found_match) {
             response.Miss(MC.pT,W);
+            if (half_switch) response_A->Miss(MC.pT, W);
+            else             response_B->Miss(MC.pT, W);
         }
     }
     for (auto& reco : data_reco) {
         if (!reco.is_matched) {
             response.Fake(reco.pT,W);
+            if (half_switch) response_A->Fake(reco.pT, W);
+            else             response_B->Fake(reco.pT, W);
         }// enter a fake
     }
     reset();
@@ -139,6 +141,8 @@ void ioJetMatcher::reset() {
 };
 void ioJetMatcher::write() {
     response.Write();
+    response_A->Write();
+    response_B->Write();
 };
     /* response.Write(); */
     /* TH1D* hg_truth    = (TH1D*) response.Htruth(); */

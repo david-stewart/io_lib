@@ -37,6 +37,8 @@ struct ioJetMatcher_index {
 class ioJetMatcher {
     public:
     RooUnfoldResponse response;
+    RooUnfoldResponse* response_A; // 1/2 of the data
+    RooUnfoldResponse* response_B; // other 1/2 of data
    
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);
@@ -67,6 +69,8 @@ class ioJetMatcher {
                   const char* title="",
                   float _jet_R=0.4 
     );
+    void init(float _jet_R);
+    bool half_switch;
 
 
     void reset();
