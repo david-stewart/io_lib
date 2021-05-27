@@ -1425,7 +1425,7 @@ void ioIntBinCnt::write() {
 ioFnCaller::ioFnCaller(const char* file_data, double(&_fn)(double*,double*)) :
     fn{_fn}, x{new double[2]}
 {
-    auto p_vals = ioReadFloatVec(file_data);
+    auto p_vals = ioReadValVec(file_data);
     p = new double[p_vals.size()];
     int i{0};
     for (auto val : p_vals) p[i++] = val;

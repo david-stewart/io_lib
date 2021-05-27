@@ -134,9 +134,28 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 // notes: (1) all lines that start with a non-numeric word are treated as comments
 //        (2) if col == -1, then read all values
 
-vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=false, bool strip_commas=true);
+/* vector<double> ioReadFloatVec(const char* file, int col=0, bool sort=false, bool strip_commas=true); */
 // notes: (1) all lines that start with a non-numeric word are treated as comments
 //        (2) if col == -1, then read all values
+
+//----------------
+vector<double> ioReadValVec(const char* file, ioOptMap options={}, 
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",true,"column","all"}});
+pair<int,double*> ioReadValsPtr(const char* file, ioOptMap ptions={}, 
+        ioOptMap dict= {{"begin_index",0,"end_index",-1,"tag","none",
+        "sort",false, "strip_commas",true,"column","all"}});
+// same as ioReadValVec, but makes a new array[double] (optionally starting and ending 
+// offset in the vector) and returns a pointer to the beginning
+
+
+// notes:  will look for <tag> ... data ... </tag>
+//         will skip all values after non-float or non-tag on each line
+//         will read all values in "... data ..."
+//         can optionally sort data
+//         tag=="none" will read all values in file (outside of comments)
+//         any word that is not <tag> </tag> or double will terminate the line
+//         column==val will only pick out that val per line
+//         skip_commas will remove all commas from all lines
 
 TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y);
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
@@ -171,5 +190,14 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double* edges_measure
         const char* tag="", const char* title="");
 
 double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p);
+
+/* int ioCheckWordTag(string word, string tag); // if tag=="name", then */
+bool ioWordIsTag   (string word, string tag); // if tag=="name", then
+bool ioWordIsEndTag(string word, string tag); 
+bool ioWordIsTag   (TString word, string tag); // if tag=="name", then
+bool ioWordIsEndTag(TString word, string tag); 
+bool ioIsAnyTag    (string word); // does it match <\\S*> or </\\S*> ?
+bool ioIsAnyTag    (TString word);
+// if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
 
 #endif

@@ -654,7 +654,25 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
     return vec;
 };
 
-vector<double> ioReadFloatVec(const char* in_file, int col, bool sort, bool strip_commas) {
+//----------
+vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict) {
+    dict += options;
+
+    bool use_column = (dict["column"].str()!="all");
+    int  which_column {0};
+    if  (use_column) { which_column = dict["column"]; }
+    bool use_tag {dict["tag"].str() != "none"};
+    string tag = use_tag ? dict["tag"] : "";
+    bool in_tag { !use_tag };
+    bool strip_commas { (bool) dict["strip_commas"]() };
+
+    // logic:
+    // per line:
+    //      if strip_commas replace all commas with spaces
+    //      if use_tag && !in_tag: ignore everything until the flag is found
+    //      if use_tag && in_tag: terminate in </tag> if found
+    //      if use_column: only read column entry
+
     vector<double> vec;
     ifstream file;
     file.open(in_file);
@@ -666,7 +684,9 @@ vector<double> ioReadFloatVec(const char* in_file, int col, bool sort, bool stri
     }
     /* int n_req { index_column > data_column ? index_column : data_column }; */
     string line;
-    bool   read_all_cols = (col==-1);
+    /* bool   read_all_cols = (col==-1); */
+    bool found_end_tag {false};
+    bool found_start_tag {false};
     while (getline(file,line)) {
         line.append(" ");
         if (strip_commas && (line.find(",") != string::npos)) {
@@ -676,31 +696,80 @@ vector<double> ioReadFloatVec(const char* in_file, int col, bool sort, bool stri
         }
         stringstream words(line);
         TString word;
-        int i {-1};
+        int col {-1};
         bool found_val  {false};
-        bool is_comment {false};
         while (words >> word) {
-            ++i;
-            if (!word.IsFloat()) {
-                is_comment = true;
-                break;
-            }
-            if (read_all_cols) vec.push_back(word.Atof());
-            if (i == col) {
-                found_val = true;
-                vec.push_back(word.Atof());
-                break;
+            if (word.IsFloat()) {
+                ++col;
+                if (in_tag) {
+                    if (!use_column || col==which_column) vec.push_back(word.Atof());
+                    if (use_column && col == which_column) break;
+                }
+                continue;
+            } 
+            bool is_a_tag { ioIsAnyTag(word) };
+            if (!is_a_tag) break; // neither number or tag, so is a comment
+            // here: is_a_tag == true
+            if (!use_tag) continue;
+            // use_tag == true && this is a tag
+            if ( in_tag ) {
+                if (ioWordIsEndTag(word, tag)) { 
+                    found_end_tag  = true;
+                    break;
+                }
+            } else {
+                if (ioWordIsTag(word,tag)) {
+                    found_start_tag = true;
+                    in_tag = true;
+                }
             }
         }
-        if (is_comment || found_val || read_all_cols) continue;
-        msg << "fatal error: could not read col " << col << endl
-            << "  in input line \""<<line<<"\""  << endl
-            << "  in input file \"" << in_file <<"\" in ioReadIntVec" << endl;
-        throw std::runtime_error(msg.str());
+        if (found_end_tag ) break;
     }
     file.close();
-    if (sort) std::sort(vec.begin(), vec.end());
+    if (use_tag && !found_start_tag) {
+        throw std::runtime_error(
+                "fatal: didn't find starting tag \"<"
+             + tag + ">\" in file \"" + in_file + "\"");
+    };
+    if (use_tag && !found_end_tag) {
+        throw std::runtime_error(
+                "fatal: didn't find end tag \"</"
+             + tag + ">\" in file \"" + in_file +"\"");
+    };
+             
+    if ( (bool) dict["sort"]() ) std::sort(vec.begin(), vec.end());
     return vec;
+};
+
+pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dict) {
+    dict += options;
+    auto vec = ioReadValVec(file, dict);
+    int i0 = dict["begin_index"];
+    int i1 = dict["end_index"];
+    int size_data {(int) vec.size()};
+    int size_req = (i1 != -1) 
+        ? i1-i0
+        : size_data-i0;
+    if (i0!=0 || i1!=-1) {
+        if (size_req<=0 || size_req > size_data) {
+            ostringstream msg;
+            msg << "ioReadValsPtr in file " << file << " requested start and end indices " 
+                << i0 << " and " << i1
+                << " for total size of " << size_req 
+                << " out of total available " << size_data << endl;
+            throw std::runtime_error(msg.str());
+        }
+    }
+    if (size_data == 0) {
+        throw std::runtime_error(
+        (string)"ioReadValsPtr  in file " + file + " found no data. ");
+    }
+    double* vals = new double[size_req];
+    for (int i{0}; i<size_req; ++i) {
+        vals[i] = vec[i0+i];
+    }
+    return {size_req, vals};
 };
 
 TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y) {
@@ -866,4 +935,14 @@ double ioRatCircleInTwoParallelLines (const double d0,const double d1,double C,d
 double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p){
     return p[0]      + p[1]*x[0] + p[2]*x[0]*x[0]
                      + p[3]*x[1] + p[4]*x[1]*x[1] + p[5]*x[0]*x[1];
+};
+
+bool ioWordIsTag   (string  word, string tag)  { return (word == ("<" +tag+">")); };
+bool ioWordIsEndTag(string  word, string tag)  { return (word == ("</" +tag+">")); };
+bool ioWordIsTag   (TString word, string tag) { return (word == ("<" +tag+">")); };
+bool ioWordIsEndTag(TString word, string tag) { return (word == ("</" +tag+">")); };
+bool ioIsAnyTag    (string  word) { return ioIsAnyTag((TString)word); };
+bool ioIsAnyTag    (TString word) {
+    if (!word.BeginsWith("<")) return false;
+    return word.EndsWith(">");
 };
