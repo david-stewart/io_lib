@@ -182,11 +182,13 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double lo_bin, double hi_bi
 RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double* edges, 
         const char* tag="", const char* title="");
 // non-symmetric in truth and measured
-RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double lo_measured, double hi_measured,
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+        int nb_measured, double lo_measured, double hi_measured,
         int nb_truth, double lo_truth, double hi_truth, 
         const char* tag="", const char* title="");
-RooUnfoldResponse ioMakeRooUnfoldResponse(int nb_measured, double* edges_measured, 
-        int nb_truth, double* edges_truth,
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+        int nb_measured, double* edges_measured, 
+        int nb_truth,    double* edges_truth,
         const char* tag="", const char* title="");
 
 double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p);

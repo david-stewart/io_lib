@@ -59,6 +59,16 @@ class ioJetMatcher {
                   int nb_truth, double* edge_truth,
                   const char* tag="", const char* title="",
                   float _jet_R=0.4 );
+    // final *and best* constructor gives file, and tag names for binnings
+    ioJetMatcher( const char* edge_file, 
+                  const char* meas_tag,
+                  const char* truth_tag,
+                  const char* name_tag="",
+                  const char* title="",
+                  float _jet_R=0.4 
+    );
+
+
     void reset();
     void write();
     /* void write(bool with_miss_fakes=true, */ 

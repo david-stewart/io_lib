@@ -73,6 +73,23 @@ ioJetMatcher::ioJetMatcher(
 {
 	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
 };
+// construct with new RooUnfoldResponse
+ioJetMatcher::ioJetMatcher( 
+        const char* edge_file, 
+        const char* meas_tag,
+        const char* truth_tag,
+        const char* name_tag,
+        const char* title,
+        float _jet_R
+) {
+    pair<int,double*> meas_bins  = ioReadValsPtr(edge_file, {{"tag",meas_tag}});
+    pair<int,double*> truth_bins = ioReadValsPtr(edge_file, {{"tag",truth_tag}});
+    response = ioMakeRooUnfoldResponse(
+            meas_bins.first-1, meas_bins.second,
+            truth_bins.first-1, truth_bins.second,
+            name_tag, title);
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+};
 
 void ioJetMatcher::addjet_MC(float eta, float phi, float pT) {
     data_MC.push_back({eta,phi,pT});
