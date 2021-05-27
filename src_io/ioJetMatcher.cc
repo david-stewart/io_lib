@@ -32,10 +32,10 @@ bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
     { return L.pT > R.pT; };
 
-// constructors: either provide a RooUnfoldReponse to copy, 
+// constructors: either provide a RooUnfoldResponse to copy, 
 // or provide enough information for them to be constructed
-ioJetMatcher::ioJetMatcher( RooUnfoldResponse _response, float _jet_R) : 
-    response{_response} 
+ioJetMatcher::ioJetMatcher( RooUnfoldResponse _response, float _jet_R) :
+    response{_response }
 {
 	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
 };
