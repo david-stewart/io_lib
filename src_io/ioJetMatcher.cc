@@ -32,19 +32,46 @@ bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
     { return L.pT > R.pT; };
 
-ioJetMatcher::ioJetMatcher(
-        RooUnfoldResponse& _response,
-        /* RooUnfoldResponse* _response, */ 
-        float _jet_R
-) : 
-    /* hg_truth{maker.hg_truth()}, */
-    /* hg_measured{maker.hg_measured()}, */
-    /* hg_response{maker.hg_response()}, */
+// constructors: either provide a RooUnfoldReponse to copy, 
+// or provide enough information for them to be constructed
+ioJetMatcher::ioJetMatcher( RooUnfoldResponse _response, float _jet_R) : 
     response{_response} 
 {
-	jet_R2 = _jet_R*_jet_R;
-    data_MC.clear();
-    data_reco.clear();
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+};
+// construct with new RooUnfoldResponse
+ioJetMatcher::ioJetMatcher( int nbins, double lo_bin, double hi_bin, 
+    const char* tag, const char* title, float _jet_R) :
+    response{ ioMakeRooUnfoldResponse(nbins, lo_bin, hi_bin, tag, title) }
+{
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+};
+// construct with new RooUnfoldResponse
+ioJetMatcher::ioJetMatcher( int nbins, double* edges,
+    const char* tag, const char* title, float _jet_R) :
+    response{ ioMakeRooUnfoldResponse(nbins, edges, tag, title) }
+{
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+};
+// construct with new RooUnfoldResponse
+ioJetMatcher::ioJetMatcher(
+        int nb_measured, double lo_measured, double hi_measured,
+        int nb_truth, double lo_truth, double hi_truth, 
+        const char* tag, const char* title, float _jet_R) :
+    response{ ioMakeRooUnfoldResponse(nb_measured, lo_measured, hi_measured,
+            nb_truth, lo_truth, hi_truth, tag, title) }
+{
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
+};
+// construct with new RooUnfoldResponse
+ioJetMatcher::ioJetMatcher(
+        int nb_measured, double* edge_measured,
+        int nb_truth, double* edge_truth,
+        const char* tag, const char* title, float _jet_R) :
+    response{ ioMakeRooUnfoldResponse(nb_measured, edge_measured,
+            nb_truth, edge_truth, tag, title) }
+{
+	jet_R2 = _jet_R*_jet_R; data_MC.clear(); data_reco.clear();
 };
 
 void ioJetMatcher::addjet_MC(float eta, float phi, float pT) {

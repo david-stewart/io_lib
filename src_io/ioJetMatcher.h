@@ -43,7 +43,22 @@ class ioJetMatcher {
     void do_matching_highfirst(double weight=1.);// Raghav's algorithm
     void do_matching(double weight=1.); // my algorithm
 
-    ioJetMatcher( RooUnfoldResponse& response, float _jet_R=0.4 );
+    ioJetMatcher( RooUnfoldResponse response, float _jet_R=0.4 );
+    // other constructors use the io_fnc iMakeRooUnfoldResponse
+    ioJetMatcher( int nbins, double lo_bin, double hi_bin, 
+                  const char* tag="", const char* title="",
+                  float _jet_R=0.4 );
+    ioJetMatcher( int nbins, double* edges, 
+                  const char* tag="", const char* title="",
+                  float _jet_R=0.4 );
+    ioJetMatcher( int nb_meas,  double lo_meas,  double hi_mea,
+                  int nb_truth, double lo_truth, double hi_truth,
+                  const char* tag="", const char* title="",
+                  float _jet_R=0.4 );
+    ioJetMatcher( int nb_meas,  double* edge_meas,
+                  int nb_truth, double* edge_truth,
+                  const char* tag="", const char* title="",
+                  float _jet_R=0.4 );
     void reset();
     void write();
     /* void write(bool with_miss_fakes=true, */ 
