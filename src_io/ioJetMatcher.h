@@ -70,8 +70,7 @@ class ioJetMatcher {
                   float _jet_R=0.4 
     );
     void init(float _jet_R);
-    bool half_switch;
-
+    bool fill_A{true};
 
     void reset();
     void write();

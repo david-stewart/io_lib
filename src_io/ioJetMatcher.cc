@@ -38,7 +38,6 @@ void ioJetMatcher::init(float _jet_R) {
 	jet_R2 = _jet_R*_jet_R; 
     data_MC.clear(); 
     data_reco.clear();
-    cout << " name: " << response.GetName() << endl; 
     response_A = (RooUnfoldResponse*) response.Clone(Form("%s_A",response.GetName()));
     response_B = (RooUnfoldResponse*) response.Clone(Form("%s_B",response.GetName()));
 }
@@ -102,7 +101,7 @@ void ioJetMatcher::do_matching_highfirst(double W) {
     /* std::sort(data_MC.begin(), data_MC.end(), std::greater<ioJetMatcher_float>()); */
     /* std::sort(data_reco.begin(), data_reco.end(), std::greater<ioJetMatcher_float>()); */
 
-    half_switch = !half_switch;
+    fill_A = !fill_A;
     for (auto& MC : data_MC) {
         bool found_match {false};
         for (auto& reco : data_reco) {
@@ -110,7 +109,7 @@ void ioJetMatcher::do_matching_highfirst(double W) {
             if (MC(reco,jet_R2)) {
                 reco.is_matched = true;
                 response.Fill(reco.pT, MC.pT, W);
-                if (half_switch) response_A->Fill(reco.pT, MC.pT, W);
+                if (fill_A) response_A->Fill(reco.pT, MC.pT, W);
                 else             response_B->Fill(reco.pT, MC.pT, W);
                 found_match = true;
                 break;
@@ -118,17 +117,20 @@ void ioJetMatcher::do_matching_highfirst(double W) {
         }
         if (!found_match) {
             response.Miss(MC.pT,W);
-            if (half_switch) response_A->Miss(MC.pT, W);
+            if (fill_A) response_A->Miss(MC.pT, W);
             else             response_B->Miss(MC.pT, W);
         }
     }
     for (auto& reco : data_reco) {
         if (!reco.is_matched) {
             response.Fake(reco.pT,W);
-            if (half_switch) response_A->Fake(reco.pT, W);
+            if (fill_A) response_A->Fake(reco.pT, W);
             else             response_B->Fake(reco.pT, W);
         }// enter a fake
     }
+    /* cout << " entries: " << response.Hresponse()->GetEntries() << " " */ 
+                         /* << response_A->Hresponse()->GetEntries() << " " */ 
+                         /* << response_B->Hresponse()->GetEntries(); */
     reset();
     // algorithm:
     // starting with the highest to lowest MC jet -- try and match to the highest to lowest reco jets
@@ -144,75 +146,4 @@ void ioJetMatcher::write() {
     response_A->Write();
     response_B->Write();
 };
-    /* response.Write(); */
-    /* TH1D* hg_truth    = (TH1D*) response.Htruth(); */
-    /* TH1D* hg_measured = (TH1D*) response.Hmeasured(); */
-    /* TH2D* hg_response = (TH2D*) response.Hresponse(); */
-    /* /1* cout << " z0 " << endl; *1/ */
-    /* if (scale_by_bin_width) { */
-    /*     io_scaleByBinWidth(hg_truth); */
-    /*     io_scaleByBinWidth(hg_measured); */
-    /*     io_scaleByBinWidth(hg_response); */
-    /* } */
-    /* hg_truth->Write(); */
-    /* hg_measured->Write(); */
-    /* hg_response->Write(); */
-
-    /* if (with_miss_fakes) { */
-    /*     TH1D* miss = (TH1D*) hg_response->ProjectionY(Form("%s_miss",tag.c_str())); */
-    /*     miss->Scale(-1.); */
-    /*     miss->Add(hg_truth); */
-    /*     miss->Write(); */
-
-    /*     TH1D* fakes = (TH1D*) hg_response->ProjectionX(Form("%s_fakes",tag.c_str())); */
-    /*     fakes->Scale(-1.); */
-    /*     fakes->Add(hg_measured); */
-    /*     fakes->Write(); */
-
-    /* /1* cout << " z10 " << endl; *1/ */
-    /*     if (add_unified2D) { // make a TH2D histogram is misses and face in a new, */ 
-    /*                          // dummy bin to the left and bottem of the TH2D. */
-    /*         TAxis *x_axis = hg_response->GetXaxis(); */
-    /*         TAxis *y_axis = hg_response->GetYaxis(); */
-
-    /*         int x_nbins = x_axis->GetNbins(); */
-    /*         int y_nbins = y_axis->GetNbins(); */
-
-    /*         double *x_edges = new double [ x_nbins+2 ]; */
-    /*         double *y_edges = new double [ y_nbins+2 ]; */
-    /* /1* TH1D* __1unified = new TH1D( "__1name__","title;x;y", 13, 0., 50.); *1/ */
-
-    /* /1* cout << " z11 " << endl; *1/ */
-    /*         x_edges[0] = x_axis->GetBinLowEdge(1) - x_axis->GetBinWidth(1); */
-    /*         for (int i{1}; i<=x_nbins; ++i) x_edges[i] = x_axis->GetBinLowEdge(i); */
-    /*         x_edges[x_nbins+1] = x_axis->GetBinUpEdge(x_nbins); */
-
-    /*         y_edges[0] = y_axis->GetBinLowEdge(1) - y_axis->GetBinWidth(1); */
-    /*         for (int i{1}; i<=y_nbins; ++i) y_edges[i] = y_axis->GetBinLowEdge(i); */
-    /*         y_edges[y_nbins+1] = y_axis->GetBinUpEdge(y_nbins); */
-
-    /*         TH2D unified { Form("%s_responseFakeMiss",tag.c_str()), */ 
-    /*             Form("%s;Reconstructed (first row is fake jets);Pythia (first column is misses)", */
-    /*                     tag.c_str()), x_nbins+1, x_edges, y_nbins+1, y_edges }; */
-    /*     /1* TH1D* __unified = new TH1D( "name__","title;x;y", 13, 0., 50.); *1/ */
-
-    /*         for (int ix{1}; ix <=x_nbins; ++ix) { */
-    /*             unified.SetBinContent(ix,1, fakes->GetBinContent(ix)); */
-    /*             unified.SetBinError  (ix,1, fakes->GetBinError(ix)); */
-    /*         } */
-    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
-    /*             unified.SetBinContent(1,iy, miss->GetBinContent(iy)); */
-    /*             unified.SetBinError  (1,iy, miss->GetBinError(iy)); */
-    /*         } */
-    /*         for (int ix{1}; ix <=x_nbins; ++ix) */
-    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
-    /*             unified.SetBinContent(ix+1,iy+1, hg_response->GetBinContent(ix,iy)); */
-    /*             unified.SetBinError  (ix+1,iy+1, hg_response->GetBinError  (ix,iy)); */
-    /*         } */
-    /*         unified.Write(); */
-    /*     } */
-    /* } */
-/* }; */
-
-
 

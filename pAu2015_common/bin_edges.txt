@@ -16,6 +16,10 @@
    41 42 43 44 45 46 47 48 49 50
 </jetpt_byones>
 
+<embedding_pthat>
+    5. 7. 9. 11. 15. 25. 35. 45. 55. 65.
+</embedding_pthat>
+
 <BBCES_prelim> # four bins are used
     0.  2750. 8292. 24159. 57433.
 </BBCES_prelim>

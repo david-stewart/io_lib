@@ -850,7 +850,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins, lo_bin, hi_bin };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 
 RooUnfoldResponse ioMakeRooUnfoldResponse(
@@ -870,7 +870,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins,  edges };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 
 
@@ -892,7 +892,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nb_measured, lo_measured, hi_measured };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 RooUnfoldResponse ioMakeRooUnfoldResponse(
      int nb_measured, double* edges_measured,
@@ -912,7 +912,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nb_measured, edges_measured};
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
