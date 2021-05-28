@@ -43,6 +43,72 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
     return obj;
 };
 
+// for ioBinVec
+ioBinVec::ioBinVec(int nbins, double lo, double hi) :
+    size {nbins} 
+{
+    double step = (hi-lo)/nbins;
+    for (int i{1}; i<=size; ++i) vec.push_back(lo+i*step);
+    build_ptr();
+};
+void ioBinVec::build_ptr() {
+    size = vec.size();
+    ptr = new double[size];
+    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+};
+ioBinVec::operator int () { return size-1; };
+ioBinVec::operator double* () { return ptr; };
+ioBinVec::operator vector<double> () { return vec; };
+
+ioBinVec::ioBinVec(vector<double> V, bool range_setter) { 
+    init(V, range_setter);
+};
+ioBinVec::ioBinVec(const char* file, ioOptMap options, bool nbin_range){
+    init( ioReadValVec(file, options), nbin_range );
+};
+
+void ioBinVec::init(vector<double> V, bool range_repeat) {
+    if (!range_repeat || V.size()==0) {
+        for (auto v : V) vec.push_back(v);
+        build_ptr();
+        return;
+    }
+    // range repeate will add a range leading to the next number
+    // it is triggered by a repeat value of the last number, followed by the number
+    // of bins
+     //   example:
+     //         0, 0, 5, 1. 2. 3. = 0 .2 .4 .6 .8 1.0 2. 3.
+    vec.push_back(V[0]);
+    int S = V.size();
+    int i{1}; 
+    while (i<(int)S) {
+        if ( V[i] == V[i-1] ) {
+            if (i>(S-3)) throw std::runtime_error( "fatal in ioBinVec with range_repeat");
+            double step = (V[i+2]-V[i])/V[i+1];
+            for (int k{1}; k<=V[i+1]; ++k) vec.push_back(V[i]+k*step);
+            i+=3;
+        } else {
+            vec.push_back(V[i]);
+            ++i;
+        }
+    }
+    build_ptr();
+};
+ioBinVec::~ioBinVec() {
+    delete[] ptr;
+};
+/* int ioBinVec::nbins() { return (int) size-1; }; */
+vector<double>::iterator ioBinVec::begin() { return vec.begin(); };
+vector<double>::iterator ioBinVec::end()   { return vec.end(); };
+double ioBinVec::operator[](int i) { return vec[i]; };
+ostream& operator<<(ostream& os, ioBinVec& io) {
+    for (auto v : io) cout << " " << v;
+    cout << endl;
+    return os;
+};
+
+
+
 // ioPads class (with helper class ioPadDim)
 void ioPadDim::check_input() {
     if (   low   < 0. || low   > 1. 

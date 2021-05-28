@@ -1,4 +1,5 @@
 #include "io_fmt.h"
+#include "io_fnc.h"
 
 TLine* io_fmt(TLine* line, ioOptMap options, ioOptMap dict)
 {
@@ -441,6 +442,9 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetZaxis()->SetLabelSize(dict["zAxisLabelSize"].val());
     if (dict("zAxisLabelOffset"))
         hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
+
+    if (dict("Normalize")) hg->Scale(1./hg->Integral());
+    if (dict("ScaleByBinWidth")) io_scaleByBinWidth(hg);
     /* cout << " MarkerColor: " << hg->GetMarkerColor() << endl; */
     return hg;
 };
