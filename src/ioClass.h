@@ -49,6 +49,34 @@ class ioGetter{
 //      See notes below.
 // --------------------------------------------------------------------------------------
 
+struct ioBinVec {
+    ioBinVec(int nbins, double lo, double hi);
+
+    // two constructors either enter a vector or read one and then use init
+    ioBinVec (vector<double>, bool range_double=true);
+    ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
+    void init(vector<double>, bool range_double=true);
+    // all constructors use build_ptr
+    void build_ptr();
+    // read the vec from a file with ioReadValVec
+    ~ioBinVec();
+    double*        ptr;
+    int            size;
+    vector<double> vec;
+
+    /* int nbins(); // return size_ptr-1 */
+    operator int ();
+    operator double* ();
+    operator vector<double> ();
+    double operator[](int);
+    friend ostream& operator<<(ostream& os, ioBinVec& val);
+
+    vector<double>::iterator begin();
+    vector<double>::iterator end();
+};
+
+
+
 struct ioPadDim {
     // a structure to contain the four coordinates requisite for a TPad (in x or y):
     //    low   : left/bottom edge of TPad (outer edge of margin)

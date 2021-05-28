@@ -29,13 +29,13 @@ LIB_ROOT=`root-config --cflags --glibs`
 test0: obj/test.o obj/oiJetMaker.o
 	 ${CC} ${CFLAGS} -o $@ $^ ${LIB_ROOT} ${LIB_FASTJET} `${io_setter} -L`
 
-obj/test.o: src_oi/test.cc
+obj/test.o: src/test.cc
 	${CC} ${ccflg}  -c $< -o $@
 
 lib/liboiJetMaker.so: obj/oiJetMaker.o
 	${CC} -shared -o lib/liboiJetMaker.so obj/oiJetMaker.o
 
-obj/oiJetMaker.o: src_oi/oiJetMaker.cc src_oi/oiJetMaker.h
+obj/oiJetMaker.o: src/oiJetMaker.cc src/oiJetMaker.h
 	${CC} ${ccflg}  -fPIC -c $< -o $@
 
 # bin/main: obj/events.o \

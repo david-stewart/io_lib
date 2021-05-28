@@ -144,8 +144,16 @@ vector<double> ioReadValVec(const char* file, ioOptMap options={},
 pair<int,double*> ioReadValsPtr(const char* file, ioOptMap ptions={}, 
         ioOptMap dict= {{"begin_index",0,"end_index",-1,"tag","none",
         "sort",false, "strip_commas",true,"column","all"}});
+
 // same as ioReadValVec, but makes a new array[double] (optionally starting and ending 
 // offset in the vector) and returns a pointer to the beginning
+double* ioRangeValsPtr(int nbins, double bin_lo, double bin_hi);
+ // |-> return pointer to an evenly spaced range of values
+double* ioSetValsPtr(vector<double>);
+ // |->  use all values in vector; if there is a repeating integer then use that as number
+ // of bins leading up to the next number
+ //   example:
+ //         0, 5, 5, 1. 2. 3. = 0 .2 .4 .6 .8 1.0 2. 3.
 
 
 // notes:  will look for <tag> ... data ... </tag>
