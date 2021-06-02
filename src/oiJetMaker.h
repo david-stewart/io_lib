@@ -80,8 +80,6 @@ class oiJetMaker {
     ClusterSequence*     cseq     {nullptr};
     ClusterSequenceArea* cseqarea {nullptr};
     
-    
-
     vector<__oiJetMaker_Jet> jets {}; // filled from pseudojets
     __oiJetMaker_Jet& operator[](int);
 

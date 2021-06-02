@@ -30,6 +30,14 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
        "yAxisTitle",dict["yTitleResponse"],
        "Stats",dict["StatsResponse"],
        "Title",dict["TitleResponse"]}});
+    if (dict("zAxisRangeLo") || dict("zAxisRangeHi")) {
+        if (!dict("zAxisRangeLo") || !dict("zAxisRangeHi")) {
+            cout << " Warning in ioCfnc.cc: has zAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting zAxisRange." << endl;
+        } else {
+            hg_response->GetZaxis()->SetRangeUser(dict["zAxisRangeLo"].val(), dict["zAxisRangeHi"].val());
+        }
+    }
 
     hg_response->Draw("colz");
 
