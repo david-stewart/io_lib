@@ -210,4 +210,6 @@ bool ioIsAnyTag    (string word); // does it match <\\S*> or </\\S*> ?
 bool ioIsAnyTag    (TString word);
 // if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
 
+void io_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
+
 #endif

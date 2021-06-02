@@ -172,6 +172,12 @@ struct ioPads {
 
     int canvas_width         { 1200 };
     int canvas_height        {  800 };
+    void stamp(const char*, ioOptMap opt={}, 
+        ioOptMap dict = {{ 
+        "TextColor", (kGray+2), 
+        "TextSize", 12,
+        "x-loc", .05,
+        "y-loc", .05}} );
 
     // To do here:
 

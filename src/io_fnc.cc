@@ -947,4 +947,30 @@ bool ioIsAnyTag    (TString word) {
     return word.EndsWith(">");
 };
 
+void io_normByRow(TH2D* hg, double factor, bool use_max_val) {
+    int nCols = hg->GetXaxis()->GetNbins();
+    int nRows   = hg->GetYaxis()->GetNbins(); 
+
+    for (int row{1}; row<=nRows; ++row) {
+        double mult;
+        if (use_max_val) {
+            double vmax { hg->GetBinContent(1,row) };
+            for (int col{1}; col <= nCols; ++col) {
+                if (hg->GetBinContent(col,row) > vmax) {
+                    vmax = hg->GetBinContent(col,row);
+                }
+            }
+            mult = 1./vmax;
+        } else {
+            mult = factor / hg->Integral(1,nCols,row,row);
+        }
+
+
+        for (int col {1}; col <= nCols; ++col) {
+            hg->SetBinContent(col, row, hg->GetBinContent(col, row) * mult);
+            hg->SetBinError  (col, row, hg->GetBinError  (col, row) * mult);
+        }
+    };
+};
+
 

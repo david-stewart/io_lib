@@ -305,6 +305,12 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
     if (c_height) canvas_height = c_height;
     /* init(); */
 };
+void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) {
+    dict += options;
+    canvas_pad->cd();
+    /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
+    ioDrawTLatex(msg,dict["x-loc"](), dict["y-loc"](), dict);
+};
 /* ioPads::ioPads(int nPads, int c_wide, int c_high){ */
 /*     if (nPads==2) { */
 /*         pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} ); */
