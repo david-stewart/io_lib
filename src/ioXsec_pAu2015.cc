@@ -70,7 +70,6 @@ double ioXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
 };
 
 double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
-
 	const static double Xsec[9] {
         // these versions were pulled from the actual embedding files
         0.107509,   0.0190967,  0.00475202,

@@ -36,6 +36,9 @@ bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 // or provide enough information for them to be constructed
 void ioJetMatcher::init(float _jet_R) {
 	jet_R2 = _jet_R*_jet_R; 
+    R2_distr_matches = new TH1D(Form("R2_distr_matches_%s",response.GetName()),
+            ";R-matches;N",100,0.,1.);
+    /* cout << jet_R2 << endl; */
     data_MC.clear(); 
     data_reco.clear();
     response_A = (RooUnfoldResponse*) response.Clone(Form("%s_A",response.GetName()));
@@ -106,7 +109,10 @@ void ioJetMatcher::do_matching_highfirst(double W) {
         bool found_match {false};
         for (auto& reco : data_reco) {
             if (reco.is_matched) continue;
-            if (MC(reco,jet_R2)) {
+            double delta_R2 { MC(reco,jet_R2) };
+            /* if (MC(reco,jet_R2)!=0.) { */
+            if (delta_R2 != 0) {
+                R2_distr_matches->Fill(delta_R2);
                 reco.is_matched = true;
                 response.Fill(reco.pT, MC.pT, W);
                 if (fill_A) response_A->Fill(reco.pT, MC.pT, W);
@@ -142,8 +148,127 @@ void ioJetMatcher::reset() {
     data_reco.clear();
 };
 void ioJetMatcher::write() {
+    R2_distr_matches->Write();
     response.Write();
     response_A->Write();
     response_B->Write();
 };
 
+ioJetMatcherX::ioJetMatcherX (const char* _name, ioXsec& _Xsec, 
+            const char* bin_file, const char* tag_M, const char* tag_T, 
+            ioOptMap options, ioBinVec _hg2ptbins, ioOptMap dict
+    ) :
+    name {_name}, 
+    Xsec{_Xsec}, 
+    response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)}
+{
+    dict += options;
+    b_make_AB       = (dict["make_AB"]==1);
+    b_hg2_Xsec_vs_M = (dict["hg2_Xsec_vs_M"]==1);
+    b_hg2_Xsec_vs_T = (dict["hg2_Xsec_vs_T"]==1);
+    b_hg2_Xsec_vs_match = (dict["hg2_Xsec_vs_match"]==1);
+    b_hg2_Xsec_vs_fake  = (dict["hg2_Xsec_vs_fake"]==1);
+    b_hg1_R2_match  = (dict["hg1_R2_match"]==1);
+
+    jet_R2 = dict["R"]()*dict["R"]();
+
+
+    if (b_make_AB) {
+        response_A = (RooUnfoldResponse*)
+            response.Clone(Form("%s_A",response.GetName()));
+        response_B = (RooUnfoldResponse*)
+            response.Clone(Form("%s_B",response.GetName()));
+    }
+    ioBinVec pthatbins { Xsec.pthatbins };
+    if (b_hg2_Xsec_vs_T) hg2_Xsec_vs_T = new TH2D(
+        Form("hg2_Xsec_vs_T_%s",_name),
+        ";#it{p}_{T} Truth;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_M) hg2_Xsec_vs_M = new TH2D(
+        Form("hg2_Xsec_vs_M_%s",_name),
+        ";#it{p}_{T} Measured;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_match) hg2_Xsec_vs_match = new TH2D(
+        Form("hg2_Xsec_vs_match_%s",_name),
+        ";#it{p}_{T} Truth matched;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_fake) hg2_Xsec_vs_fake = new TH2D(
+        Form("hg2_Xsec_vs_fake_%s",_name),
+        ";#it{p}_{T} Measured fakes;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg1_R2_match) hg1_R2_match = new TH1D(
+        Form("hg1_R2_match_%s",_name), 
+        "Matched jets; #sqrt((#Delta#phi)^2+(#delta#eta)^2)",
+        100, 0., 0.2 );
+}
+
+void ioJetMatcherX::do_matching(pair<double,double> pthatrange) {
+    do_matching(Xsec.pthatbin(pthatrange));
+};
+
+void ioJetMatcherX::do_matching(int pthatbin) {
+    double W { Xsec.Xsec(pthatbin) };
+    double pthat_val { (0.5)*(Xsec.pthatbins[pthatbin]+
+                       Xsec.pthatbins[pthatbin+1]) };
+    switch_AB = !switch_AB;
+
+    for (auto& MC : data_MC) {
+        if (b_hg2_Xsec_vs_T) 
+            hg2_Xsec_vs_T->Fill(MC.pT,pthat_val);
+        bool found_match {false};
+        for (auto& reco : data_reco) {
+            if (reco.is_matched) continue;
+            double delta_R2 { MC(reco,jet_R2) };
+            if (delta_R2 != 0) {
+                found_match = true;
+                reco.is_matched = true;
+                if (b_hg2_Xsec_vs_match) 
+                    hg2_Xsec_vs_match->Fill(MC.pT,pthat_val);
+                if (b_hg1_R2_match) hg1_R2_match->Fill(delta_R2);
+                response.Fill(reco.pT, MC.pT, W);
+                if (switch_AB)  response_A->Fill(reco.pT, MC.pT, W);
+                else            response_B->Fill(reco.pT, MC.pT, W);
+                break;
+            }
+        }
+        if (!found_match) {
+            response.Miss(MC.pT,W);
+            if (switch_AB) response_A->Miss(MC.pT, W);
+            else           response_B->Miss(MC.pT, W);
+        }
+    }
+    for (auto& reco : data_reco) {
+        if (hg2_Xsec_vs_M) hg2_Xsec_vs_M->Fill(reco.pT,pthat_val);
+        if (!reco.is_matched) {
+            if (hg2_Xsec_vs_fake) hg2_Xsec_vs_fake->Fill(reco.pT,pthat_val);
+            response.Fake(reco.pT,W);
+            if (switch_AB) response_A->Fake(reco.pT, W);
+            else           response_B->Fake(reco.pT, W);
+        }// enter a fake
+    }
+};
+void ioJetMatcherX::reset() {
+    data_MC.clear();
+    data_reco.clear();
+};
+void ioJetMatcherX::write() {
+    /* R2_distr_matches->Write(); */
+    response.Write();
+    if (b_make_AB) {
+        response_A->Write();
+        response_B->Write();
+    }
+    if (b_hg2_Xsec_vs_M) hg2_Xsec_vs_M->Write();
+    if (b_hg2_Xsec_vs_T) hg2_Xsec_vs_T->Write();
+    if (b_hg2_Xsec_vs_match) hg2_Xsec_vs_match->Write();
+    if (b_hg2_Xsec_vs_fake) hg2_Xsec_vs_fake->Write();
+    if (b_hg1_R2_match) hg1_R2_match->Write();
+};
+
+void ioJetMatcherX::addjet_MC(float eta, float phi, float pT) {
+    data_MC.push_back({eta,phi,pT});
+};
+
+void ioJetMatcherX::addjet_reco(float eta, float phi, float pT) {
+    data_reco.push_back({eta,phi,pT});
+};

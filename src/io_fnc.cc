@@ -655,6 +655,12 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
 };
 
 //----------
+vector<double> ioReadValVec(const char* in_file, const char* tag, 
+        ioOptMap options, ioOptMap dict) {
+    dict += options;
+    dict["tag"] = tag;
+    return ioReadValVec(in_file, dict);
+};
 vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict) {
     dict += options;
 
@@ -914,7 +920,6 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             nb_measured, edges_measured};
     return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
-
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 /* int iowhichbin(int, double*); */
 /* int iowhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */

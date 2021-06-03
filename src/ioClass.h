@@ -53,8 +53,9 @@ struct ioBinVec {
     ioBinVec(int nbins, double lo, double hi);
 
     // two constructors either enter a vector or read one and then use init
-    ioBinVec (vector<double>, bool range_double=true);
+    ioBinVec(vector<double>, bool range_double=true);
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
+    ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
     void init(vector<double>, bool range_double=true);
     // all constructors use build_ptr
     void build_ptr();
@@ -476,6 +477,41 @@ struct ioFnCaller{
     double operator()(double,double);
     double *p; // fit parameters, read from data_file
     double *x;
+};
+
+struct ioXsec{
+    // generalization of src/ioXsec_pAu2015.h
+    // ptHat bins, X-sections, and nEvents are read in from file
+
+    // data
+    ioXsec (
+        const char* tag_file,
+        const char* Xsection_tag="Xsection",
+        const char* pthatbin_tag="pThat",
+        const char* nEvents_tag="nEvents"
+    );
+    vector<double> Xsection;
+    vector<double> pthatbins;
+    int nbins_pthat;
+    vector<int> Nevents;
+    vector<int> Ncollected;
+    long int n_collected_total{0};
+
+    // functions
+    int pthatbin(pair<double,double> pthat_bounds);
+    
+    double Xsec(pair<double,double>, int number_of_events=0); 
+    double Xsec(int pthatbin, int number_of_events=0); 
+    double operator()(int pthatbin, int num_of_events=0) 
+        { return Xsec(pthatbin, num_of_events); };
+    double operator()(pair<double,double> pthatbounds, int num_of_events=0) 
+        { return Xsec(pthatbounds, num_of_events); };
+
+    void collect (int pthat_bin);
+    void collect (pair<double,double> pthatbounds);
+    void check_pthatbin(int bin);
+
+    TH1D* hg_collected;
 };
 
 #endif

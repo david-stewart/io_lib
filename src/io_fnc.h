@@ -141,6 +141,8 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 //----------------
 vector<double> ioReadValVec(const char* file, ioOptMap options={}, 
         ioOptMap dict= {{"tag","none","sort",false, "strip_commas",true,"column","all"}});
+vector<double> ioReadValVec(const char* file, const char* tag, ioOptMap options={}, 
+        ioOptMap dict= {{"sort",false, "strip_commas",true,"column","all"}});
 pair<int,double*> ioReadValsPtr(const char* file, ioOptMap ptions={}, 
         ioOptMap dict= {{"begin_index",0,"end_index",-1,"tag","none",
         "sort",false, "strip_commas",true,"column","all"}});
