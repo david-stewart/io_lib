@@ -772,18 +772,18 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
     return {size_req, vals};
 };
 
-TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y) {
-    if (x.size() != y.size()) 
-        throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length");
-    const unsigned int n = x.size();
-    double* xpts = new double[n];
-    double* ypts = new double[n];
-    for (unsigned int i{0}; i<n; ++i) {
-        xpts[i] = x[i];
-        ypts[i] = y[i];
-    }
-    return new TGraph(n,xpts,ypts);
-};
+/* TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y) { */
+/*     if (x.size() != y.size()) */ 
+/*         throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length"); */
+/*     const unsigned int n = x.size(); */
+/*     double* xpts = new double[n]; */
+/*     double* ypts = new double[n]; */
+/*     for (unsigned int i{0}; i<n; ++i) { */
+/*         xpts[i] = x[i]; */
+/*         ypts[i] = y[i]; */
+/*     } */
+/*     return new TGraph(n,xpts,ypts); */
+/* }; */
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
     if (x.size() != y.size()) 
         throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length");

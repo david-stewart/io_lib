@@ -51,10 +51,12 @@ class ioGetter{
 
 struct ioBinVec {
     ioBinVec(int nbins, double lo, double hi);
+    vector<double> bin_centers();
 
     // two constructors either enter a vector or read one and then use init
     ioBinVec (vector<double>, bool range_double=true);
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
+    ioBinVec(TAxis*);
     void init(vector<double>, bool range_double=true);
     // all constructors use build_ptr
     void build_ptr();

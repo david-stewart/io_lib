@@ -165,14 +165,17 @@ double* ioSetValsPtr(vector<double>);
 //         column==val will only pick out that val per line
 //         skip_commas will remove all commas from all lines
 
-TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y);
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
+/* TGraph* ioMakeTGraph(vector<double> x, vector<double> y); */
 
 // find the bin in a vector
 int iowhichbin0(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 int iowhichbin0(double val, TH1D*); // remember that the first bin is zero-indexed
 int iowhichbin1(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 int iowhichbin1(double val, TH1D*); // remember that the first bin is zero-indexed
+
+void io_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
+void io_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
 
 double* ax_doubleptr(vector<int> vec);
 /* int iowhichbin(double val, int nBec, double*); */

@@ -44,6 +44,16 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
 };
 
 // for ioBinVec
+vector<double> ioBinVec::bin_centers() {
+    vector<double> V;
+    for (int i{0}; i<(int)vec.size()-1; ++i) V.push_back(0.5*(vec[i]+vec[i+1]));
+    return V;
+};
+ioBinVec::ioBinVec(TAxis* ax) {
+    vector<double> build_vec;
+    for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
+    init(build_vec);
+};
 ioBinVec::ioBinVec(int nbins, double lo, double hi) :
     size {nbins} 
 {
