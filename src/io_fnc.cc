@@ -834,8 +834,14 @@ double* ax_doubleptr(vector<int> vals) {
     x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
     return x;
 };
-double io_R(double x0,double y0,double x1,double y1) 
+double io_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
+double io_D2(double x0,double y0,double x1,double y1) 
+{ return TMath::Sq(x1-x0)+TMath::Sq(y1-y0); };
+double io_R(double x0,double y0,double x1,double y1) 
+{ return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0))); };
+double io_R2(double x0,double y0,double x1,double y1) 
+{ return TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0)); };
 
 
 

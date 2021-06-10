@@ -70,6 +70,20 @@ ioBinVec::ioBinVec(const char* file, const char* tag, ioOptMap options, bool nbi
     options["tag"] = tag;
     init( ioReadValVec(file, options), nbin_range );
 };
+ioBinVec::ioBinVec(vector<vector<double>> V_in) {
+    for (auto& VEC : V_in)
+    for (auto    v : VEC) 
+        vec.push_back(v);
+    build_ptr();
+};
+
+/* ioBinVec ioBinVec::operator+=(const ioBinVec& _) { */
+    /* for (auto v : _.vec) vec.push_back(v); */
+    /* delete[] ptr; */
+    /* build_ptr(); */
+    /* return *this; */
+/* }; */
+/* ioBinVec operator+ (ioBinVec lhs, const ioBinVec& rhs) { lhs += rhs; return lhs; }; */
 
 void ioBinVec::init(vector<double> V, bool range_repeat) {
     if (!range_repeat || V.size()==0) {
@@ -105,13 +119,40 @@ ioBinVec::~ioBinVec() {
 vector<double>::iterator ioBinVec::begin() { return vec.begin(); };
 vector<double>::iterator ioBinVec::end()   { return vec.end(); };
 double ioBinVec::operator[](int i) { return vec[i]; };
+double ioBinVec::bin_underflow() { 
+    if (vec.size()<2)  return 0.;
+    return vec[0]-(vec[1]-vec[0]);
+};
+double ioBinVec::bin_overflow() { 
+    if (vec.size()<2)  return 0.;
+    int i { static_cast<int>(vec.size())-1 };
+    return vec[i]+(vec[i]-vec[i-1]);
+};
 ostream& operator<<(ostream& os, ioBinVec& io) {
     for (auto v : io) cout << " " << v;
     cout << endl;
     return os;
 };
 
-
+bool ioInBounds::operator()(double x) {
+    return (x >= lo_bound && x <= hi_bound);
+};
+void ioInBounds::init(ioBinVec bins) {
+    if (bins.vec.size()<2) {
+        throw std::runtime_error(
+        "Fatal: tried to initialize a ioInBounds with "
+        "an input ioBinVec with less than 2 entries!"
+        );
+    };
+    lo_bound = bins[0];
+    hi_bound = bins[bins.vec.size()-1];
+};
+ioInBounds::ioInBounds(const char* file, const char* tag){
+    init( {file, tag} );
+};
+ioInBounds::ioInBounds(ioBinVec bins) { init(bins); };
+ioInBounds::ioInBounds(double lo, double hi) :
+    lo_bound{lo}, hi_bound(hi) {}; 
 
 // ioPads class (with helper class ioPadDim)
 void ioPadDim::check_input() {
@@ -1533,11 +1574,15 @@ ioXsec::ioXsec(
         pthat_edges, pthat_edges);
 };
 
+double ioXsec::pthatbin_center(int bin) {
+    return 0.5*(pthatbins[bin]+pthatbins[bin+1]);
+};
+
 int ioXsec::pthatbin(pair<double,double> bounds) {
     double first { bounds.first };
     auto iter = std::lower_bound(pthatbins.begin(), pthatbins.end(), bounds.first);
     if (iter==pthatbins.end() || (*(iter)!=bounds.first)) { 
-        throw std::runtime_error(" fatal in ioXsec::pthabin: pthatbin not found " );
+        throw std::runtime_error(" fatal in ioXsec::pthatbin: pthatbin not found " );
         return -1;
     }
     if (*(iter+1) != bounds.second) {
@@ -1580,3 +1625,86 @@ void ioXsec::check_pthatbin(int bin) {
         bin, nbins_pthat));
     }
 };
+
+/* io_pThatOutliers::io_pThatOutliers( */
+/*         map<int,double> _pt_limits, */ 
+/*         double _pt_fakes, double _pt_misses */
+/* ) : */
+/*     pt_limits {_pt_limits}, */ 
+/*     pt_fakes {_pt_fakes}, */ 
+/*     pt_misses {_pt_misses} */ 
+/* { */
+/*     for (auto p : pt_limits) { */
+/*         M_matches[p.first] = {}; */
+/*         T_matches[p.first] = {}; */
+/*         misses[p.first] = {}; */
+/*         fakes[p.first] = {}; */
+/*     } */
+/* }; */
+
+/* bool io_pThatOutliers::check_if_outlier(int _pthatbin, double pt) { */
+/*     if (pt_limits.count(_pthatbin) == 0) { */
+/*         throw std::runtime_error( */
+/*             Form("fatal error in io_pThatOutliers: " */
+/*             " limit for required pthatbin (%i) not set", */
+/*             _pthatbin) */
+/*         ); */
+/*     } */
+/*     is_outlier = (pt >= pt_limits[_pthatbin]); */
+/*     pthatbin = _pthatbin; */
+/*     return is_outlier; */
+/* }; */
+
+/* void io_pThatOutliers::match(double M, double T) { */
+/*     if (is_outlier) { */
+/*         M_matches[pthatbin].push_back(M); */
+/*         T_matches[pthatbin].push_back(T); */
+/*     } */
+/* }; */
+/* void io_pThatOutliers::miss(double T) { */
+/*     if (is_outlier) misses[pthatbin].push_back(T); */
+/* }; */
+/* void io_pThatOutliers::fake(double M) { */
+/*     if (is_outlier) fakes[pthatbin].push_back(M); */
+/* }; */
+
+
+/* void io_pThatOutliers::write_TGraph(int _pthatbin, */
+/*         ioOptMap options, ioOptMap dict) { */
+/*     dict += options; */
+/*     if (pt_limits.count(_pthatbin)==0) { */
+/*         throw std::runtime_error( */
+/*         Form( */
+/*             "fatal error in io_pThatOutliers: " */
+/*             " limit for required pthatbin (%i) not set", */
+/*             _pthatbin) */
+/*         ); */
+/*     } */
+
+/*     // draw the matches TGraph */
+/*     if (M_matches[pthatbin].size()>0) { */
+/*         ioBinVec x { M_matches[pthatbin], false }; */
+/*         ioBinVec y { T_matches[pthatbin], false }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_matches",dict["prefix"].c_str()) ); */
+/*     } */
+/*     dict["MarkerStyle"] = dict["MarkerFakeMiss"]; */
+/*     if (fakes[pthatbin].size() > 0) { */
+/*         ioBinVec x { fakes[pthatbin], false }; */
+/*         ioBinVec y { vector<double>(fakes[pthatbin].size(), */ 
+/*                 pt_fakes) }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_fakes",dict["prefix"].c_str()) ); */
+/*     } */
+/*     if (misses[pthatbin].size() > 0) { */
+/*         ioBinVec x { vector<double>(misses[pthatbin].size(), */ 
+/*                 pt_misses) }; */
+/*         ioBinVec y { misses[pthatbin], false }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_misses",dict["prefix"].c_str()) ); */
+/*     } */
+/* }; */
+    
