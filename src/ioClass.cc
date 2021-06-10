@@ -76,6 +76,24 @@ ioBinVec::ioBinVec(vector<double> V, bool range_setter) {
 ioBinVec::ioBinVec(const char* file, ioOptMap options, bool nbin_range){
     init( ioReadValVec(file, options), nbin_range );
 };
+ioBinVec::ioBinVec(const char* file, const char* tag, ioOptMap options, bool nbin_range){
+    options["tag"] = tag;
+    init( ioReadValVec(file, options), nbin_range );
+};
+ioBinVec::ioBinVec(vector<vector<double>> V_in) {
+    for (auto& VEC : V_in)
+    for (auto    v : VEC) 
+        vec.push_back(v);
+    build_ptr();
+};
+
+/* ioBinVec ioBinVec::operator+=(const ioBinVec& _) { */
+    /* for (auto v : _.vec) vec.push_back(v); */
+    /* delete[] ptr; */
+    /* build_ptr(); */
+    /* return *this; */
+/* }; */
+/* ioBinVec operator+ (ioBinVec lhs, const ioBinVec& rhs) { lhs += rhs; return lhs; }; */
 
 void ioBinVec::init(vector<double> V, bool range_repeat) {
     if (!range_repeat || V.size()==0) {
@@ -86,8 +104,8 @@ void ioBinVec::init(vector<double> V, bool range_repeat) {
     // range repeate will add a range leading to the next number
     // it is triggered by a repeat value of the last number, followed by the number
     // of bins
-     //   example:
-     //         0, 0, 5, 1. 2. 3. = 0 .2 .4 .6 .8 1.0 2. 3.
+    //   example:
+    //         0, 0, 5, 1. 2. 3. = 0 .2 .4 .6 .8 1.0 2. 3.
     vec.push_back(V[0]);
     int S = V.size();
     int i{1}; 
@@ -111,13 +129,40 @@ ioBinVec::~ioBinVec() {
 vector<double>::iterator ioBinVec::begin() { return vec.begin(); };
 vector<double>::iterator ioBinVec::end()   { return vec.end(); };
 double ioBinVec::operator[](int i) { return vec[i]; };
+double ioBinVec::bin_underflow() { 
+    if (vec.size()<2)  return 0.;
+    return vec[0]-(vec[1]-vec[0]);
+};
+double ioBinVec::bin_overflow() { 
+    if (vec.size()<2)  return 0.;
+    int i { static_cast<int>(vec.size())-1 };
+    return vec[i]+(vec[i]-vec[i-1]);
+};
 ostream& operator<<(ostream& os, ioBinVec& io) {
     for (auto v : io) cout << " " << v;
     cout << endl;
     return os;
 };
 
-
+bool ioInBounds::operator()(double x) {
+    return (x >= lo_bound && x <= hi_bound);
+};
+void ioInBounds::init(ioBinVec bins) {
+    if (bins.vec.size()<2) {
+        throw std::runtime_error(
+        "Fatal: tried to initialize a ioInBounds with "
+        "an input ioBinVec with less than 2 entries!"
+        );
+    };
+    lo_bound = bins[0];
+    hi_bound = bins[bins.vec.size()-1];
+};
+ioInBounds::ioInBounds(const char* file, const char* tag){
+    init( {file, tag} );
+};
+ioInBounds::ioInBounds(ioBinVec bins) { init(bins); };
+ioInBounds::ioInBounds(double lo, double hi) :
+    lo_bound{lo}, hi_bound(hi) {}; 
 
 // ioPads class (with helper class ioPadDim)
 void ioPadDim::check_input() {
@@ -173,7 +218,7 @@ vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin
     vector<ioPadDim> vec;
     double space = {(1.-(left_margin+right_margin)*nPads-overall_left-overall_right)/nPads};
     if (space<=0) throw std::runtime_error(
-        "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
+            "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
     double left = overall_left;
     for (int i{0}; i<nPads; ++i) {
         /* cout << "i: " << i << endl; */
@@ -198,9 +243,9 @@ vector<ioPadDim> ioPadDimSet(
     double space = {(1.-(left_in+right_in)*(nPads-1)
             -left_margin-right_margin-leftM-rightM)/nPads};
     /* double space = {(1.-(left_in+right_in)*(nPads-1) */
-            /* -left_margin-right_margin-left_in-right_in)/nPads}; */
+    /* -left_margin-right_margin-left_in-right_in)/nPads}; */
     if (space<=0) throw std::runtime_error(
-        "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
+            "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
 
     if (nPads == 1) {
         vec.push_back( {
@@ -251,9 +296,9 @@ ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
 };
 /* ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) { */
 ioPads::ioPads ( int nYpads, int nXpads, double y_margin, double x_margin, 
-             int c_wide, int c_height ){ // default of 1 and 2 pad TPad sets
-// make a set of pads with y_margin on bottom, x_margin on left, 0.05 on top and right,
-// and solid packed between
+        int c_wide, int c_height ){ // default of 1 and 2 pad TPad sets
+    // make a set of pads with y_margin on bottom, x_margin on left, 0.05 on top and right,
+    // and solid packed between
     vector<ioPadDim> y_dim{};
     vector<ioPadDim> x_dim{};
 
@@ -315,6 +360,12 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
     if (c_height) canvas_height = c_height;
     /* init(); */
 };
+void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) {
+    dict += options;
+    canvas_pad->cd();
+    /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
+    ioDrawTLatex(msg,dict["x-loc"](), dict["y-loc"](), dict);
+};
 /* ioPads::ioPads(int nPads, int c_wide, int c_high){ */
 /*     if (nPads==2) { */
 /*         pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} ); */
@@ -369,7 +420,7 @@ TPad* ioPads::operator()(int row, int col) {
 
 void ioPads::init() {
     // make and stylize the TCanvas and pads currently in the list
-    
+
     const char* t_name = Form("canv_%s",ioUniqueName(101));
     canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
     /* cout << " a0 " << endl; */
@@ -501,9 +552,9 @@ ioIntMap::ioIntMap(const char* file,
         int data_column,
         bool echo_print,
         vector<int> skip_vals
-) {
-   ioIntMap_constructor(file, index_column, data_column, 
-           echo_print, skip_vals);
+        ) {
+    ioIntMap_constructor(file, index_column, data_column, 
+            echo_print, skip_vals);
 };
 ioIntMap::ioIntMap(const char* file,
         int index_column, 
@@ -511,9 +562,9 @@ ioIntMap::ioIntMap(const char* file,
         bool echo_print,
         ofstream& log,
         vector<int> skip_vals
-) {
-   log << ioIntMap_constructor(file, index_column, data_column, 
-           echo_print, skip_vals);
+        ) {
+    log << ioIntMap_constructor(file, index_column, data_column, 
+            echo_print, skip_vals);
 };
 string ioIntMap::ioIntMap_constructor (
         const char* in_file,
@@ -521,10 +572,10 @@ string ioIntMap::ioIntMap_constructor (
         int data_column,
         bool echo_print,
         vector<int> skip_vals
-) {
+        ) {
     set<int> skip_val_set;
     for (auto& v : skip_vals) skip_val_set.insert(v);
-/* string ioIntMap::make(const char* in_file, bool print) { */
+    /* string ioIntMap::make(const char* in_file, bool print) { */
     ostringstream msg;
     ifstream file;
     file.open(in_file);
@@ -662,7 +713,7 @@ double ioHgStats::mean_Xsigma(double X) {
     /* for (auto w : vals) sumV += w; */
     /* for (auto w : errs) sumE += w; */
     /* cout << " mean: " << mean << "  stddev " << stddev << "  X " << X << "  val: " << */
-        /* mean+X*stddev << " >> npts" << nbins << Form("stats:%f,%f,%f",sumV,sumE,sumW) <<endl; */
+    /* mean+X*stddev << " >> npts" << nbins << Form("stats:%f,%f,%f",sumV,sumE,sumW) <<endl; */
     return mean+ X * stddev;
 };
 TLine* ioHgStats::get_horizontal_TLine(double cut, bool cut_times_sigma) {
@@ -760,9 +811,9 @@ vector<double> ioHgStats::unmasked_vals() {
 ioHgStats& ioHgStats::mask(const vector<bool>  mask) {
     if ((int)mask.size() != nbins) {
         cout << " error in ioHgStats::mask " << endl
-             << " There are " << nbins << " bins, but only " << mask.size()
-             << " points in in put mask " << endl << endl
-             << " Therefore mask is not applied." << endl;
+            << " There are " << nbins << " bins, but only " << mask.size()
+            << " points in in put mask " << endl << endl
+            << " Therefore mask is not applied." << endl;
         return *this;
     }
     for (int i{0}; i<nbins; ++i) {
@@ -891,14 +942,13 @@ void ioMsgTree::read_messages(const char* f_name){
     fin->Close();
     delete fin;
     /* } */
-};
+    };
 void ioMsgTree::slurp_file(const char* which_file) {
     // try and read all lines of which_file into the tree
     msg(Form("--Begin contents of file \"%s\"",which_file));
     ifstream f_in {which_file};
     if (!f_in.is_open()) {
         msg(Form("  error: couldn't open file \"%s\"",which_file));
-        cout << "  error: couldn't open file \""<<which_file<<"\""<< endl;
     } else {
         string line;
         while (getline(f_in,line)) msg(line);
@@ -920,8 +970,8 @@ vector<int> ioIntVec::vals(string tag, vector<bool> mask) {
     int col { i_tag(tag) };
 
     if (mask.size() != data.size())
-    throw std::runtime_error(
-            Form("fatal error in ioIntVec::vals: size of mask and data do not match"));
+        throw std::runtime_error(
+                Form("fatal error in ioIntVec::vals: size of mask and data do not match"));
 
     vector<int> r_vec {};
     for (auto i{0}; i<(int)mask.size(); ++i) if (mask[i]) r_vec.push_back(data[i][col]);
@@ -967,7 +1017,7 @@ ioIntVec::ioIntVec( const char* file_name, bool echo_print, vector<string>_tags)
 { ioIntVec_constructor(file_name, echo_print, _tags); };
 
 ioIntVec::ioIntVec( const char* file_name, ofstream& log, 
-                         bool echo_print, vector<string>_tags) 
+        bool echo_print, vector<string>_tags) 
 { 
     log << ioIntVec_constructor(file_name, echo_print, _tags); 
     log << *this;
@@ -1046,10 +1096,10 @@ string ioIntVec::ioIntVec_constructor(const char* in_file,
         if (has_key) {
             data_in.push_back({key,c_vec});
             if ((int)c_vec.size() < (max_col+1))
-            throw std::runtime_error(
-                Form("In ioIntVec needs at least %i entries (+id) in line \"%s\"",
-                    max_col+1, line.c_str())
-            );
+                throw std::runtime_error(
+                        Form("In ioIntVec needs at least %i entries (+id) in line \"%s\"",
+                            max_col+1, line.c_str())
+                        );
         }
     }
     std::sort(data_in.begin(), data_in.end());
@@ -1078,7 +1128,7 @@ int ioIntVec::i_tag(string tag) {
 
 void ioIntVec::assert_tag(string tag, const char* module) {
     if (!has_tag(tag)) 
-    throw std::runtime_error(Form("fatal in ioIntVec::%s, couldn't find tag \"%s\"",module,tag.c_str()));
+        throw std::runtime_error(Form("fatal in ioIntVec::%s, couldn't find tag \"%s\"",module,tag.c_str()));
 };
 vector<int> ioIntVec::tag_cols(vector<string> _tags, const char* name) {
     vector<int> cols;
@@ -1100,14 +1150,14 @@ ioIntVec& ioIntVec::swap_tags(string tag0, string tag1) {
     int i0 = i_tag(tag0);
     if (i0 == -1) { 
         cout << "fatal error in ioIntVec::swap_tags "
-             << "could not find tag \"" << tag0 << "\"" << endl;
+            << "could not find tag \"" << tag0 << "\"" << endl;
         return *this;
     }
 
     int i1 = i_tag(tag1);
     if (i1 == -1) {
         cout << "fatal error in ioIntVec::swap_tags "
-             << "could not find tag \"" << tag1 << "\"" << endl;
+            << "could not find tag \"" << tag1 << "\"" << endl;
         return *this;
     }
 
@@ -1177,8 +1227,8 @@ vector<int>& ioIntVec::operator[](int key) {
 /* }; */
 vector<int> ioIntVec::get_keys(vector<bool> mask, bool keep_on_true) {
     if (mask.size() != data.size())
-    throw std::runtime_error(
-            Form("fatal error in ioIntVec::keys: size of mask and data do not match"));
+        throw std::runtime_error(
+                Form("fatal error in ioIntVec::keys: size of mask and data do not match"));
 
     vector<int> r_vec {};
     for (auto i{0}; i<(int)mask.size(); ++i) {
@@ -1233,7 +1283,7 @@ int ioIntVec::size(){ return (int)keys.size(); };
 /* }; */
 ostream& operator<<(ostream& os, ioIntVec& io) {
     // generate the max charactures needed in each column
-    
+
     // max length id line
     int max_id = 2;
     for (auto key : io.keys) {
@@ -1285,8 +1335,8 @@ void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
     ofstream f_out { which_file };
     if (!f_out.is_open()) {
         cout <<  "  fatal error in ioIntVec::write_to_file : " << endl
-             <<  "    Couldn't open file \""<<which_file<<"\""<< endl
-             <<  "    -> not file being written to " << endl;
+            <<  "    Couldn't open file \""<<which_file<<"\""<< endl
+            <<  "    -> not file being written to " << endl;
     }
     for (auto comment : comments) f_out << "// " << comment << endl;
     f_out << *this;
@@ -1513,4 +1563,158 @@ double ioFnCaller::operator()(double x0, double x1){
 };
 
 //-------------------------------------------------
+ioXsec::ioXsec(
+     const char* tag_file,
+     const char* Xsection_tag,
+     const char* pthatbin_tag,
+     const char* nEvents_tag
+ ) :
+    Xsection  { ioReadValVec(tag_file, Xsection_tag) },
+    pthatbins { ioReadValVec(tag_file, pthatbin_tag) },
+    nbins_pthat { static_cast<int>( Xsection.size()) },
+    Nevents {},
+    Ncollected ( nbins_pthat, 0 )
+{
+    for (auto v : ioReadValVec(tag_file, nEvents_tag)) {
+        Nevents.push_back(static_cast<int>(v));
+    }
+    ioBinVec pthat_edges { tag_file, {{"tag",pthatbin_tag}} };
+    hg_collected = new TH1D("pthat_bins_collected",
+        "Number of events collected in each pthat bin;#hat{p}_{T};n-collected",
+        pthat_edges, pthat_edges);
+};
 
+double ioXsec::pthatbin_center(int bin) {
+    return 0.5*(pthatbins[bin]+pthatbins[bin+1]);
+};
+
+int ioXsec::pthatbin(pair<double,double> bounds) {
+    double first { bounds.first };
+    auto iter = std::lower_bound(pthatbins.begin(), pthatbins.end(), bounds.first);
+    if (iter==pthatbins.end() || (*(iter)!=bounds.first)) { 
+        throw std::runtime_error(" fatal in ioXsec::pthatbin: pthatbin not found " );
+        return -1;
+    }
+    if (*(iter+1) != bounds.second) {
+        cout << " warning in ioXsec::pthatbin: pthatbin upperbound sought " << endl
+             << " doesnt match pthatbin lower found." << endl;
+    }
+    return (iter - pthatbins.begin());
+};
+
+double ioXsec::Xsec(pair<double,double> bounds, int numEvents) {
+    return Xsec(pthatbin(bounds), numEvents);
+};
+double ioXsec::Xsec(int pthatbin, int numEvents) {
+    check_pthatbin(pthatbin);
+    if (numEvents != 0) return Xsection[pthatbin] / numEvents;
+
+    if (n_collected_total != 0) {
+        if (Ncollected[pthatbin]==0) {
+            cout << " fatal error: no events for bin " << pthatbin 
+                << " have been collected." << endl
+                << " Cannot generate weighted cross section." << endl;
+            throw std::runtime_error("Asking for ptbin with no events in ioXsec::Xsec");
+        } else {
+            return Xsection[pthatbin] / Ncollected[pthatbin] ;
+        }
+    }
+    return Xsection[pthatbin] / Nevents[pthatbin];
+};
+
+void ioXsec::collect (int pthatbin) {
+    ++n_collected_total;
+    ++Ncollected[pthatbin];
+};
+void ioXsec::collect(pair<double,double>bounds) { collect(pthatbin(bounds)); };
+
+void ioXsec::check_pthatbin(int bin) {
+    if (bin >= nbins_pthat) {
+        throw std::runtime_error( Form(
+        "fatal in ioXsec : asked for pthatbin %i but there are only %i bins",
+        bin, nbins_pthat));
+    }
+};
+
+/* io_pThatOutliers::io_pThatOutliers( */
+/*         map<int,double> _pt_limits, */ 
+/*         double _pt_fakes, double _pt_misses */
+/* ) : */
+/*     pt_limits {_pt_limits}, */ 
+/*     pt_fakes {_pt_fakes}, */ 
+/*     pt_misses {_pt_misses} */ 
+/* { */
+/*     for (auto p : pt_limits) { */
+/*         M_matches[p.first] = {}; */
+/*         T_matches[p.first] = {}; */
+/*         misses[p.first] = {}; */
+/*         fakes[p.first] = {}; */
+/*     } */
+/* }; */
+
+/* bool io_pThatOutliers::check_if_outlier(int _pthatbin, double pt) { */
+/*     if (pt_limits.count(_pthatbin) == 0) { */
+/*         throw std::runtime_error( */
+/*             Form("fatal error in io_pThatOutliers: " */
+/*             " limit for required pthatbin (%i) not set", */
+/*             _pthatbin) */
+/*         ); */
+/*     } */
+/*     is_outlier = (pt >= pt_limits[_pthatbin]); */
+/*     pthatbin = _pthatbin; */
+/*     return is_outlier; */
+/* }; */
+
+/* void io_pThatOutliers::match(double M, double T) { */
+/*     if (is_outlier) { */
+/*         M_matches[pthatbin].push_back(M); */
+/*         T_matches[pthatbin].push_back(T); */
+/*     } */
+/* }; */
+/* void io_pThatOutliers::miss(double T) { */
+/*     if (is_outlier) misses[pthatbin].push_back(T); */
+/* }; */
+/* void io_pThatOutliers::fake(double M) { */
+/*     if (is_outlier) fakes[pthatbin].push_back(M); */
+/* }; */
+
+
+/* void io_pThatOutliers::write_TGraph(int _pthatbin, */
+/*         ioOptMap options, ioOptMap dict) { */
+/*     dict += options; */
+/*     if (pt_limits.count(_pthatbin)==0) { */
+/*         throw std::runtime_error( */
+/*         Form( */
+/*             "fatal error in io_pThatOutliers: " */
+/*             " limit for required pthatbin (%i) not set", */
+/*             _pthatbin) */
+/*         ); */
+/*     } */
+
+/*     // draw the matches TGraph */
+/*     if (M_matches[pthatbin].size()>0) { */
+/*         ioBinVec x { M_matches[pthatbin], false }; */
+/*         ioBinVec y { T_matches[pthatbin], false }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_matches",dict["prefix"].c_str()) ); */
+/*     } */
+/*     dict["MarkerStyle"] = dict["MarkerFakeMiss"]; */
+/*     if (fakes[pthatbin].size() > 0) { */
+/*         ioBinVec x { fakes[pthatbin], false }; */
+/*         ioBinVec y { vector<double>(fakes[pthatbin].size(), */ 
+/*                 pt_fakes) }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_fakes",dict["prefix"].c_str()) ); */
+/*     } */
+/*     if (misses[pthatbin].size() > 0) { */
+/*         ioBinVec x { vector<double>(misses[pthatbin].size(), */ 
+/*                 pt_misses) }; */
+/*         ioBinVec y { misses[pthatbin], false }; */
+/*         TGraph gr { x.size, x, y }; */
+/*         io_fmt( &gr, options ); */
+/*         gr.Write( Form("%s_misses",dict["prefix"].c_str()) ); */
+/*     } */
+/* }; */
+    

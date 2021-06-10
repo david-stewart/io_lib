@@ -8,6 +8,8 @@
 #include "TH2D.h"
 
 #include "RooUnfoldResponse.h"
+#include "ioClass.h"
+#include "ioCfnc.h"
 
 using std::vector;
 using std::sort;
@@ -36,6 +38,7 @@ struct ioJetMatcher_index {
 
 class ioJetMatcher {
     public:
+    TH1D* R2_distr_matches;
     RooUnfoldResponse response;
     RooUnfoldResponse* response_A; // 1/2 of the data
     RooUnfoldResponse* response_B; // other 1/2 of data
@@ -70,8 +73,7 @@ class ioJetMatcher {
                   float _jet_R=0.4 
     );
     void init(float _jet_R);
-    bool half_switch;
-
+    bool fill_A{true};
 
     void reset();
     void write();
@@ -85,6 +87,126 @@ class ioJetMatcher {
 	vector<ioJetMatcher_float> data_MC;
 	vector<ioJetMatcher_float> data_reco;
 
+};
+
+struct ioJetMatcher_outlier {
+    ioJetMatcher_outlier();
+    
+    //---------------------------------
+    // optionally initialize and use
+    //---------------------------------
+    void init( 
+        map<int,double> boundaries,
+        double  _pt_fakes,
+        double  _pt_misses,
+        ioXsec* _Xsec
+    );
+    ioXsec* Xsec;
+    map<int,double> pt_limits{}; // entries are <pthatbin, limit>
+    double pt_fakes, pt_misses; // intiali
+    bool is_set{false}; // if not is set, simply always ignore
+
+    // use
+    bool operator()(int, double); // check if it is an outlier
+
+    // collect the values of out-of bound values
+    map<int, vector<double>> M_matches{};
+    map<int, vector<double>> T_matches{};
+    map<int, vector<double>> misses{}; // plotted on y-axis at x=pt-misses
+    map<int, vector<double>> fakes{};  // plotted on x-axis at y=pt-fakes
+
+    // how to collect above values
+    void add_fake(int pthatbin, double pt);
+    void add_miss(int pthatbin, double pt);
+    void add_match(int pthatbin, double M_pt, double T_pt);
+
+    // write out the 2-D TGraph of matches outliers
+    // including 1-D outliers of any misses and fakes
+    void write_TGraph(
+        int pthatbin, 
+        ioOptMap options={}, 
+        ioOptMap dict={{
+        "MarkerStyle", kFullCircle,
+        "MarkerColor", kBlack,
+        "MarkerFakeMiss", kOpenCircle,
+        "name","outlier_"}}
+    );
+    void write_TGraph(
+        int pthatbin, const char* name, 
+        int markerstyle, int markercolor,
+        ioOptMap options={},
+        ioOptMap dict={{"MarkerFakeMiss",0}}
+    );
+};
+
+struct ioJetMatcherX {
+    // like above, but uses it's own ioXsec
+    public:
+    string name;
+    ioXsec& Xsec;
+    RooUnfoldResponse response;
+    ioInBounds bounds_T;
+    ioInBounds bounds_M;
+
+    bool cut_outliers{false};
+
+    /* int* eventid; */ 
+    /* int* runid; */
+    map<int,int> outlier_ids; // runid->eventid
+
+    ioJetMatcherX (const char* name, ioXsec& _Xsec, 
+            const char* bin_file, 
+            const char* tag_M, 
+            const char* tag_T, 
+            ioOptMap options={}, ioBinVec _hg2ptbins={81,-0.5,80.5}, 
+            ioOptMap dict={{
+                "make_AB",1,
+                "hg2_Xsec_vs_T",1,
+                "hg2_Xsec_vs_M",1,
+                "hg2_Xsec_vs_match",1,
+                "hg2_Xsec_vs_fake",1,
+                "hg1_R2_match",1,
+                "R",0.4,
+                "cut_outliers",0
+            }}
+    );
+    double pt_fakes, pt_misses;
+
+    ioJetMatcher_outlier& outlier(char); // 'F' 'M' or 'T'
+    void set_outlier(char C, map<int, double> boundaries);
+    ioJetMatcher_outlier fake_outliers{};
+    ioJetMatcher_outlier M_outliers{};
+    ioJetMatcher_outlier T_outliers{};
+    void set_outlier(ioJetMatcher_outlier&, map<int,double> pt_limits);
+
+    bool b_make_AB;
+    bool b_hg2_Xsec_vs_T;
+    bool b_hg2_Xsec_vs_M;
+    bool b_hg2_Xsec_vs_match;
+    bool b_hg2_Xsec_vs_fake;
+    bool b_hg1_R2_match;
+    bool switch_AB{true};
+
+    RooUnfoldResponse* response_A; // 1/2 of the data
+    RooUnfoldResponse* response_B; // other 1/2 of data
+    TH2D* hg2_Xsec_vs_T{nullptr};
+    TH2D* hg2_Xsec_vs_M{nullptr};
+    TH2D* hg2_Xsec_vs_match{nullptr};
+    TH2D* hg2_Xsec_vs_fake{nullptr};
+    TH1D* hg1_R2_match{nullptr};
+
+    void addjet_MC(float eta, float phi, float pT);
+    void addjet_reco(float eta, float phi, float pT);
+    void do_matching(int pthatbin);
+    void do_matching(pair<double,double> pthatrange);
+
+    void reset();
+    void write();
+
+    private: //internal data to do the matching
+    float jet_R2; // jet_R * jet_R   
+	vector<ioJetMatcher_float> data_MC;
+	vector<ioJetMatcher_float> data_reco;
 };
 
 #endif

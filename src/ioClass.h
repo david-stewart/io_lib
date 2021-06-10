@@ -48,15 +48,21 @@ class ioGetter{
 //      See notes below.
 // --------------------------------------------------------------------------------------
 
+
+
+
 struct ioBinVec {
     ioBinVec(int nbins, double lo, double hi);
-    vector<double> bin_centers();
+    ioBinVec(vector<vector<double>>);
+    /* ioBinVec operator+=(const ioBinVec& _); */
+    /* friend ioBinVec operator+ (const ioBinVec lhs, const ioBinVec& rhs); */
 
     // two constructors either enter a vector or read one and then use init
-    ioBinVec (vector<double>, bool range_double=true);
+    ioBinVec(vector<double>, bool range_double=true);
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
-    ioBinVec(TAxis*);
+    ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
     void init(vector<double>, bool range_double=true);
+    /* void update(); */
     // all constructors use build_ptr
     void build_ptr();
     // read the vec from a file with ioReadValVec
@@ -69,11 +75,23 @@ struct ioBinVec {
     operator int ();
     operator double* ();
     operator vector<double> ();
-    double operator[](int);
+    double operator[](int); 
+    double bin_underflow(); 
+    double bin_overflow();
     friend ostream& operator<<(ostream& os, ioBinVec& val);
 
     vector<double>::iterator begin();
     vector<double>::iterator end();
+};
+// small class used to see if things are in bounds
+struct ioInBounds {
+    double lo_bound;
+    double hi_bound;
+    bool operator()(double);
+    void init(ioBinVec);
+    ioInBounds(ioBinVec);
+    ioInBounds(const char* file, const char* tag="");
+    ioInBounds(double, double);
 };
 
 
@@ -173,6 +191,12 @@ struct ioPads {
 
     int canvas_width         { 1200 };
     int canvas_height        {  800 };
+    void stamp(const char*, ioOptMap opt={}, 
+        ioOptMap dict = {{ 
+        "TextColor", (kGray+2), 
+        "TextSize", 12,
+        "x-loc", .05,
+        "y-loc", .05}} );
 
     // To do here:
 
@@ -472,6 +496,77 @@ struct ioFnCaller{
     double *p; // fit parameters, read from data_file
     double *x;
 };
+
+struct ioXsec{
+    // generalization of src/ioXsec_pAu2015.h
+    // ptHat bins, X-sections, and nEvents are read in from file
+
+    // data
+    ioXsec (
+        const char* tag_file,
+        const char* Xsection_tag="Xsection",
+        const char* pthatbin_tag="pThat",
+        const char* nEvents_tag="nEvents"
+    );
+    vector<double> Xsection;
+    vector<double> pthatbins;
+    double pthatbin_center(int);
+    int nbins_pthat;
+    vector<int> Nevents;
+    vector<int> Ncollected;
+    long int n_collected_total{0};
+
+    // functions
+    int pthatbin(pair<double,double> pthat_bounds);
+    
+    double Xsec(pair<double,double>, int number_of_events=0); 
+    double Xsec(int pthatbin, int number_of_events=0); 
+    double operator()(int pthatbin, int num_of_events=0) 
+        { return Xsec(pthatbin, num_of_events); };
+    double operator()(pair<double,double> pthatbounds, int num_of_events=0) 
+        { return Xsec(pthatbounds, num_of_events); };
+
+    void collect (int pthatbin);
+    void collect (pair<double,double> pthatbounds);
+    void check_pthatbin(int bin);
+
+    TH1D* hg_collected;
+};
+
+/* // object to record pthatbin outliers and plot them as desired */
+/* struct io_pThatOutliers { */
+/*     io_pThatOutliers( */
+/*         map<int,double> _pt_limits, */ 
+/*         double _pt_fakes=0., */
+/*         double _pt_misses=0. */
+/*     ); */
+
+/*     map<int,double> pt_limits; */
+/*     map<int, vector<double>> M_matches; */
+/*     map<int, vector<double>> T_matches; */
+/*     map<int, vector<double>> misses; */
+/*     map<int, vector<double>> fakes; */
+/*     bool is_outlier {false}; */
+/*     int  pthatbin; */
+/*     bool check_if_outlier(int pthatbin, double pt); */
+
+/*     void match(double M, double T); */
+/*     void miss(double T); */
+/*     void fake(double M); */
+
+/*     double pt_fakes; */
+/*     double pt_misses; */
+
+
+/*     void write_TGraph(int pthatbin, ioOptMap options={}, */ 
+/*           ioOptMap dict={{ */
+/*           "MarkerStyle", kFullCircle, */
+/*           "MarkerColor", kBlack, */
+/*           "MarkerFakeMiss", kOpenCircle, */
+/*           "name","outlier_"}} */
+/*     ); */
+/* }; */
+
 
 #endif
 

@@ -32,6 +32,14 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
        "zAxisRangeHi",dict["zAxisRangeHo"],
        "Stats",dict["StatsResponse"],
        "Title",dict["TitleResponse"]}});
+    if (dict("zAxisRangeLo") || dict("zAxisRangeHi")) {
+        if (!dict("zAxisRangeLo") || !dict("zAxisRangeHi")) {
+            cout << " Warning in ioCfnc.cc: has zAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting zAxisRange." << endl;
+        } else {
+            hg_response->GetZaxis()->SetRangeUser(dict["zAxisRangeLo"].val(), dict["zAxisRangeHi"].val());
+        }
+    }
 
     hg_response->Draw("colz");
 
@@ -74,4 +82,18 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
 
     pads.pads.push_back(pads.canvas_pad);
     return std::tie(pads, hg_response, truth, unf, rat);
+};
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+        const char* name, const char* file, const char* tag_M, const char* tag_T ) {
+    ioBinVec bin_M { file, tag_M };
+    ioBinVec bin_T { file, tag_T };
+    TH1D truth {
+            Form("%s_truth",ioUniqueName()),
+            Form("%s;truth;N",ioUniqueName()),
+            bin_T, bin_T};
+    TH1D measured {
+            Form("%s_measured",ioUniqueName()),
+            Form("%s;measured;N",ioUniqueName()),
+            bin_M, bin_M};
+    return {&measured, &truth, Form("%s_RUR",name), "RooUnfoldResponse"};
 };

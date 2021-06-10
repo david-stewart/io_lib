@@ -655,6 +655,12 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
 };
 
 //----------
+vector<double> ioReadValVec(const char* in_file, const char* tag, 
+        ioOptMap options, ioOptMap dict) {
+    dict += options;
+    dict["tag"] = tag;
+    return ioReadValVec(in_file, dict);
+};
 vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict) {
     dict += options;
 
@@ -828,8 +834,14 @@ double* ax_doubleptr(vector<int> vals) {
     x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
     return x;
 };
-double io_R(double x0,double y0,double x1,double y1) 
+double io_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
+double io_D2(double x0,double y0,double x1,double y1) 
+{ return TMath::Sq(x1-x0)+TMath::Sq(y1-y0); };
+double io_R(double x0,double y0,double x1,double y1) 
+{ return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0))); };
+double io_R2(double x0,double y0,double x1,double y1) 
+{ return TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0)); };
 
 
 
@@ -850,7 +862,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins, lo_bin, hi_bin };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 
 RooUnfoldResponse ioMakeRooUnfoldResponse(
@@ -870,7 +882,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nbins,  edges };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 
 
@@ -892,7 +904,7 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nb_measured, lo_measured, hi_measured };
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
 RooUnfoldResponse ioMakeRooUnfoldResponse(
      int nb_measured, double* edges_measured,
@@ -912,9 +924,8 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             Form("%s_measured",this_tag),
             Form("%s;measured;N",title),
             nb_measured, edges_measured};
-    return {&measured, &truth, Form("%s_response",this_tag), title};
+    return {&measured, &truth, Form("%s_RooUnfR",this_tag), title};
 };
-
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 /* int iowhichbin(int, double*); */
 /* int iowhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
@@ -945,6 +956,32 @@ bool ioIsAnyTag    (string  word) { return ioIsAnyTag((TString)word); };
 bool ioIsAnyTag    (TString word) {
     if (!word.BeginsWith("<")) return false;
     return word.EndsWith(">");
+};
+
+void io_normByRow(TH2D* hg, double factor, bool use_max_val) {
+    int nCols = hg->GetXaxis()->GetNbins();
+    int nRows   = hg->GetYaxis()->GetNbins(); 
+
+    for (int row{1}; row<=nRows; ++row) {
+        double mult;
+        if (use_max_val) {
+            double vmax { hg->GetBinContent(1,row) };
+            for (int col{1}; col <= nCols; ++col) {
+                if (hg->GetBinContent(col,row) > vmax) {
+                    vmax = hg->GetBinContent(col,row);
+                }
+            }
+            mult = 1./vmax;
+        } else {
+            mult = factor / hg->Integral(1,nCols,row,row);
+        }
+
+
+        for (int col {1}; col <= nCols; ++col) {
+            hg->SetBinContent(col, row, hg->GetBinContent(col, row) * mult);
+            hg->SetBinError  (col, row, hg->GetBinError  (col, row) * mult);
+        }
+    };
 };
 
 

@@ -25,5 +25,7 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
             "yTitleRatio","Ratio: unf./truth"}}
         );
 
+RooUnfoldResponse ioMakeRooUnfoldResponse(
+        const char* name, const char* file, const char* tag_M, const char* tag_T );
 
 #endif

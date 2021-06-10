@@ -36,9 +36,11 @@ bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 // or provide enough information for them to be constructed
 void ioJetMatcher::init(float _jet_R) {
 	jet_R2 = _jet_R*_jet_R; 
+    R2_distr_matches = new TH1D(Form("R2_distr_matches_%s",response.GetName()),
+            ";R-matches;N",100,0.,1.);
+    /* cout << jet_R2 << endl; */
     data_MC.clear(); 
     data_reco.clear();
-    cout << " name: " << response.GetName() << endl; 
     response_A = (RooUnfoldResponse*) response.Clone(Form("%s_A",response.GetName()));
     response_B = (RooUnfoldResponse*) response.Clone(Form("%s_B",response.GetName()));
 }
@@ -102,15 +104,19 @@ void ioJetMatcher::do_matching_highfirst(double W) {
     /* std::sort(data_MC.begin(), data_MC.end(), std::greater<ioJetMatcher_float>()); */
     /* std::sort(data_reco.begin(), data_reco.end(), std::greater<ioJetMatcher_float>()); */
 
-    half_switch = !half_switch;
+    fill_A = !fill_A;
     for (auto& MC : data_MC) {
+        // cut out out-of-bounds jet
         bool found_match {false};
         for (auto& reco : data_reco) {
             if (reco.is_matched) continue;
-            if (MC(reco,jet_R2)) {
+            double delta_R2 { MC(reco,jet_R2) };
+            /* if (MC(reco,jet_R2)!=0.) { */
+            if (delta_R2 != 0) {
+                R2_distr_matches->Fill(delta_R2);
                 reco.is_matched = true;
                 response.Fill(reco.pT, MC.pT, W);
-                if (half_switch) response_A->Fill(reco.pT, MC.pT, W);
+                if (fill_A) response_A->Fill(reco.pT, MC.pT, W);
                 else             response_B->Fill(reco.pT, MC.pT, W);
                 found_match = true;
                 break;
@@ -118,17 +124,20 @@ void ioJetMatcher::do_matching_highfirst(double W) {
         }
         if (!found_match) {
             response.Miss(MC.pT,W);
-            if (half_switch) response_A->Miss(MC.pT, W);
+            if (fill_A) response_A->Miss(MC.pT, W);
             else             response_B->Miss(MC.pT, W);
         }
     }
     for (auto& reco : data_reco) {
         if (!reco.is_matched) {
             response.Fake(reco.pT,W);
-            if (half_switch) response_A->Fake(reco.pT, W);
+            if (fill_A) response_A->Fake(reco.pT, W);
             else             response_B->Fake(reco.pT, W);
         }// enter a fake
     }
+    /* cout << " entries: " << response.Hresponse()->GetEntries() << " " */ 
+                         /* << response_A->Hresponse()->GetEntries() << " " */ 
+                         /* << response_B->Hresponse()->GetEntries(); */
     reset();
     // algorithm:
     // starting with the highest to lowest MC jet -- try and match to the highest to lowest reco jets
@@ -140,79 +149,260 @@ void ioJetMatcher::reset() {
     data_reco.clear();
 };
 void ioJetMatcher::write() {
+    R2_distr_matches->Write();
     response.Write();
     response_A->Write();
     response_B->Write();
 };
-    /* response.Write(); */
-    /* TH1D* hg_truth    = (TH1D*) response.Htruth(); */
-    /* TH1D* hg_measured = (TH1D*) response.Hmeasured(); */
-    /* TH2D* hg_response = (TH2D*) response.Hresponse(); */
-    /* /1* cout << " z0 " << endl; *1/ */
-    /* if (scale_by_bin_width) { */
-    /*     io_scaleByBinWidth(hg_truth); */
-    /*     io_scaleByBinWidth(hg_measured); */
-    /*     io_scaleByBinWidth(hg_response); */
-    /* } */
-    /* hg_truth->Write(); */
-    /* hg_measured->Write(); */
-    /* hg_response->Write(); */
 
-    /* if (with_miss_fakes) { */
-    /*     TH1D* miss = (TH1D*) hg_response->ProjectionY(Form("%s_miss",tag.c_str())); */
-    /*     miss->Scale(-1.); */
-    /*     miss->Add(hg_truth); */
-    /*     miss->Write(); */
+ioJetMatcher_outlier::ioJetMatcher_outlier() {};
+void ioJetMatcher_outlier::init(
+        map<int,double> boundaries,
+        double _pt_fakes,
+        double _pt_misses,
+        ioXsec* _Xsec
+    ) {
+    pt_limits = boundaries;
+    pt_fakes = _pt_fakes;
+    pt_misses = _pt_misses;
+    Xsec = _Xsec;
+    is_set = true;
+};
 
-    /*     TH1D* fakes = (TH1D*) hg_response->ProjectionX(Form("%s_fakes",tag.c_str())); */
-    /*     fakes->Scale(-1.); */
-    /*     fakes->Add(hg_measured); */
-    /*     fakes->Write(); */
+/* ioJetMatcher_outlier::operator bool () { return is_set; }; */
+bool ioJetMatcher_outlier::operator() (int pthatbin, double pt) {
+    if (!is_set) return false;
+    if (pt_limits.count(pthatbin)==0) return false;
+    return (pt > pt_limits[pthatbin]);
+};
 
-    /* /1* cout << " z10 " << endl; *1/ */
-    /*     if (add_unified2D) { // make a TH2D histogram is misses and face in a new, */ 
-    /*                          // dummy bin to the left and bottem of the TH2D. */
-    /*         TAxis *x_axis = hg_response->GetXaxis(); */
-    /*         TAxis *y_axis = hg_response->GetYaxis(); */
+void ioJetMatcher_outlier::add_match(int pthatbin, double M, double T) {
+    M_matches[pthatbin].push_back(M);
+    T_matches[pthatbin].push_back(T);
+};
 
-    /*         int x_nbins = x_axis->GetNbins(); */
-    /*         int y_nbins = y_axis->GetNbins(); */
+void ioJetMatcher_outlier::add_fake(int pthatbin, double M) {
+    fakes[pthatbin].push_back(M); };
 
-    /*         double *x_edges = new double [ x_nbins+2 ]; */
-    /*         double *y_edges = new double [ y_nbins+2 ]; */
-    /* /1* TH1D* __1unified = new TH1D( "__1name__","title;x;y", 13, 0., 50.); *1/ */
+void ioJetMatcher_outlier::add_miss(int pthatbin, double T) {
+    misses[pthatbin].push_back(T); };
 
-    /* /1* cout << " z11 " << endl; *1/ */
-    /*         x_edges[0] = x_axis->GetBinLowEdge(1) - x_axis->GetBinWidth(1); */
-    /*         for (int i{1}; i<=x_nbins; ++i) x_edges[i] = x_axis->GetBinLowEdge(i); */
-    /*         x_edges[x_nbins+1] = x_axis->GetBinUpEdge(x_nbins); */
+void ioJetMatcher_outlier::write_TGraph(
+    int pthatbin, const char* name, 
+    int markerstyle, int markercolor,
+    ioOptMap options,
+    ioOptMap dict
+) {
+    dict += options;
+    if (dict["MarkerFakeMiss"]==0) 
+        dict["MarkerFakeMiss"]=markerstyle;
+    dict["MarkerStyle"]=markerstyle;
+    dict["MarkerColor"]=markercolor;
+    dict["name"]=name;
+    write_TGraph(pthatbin, dict);
+};
+void ioJetMatcher_outlier::write_TGraph(
+      int pthatbin, 
+      ioOptMap options,
+      ioOptMap dict
+) {
+    double pthatval = Xsec->pthatbin_center(pthatbin);
+    dict += options;
+    /* cout << "name " << dict["name"].str() << "  markercolor " << dict["MarkerColor"] << endl; */
+    if (pt_limits.count(pthatbin)==0) {
+        throw std::runtime_error(
+        Form(
+            "fatal error in ioJetMatcher_outlier: "
+            " limit for requested pthatbin (%i) not set",
+            pthatbin)
+        );
+    }
 
-    /*         y_edges[0] = y_axis->GetBinLowEdge(1) - y_axis->GetBinWidth(1); */
-    /*         for (int i{1}; i<=y_nbins; ++i) y_edges[i] = y_axis->GetBinLowEdge(i); */
-    /*         y_edges[y_nbins+1] = y_axis->GetBinUpEdge(y_nbins); */
+    // draw TGraph the single point for the boundary
+    {
+        double *x = new double[1];
+        double *y = new double[1];
+        x[0] = pt_limits[pthatbin];
+        y[0] = pthatval;
+        TGraph gr { 1, x, y };
+        io_fmt(&gr, dict);
+        gr.SetName(Form("%s_limit_%i",dict["name"].c_str(),pthatbin));
+        gr.Write();
+    }
+    
+    // draw the matches TGraph
+    if (M_matches[pthatbin].size()>0) {
+        ioBinVec x { M_matches[pthatbin], false };
+        ioBinVec y { T_matches[pthatbin], false };
+        TGraph gr { x.size, x, y };
+        io_fmt( &gr, options );
+        gr.Write( Form("%s_match_%i",dict["name"].c_str(),pthatbin) );
+    }
+    // draw the miss-fakes TGraph
+    dict["MarkerStyle"] = dict["MarkerFakeMiss"];
 
-    /*         TH2D unified { Form("%s_responseFakeMiss",tag.c_str()), */ 
-    /*             Form("%s;Reconstructed (first row is fake jets);Pythia (first column is misses)", */
-    /*                     tag.c_str()), x_nbins+1, x_edges, y_nbins+1, y_edges }; */
-    /*     /1* TH1D* __unified = new TH1D( "name__","title;x;y", 13, 0., 50.); *1/ */
+    ioBinVec x_fakes { fakes[pthatbin], false };
+    ioBinVec y_fakes { vector<double>(fakes[pthatbin].size(), pt_fakes), false };
 
-    /*         for (int ix{1}; ix <=x_nbins; ++ix) { */
-    /*             unified.SetBinContent(ix,1, fakes->GetBinContent(ix)); */
-    /*             unified.SetBinError  (ix,1, fakes->GetBinError(ix)); */
-    /*         } */
-    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
-    /*             unified.SetBinContent(1,iy, miss->GetBinContent(iy)); */
-    /*             unified.SetBinError  (1,iy, miss->GetBinError(iy)); */
-    /*         } */
-    /*         for (int ix{1}; ix <=x_nbins; ++ix) */
-    /*         for (int iy{1}; iy <=y_nbins; ++iy) { */
-    /*             unified.SetBinContent(ix+1,iy+1, hg_response->GetBinContent(ix,iy)); */
-    /*             unified.SetBinError  (ix+1,iy+1, hg_response->GetBinError  (ix,iy)); */
-    /*         } */
-    /*         unified.Write(); */
-    /*     } */
-    /* } */
-/* }; */
+    ioBinVec x_misses { misses[pthatbin], false };
+    ioBinVec y_misses { vector<double>(misses[pthatbin].size(), pt_fakes), false };
 
+    ioBinVec x {{x_fakes.vec, x_misses}};
+    ioBinVec y {{y_fakes.vec, y_misses}};
 
+    if (x.size > 0) {
+        TGraph gr { x.size, x, y };
+        io_fmt( &gr, options );
+        gr.Write( Form("%s_missfakes_%i",dict["name"].c_str(),pthatbin));
+    }
+};
 
+ioJetMatcherX::ioJetMatcherX (const char* _name, ioXsec& _Xsec, 
+            const char* bin_file, const char* tag_M, const char* tag_T, 
+            ioOptMap options, ioBinVec _hg2ptbins, ioOptMap dict
+    ) :
+    name {_name}, 
+    Xsec{_Xsec}, 
+    response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)},
+    bounds_T{bin_file,tag_T},
+    bounds_M{bin_file,tag_M}
+{
+    dict += options;
+
+    ioBinVec binsM { bin_file, tag_M };
+    pt_misses = binsM[0];
+
+    ioBinVec binsT { bin_file, tag_T };
+    pt_fakes = binsT[0];
+
+    b_make_AB       = (dict["make_AB"]==1);
+    b_hg2_Xsec_vs_M = (dict["hg2_Xsec_vs_M"]==1);
+    b_hg2_Xsec_vs_T = (dict["hg2_Xsec_vs_T"]==1);
+    b_hg2_Xsec_vs_match = (dict["hg2_Xsec_vs_match"]==1);
+    b_hg2_Xsec_vs_fake  = (dict["hg2_Xsec_vs_fake"]==1);
+    b_hg1_R2_match  = (dict["hg1_R2_match"]==1);
+
+    jet_R2 = dict["R"]()*dict["R"]();
+
+    if (b_make_AB) {
+        response_A = (RooUnfoldResponse*)
+            response.Clone(Form("%s_A",response.GetName()));
+        response_B = (RooUnfoldResponse*)
+            response.Clone(Form("%s_B",response.GetName()));
+    }
+    ioBinVec pthatbins { Xsec.pthatbins };
+    if (b_hg2_Xsec_vs_T) hg2_Xsec_vs_T = new TH2D(
+        Form("hg2_Xsec_vs_T_%s",_name),
+        ";#it{p}_{T} Truth;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_M) hg2_Xsec_vs_M = new TH2D(
+        Form("hg2_Xsec_vs_M_%s",_name),
+        ";#it{p}_{T} Measured;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_match) hg2_Xsec_vs_match = new TH2D(
+        Form("hg2_Xsec_vs_match_%s",_name),
+        ";#it{p}_{T} Truth matched;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg2_Xsec_vs_fake) hg2_Xsec_vs_fake = new TH2D(
+        Form("hg2_Xsec_vs_fake_%s",_name),
+        ";#it{p}_{T} Measured fakes;#vec{#it{p}}_{T}",
+        _hg2ptbins, _hg2ptbins, pthatbins, pthatbins);
+    if (b_hg1_R2_match) hg1_R2_match = new TH1D(
+        Form("hg1_R2_match_%s",_name), 
+        "Matched jets; #sqrt((#Delta#phi)^2+(#delta#eta)^2)",
+        100, 0., 0.2 );
+}
+
+ioJetMatcher_outlier& ioJetMatcherX::outlier(char C) {
+    if (C == 'F') return fake_outliers;
+    if (C == 'M') return M_outliers;
+    if (C == 'T') return T_outliers;
+    throw std::runtime_error(
+    "Fatal call to ioJetMatcherX::outlier, can only use 'F', 'M', or 'T'");
+};
+void ioJetMatcherX::set_outlier(char C, map<int,double> boundaries) {
+    outlier(C).init(boundaries, pt_fakes, pt_misses, &Xsec);
+};
+
+void ioJetMatcherX::do_matching(pair<double,double> pthatrange) {
+    do_matching(Xsec.pthatbin(pthatrange));
+};
+
+void ioJetMatcherX::do_matching(int pthatbin) {
+    double W { Xsec.Xsec(pthatbin) };
+    double pthat_val { (0.5)*(Xsec.pthatbins[pthatbin]+
+                       Xsec.pthatbins[pthatbin+1]) };
+    switch_AB = !switch_AB;
+
+    for (auto& MC : data_MC) {
+        if (cut_outliers && T_outliers(pthatbin,MC.pT)) continue;
+        if (b_hg2_Xsec_vs_T) 
+            hg2_Xsec_vs_T->Fill(MC.pT,pthat_val);
+        bool found_match {false};
+        for (auto& reco : data_reco) {
+            if (cut_outliers && M_outliers(pthatbin,reco.pT)) continue;
+            if (reco.is_matched) continue;
+            double delta_R2 { MC(reco,jet_R2) };
+            if (delta_R2 != 0) {
+                found_match = true;
+                reco.is_matched = true;
+                if (b_hg2_Xsec_vs_match) 
+                    hg2_Xsec_vs_match->Fill(MC.pT,pthat_val);
+                if (b_hg1_R2_match) hg1_R2_match->Fill(delta_R2);
+
+                if (T_outliers(pthatbin, MC.pT))   T_outliers.add_match(pthatbin, reco.pT, MC.pT);
+                if (M_outliers(pthatbin, reco.pT)) M_outliers.add_match(pthatbin, reco.pT, MC.pT);
+                response.Fill(reco.pT, MC.pT, W);
+                if (switch_AB)  response_A->Fill(reco.pT, MC.pT, W);
+                else            response_B->Fill(reco.pT, MC.pT, W);
+                break;
+            }
+        }
+        if (!found_match) {
+            response.Miss(MC.pT,W);
+            if (T_outliers(pthatbin, MC.pT))   T_outliers.add_miss(pthatbin, MC.pT);
+            if (switch_AB) response_A->Miss(MC.pT, W);
+            else           response_B->Miss(MC.pT, W);
+        }
+    }
+    for (auto& reco : data_reco) {
+        if (hg2_Xsec_vs_M) hg2_Xsec_vs_M->Fill(reco.pT,pthat_val);
+        if (!reco.is_matched) {
+            if (cut_outliers && fake_outliers(pthatbin,reco.pT)) continue;
+            if (hg2_Xsec_vs_fake) hg2_Xsec_vs_fake->Fill(reco.pT,pthat_val);
+            if (M_outliers(pthatbin, reco.pT)) M_outliers.add_fake(pthatbin, reco.pT);
+            if (fake_outliers(pthatbin, reco.pT)) fake_outliers.add_fake(pthatbin, reco.pT);
+            response.Fake(reco.pT,W);
+            if (switch_AB) response_A->Fake(reco.pT, W);
+            else           response_B->Fake(reco.pT, W);
+        }// enter a fake
+    }
+    reset();
+};
+void ioJetMatcherX::reset() {
+    data_MC.clear();
+    data_reco.clear();
+};
+void ioJetMatcherX::write() {
+    /* R2_distr_matches->Write(); */
+    response.Write();
+    if (b_make_AB) {
+        response_A->Write();
+        response_B->Write();
+    }
+    if (b_hg2_Xsec_vs_M) hg2_Xsec_vs_M->Write();
+    if (b_hg2_Xsec_vs_T) hg2_Xsec_vs_T->Write();
+    if (b_hg2_Xsec_vs_match) hg2_Xsec_vs_match->Write();
+    if (b_hg2_Xsec_vs_fake) hg2_Xsec_vs_fake->Write();
+    if (b_hg1_R2_match) hg1_R2_match->Write();
+};
+
+void ioJetMatcherX::addjet_MC(float eta, float phi, float pT) {
+    /* if (bounds_T(pT)) data_MC.push_back({eta,phi,pT}); */
+    data_MC.push_back({eta,phi,pT});
+};
+
+void ioJetMatcherX::addjet_reco(float eta, float phi, float pT) {
+    /* if (bounds_M(pT)) data_reco.push_back({eta,phi,pT}); */
+    data_reco.push_back({eta,phi,pT});
+};

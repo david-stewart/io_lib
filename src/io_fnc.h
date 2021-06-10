@@ -141,6 +141,8 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 //----------------
 vector<double> ioReadValVec(const char* file, ioOptMap options={}, 
         ioOptMap dict= {{"tag","none","sort",false, "strip_commas",true,"column","all"}});
+vector<double> ioReadValVec(const char* file, const char* tag, ioOptMap options={}, 
+        ioOptMap dict= {{"sort",false, "strip_commas",true,"column","all"}});
 pair<int,double*> ioReadValsPtr(const char* file, ioOptMap ptions={}, 
         ioOptMap dict= {{"begin_index",0,"end_index",-1,"tag","none",
         "sort",false, "strip_commas",true,"column","all"}});
@@ -182,7 +184,10 @@ double* ax_doubleptr(vector<int> vec);
 /* int iowhichbin(double val, vector<double>&, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
 /* int iowhichbin(double val, int, double*,   vector<int> remap); */
 
-double io_R(double x0,double y0,double x1,double y1);
+double io_D (double x0,double y0,double x1,double y1);
+double io_D2(double x0,double y0,double x1,double y1);
+double io_R (double eta0,double phi0,double eta1,double phi1);
+double io_R2(double eta0,double phi0,double eta1,double phi1);
 
 // return the ratio of a circle of radius R outside of a line distance d away 
 double ioRatCircleOverLine (double R, double d);
@@ -212,5 +217,7 @@ bool ioWordIsEndTag(TString word, string tag);
 bool ioIsAnyTag    (string word); // does it match <\\S*> or </\\S*> ?
 bool ioIsAnyTag    (TString word);
 // if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
+
+void io_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
 
 #endif
