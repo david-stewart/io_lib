@@ -55,6 +55,11 @@ ioOptMap::ioOptMap(ioOpt _)         { add(_); };
 ioOptMap::ioOptMap(vector<ioOpt> _) { add(_); };
 ioOptMap::ioOptMap()                {};
 
+ioOpt ioOptMap::operator()(string name, ioOpt defVal) {
+    if (has(name)) return dict[name];
+    else return defVal;
+};
+
 ioOpt& ioOptMap::operator[](string _) { return dict[_]; }; //if (dict.count(_)!=0) return dict[_]; else return null_opt; };
 bool ioOptMap::has(string _) { return dict.count(_) != 0; };
 bool ioOptMap::operator()(string _) { return has(_); };
@@ -68,6 +73,8 @@ ioOptMap ioOptMap::operator+=(ioOptMap _) {
     for (auto& key : _.dict) dict[key.first] = key.second; return *this; 
 };
 ioOptMap operator+ (ioOptMap lhs, const ioOptMap& rhs) { lhs += rhs; return lhs; };
+
+
 
 void ioOptMap::add(ioOpt _) {
     // only acceptable syntax is string with "key:value;;[key2:value2;; ...]"

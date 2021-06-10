@@ -28,6 +28,8 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
     io_fmt(hg_response,{{
        "xAxisTitle",dict["xTitleResponse"],
        "yAxisTitle",dict["yTitleResponse"],
+       "zAxisRangeLo",dict["zAxisRangeLo"],
+       "zAxisRangeHi",dict["zAxisRangeHo"],
        "Stats",dict["StatsResponse"],
        "Title",dict["TitleResponse"]}});
 

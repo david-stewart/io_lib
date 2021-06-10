@@ -450,38 +450,11 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
 };
 
 TH2D* io_fmt (TH2D* hg, ioOptMap _override, ioOptMap dict) {
-    /* cout << " alpha " << endl; */
     dict += _override;
 
-    /* cout << " format " << endl; */
-    /* cout << dict << endl; */
-
     if (dict("normalize")) hg->Scale(1./hg->Integral());
-    /* if (dict("Rebin"))        hg->Rebin(dict["Rebin"]); */
-
-    /* if (!dict("MarkerAlpha")) dict["MarkerAlpha"] = 1.; */
     if (dict("noTitle"))      hg->SetTitle("");
     if (dict("SetStats"))     hg->SetStats(dict["SetStats"]);
-
-
-    /* if (dict("MarkerStyle")) */
-        /* hg->SetMarkerStyle(dict["MarkerStyle"]); */
-    /* if (dict("MarkerColor")) */
-        /* hg->SetMarkerColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val()); */
-    /* if (dict("MarkerSize")) */
-        /* hg->SetMarkerSize(dict["MarkerSize"].val()); */
-
-    /* if (dict("LineWidth")) */
-        /* hg->SetLineWidth(dict["LineWidth"]); */
-    /* if (dict("LineStyle")) */
-        /* hg->SetLineStyle(dict["LineStyle"]); */
-    /* if (dict("MarkerColor")) */
-        /* hg->SetLineColorAlpha(dict["MarkerColor"], dict["MarkerAlpha"].val()); */
-    
-    /* if (dict("LineColor")) { */
-        /* double LineAlpha = dict("LineAlpha") ? dict["LineAlpha"].val() : dict["MarkerAlpha"].val(); */
-        /* hg->SetLineColorAlpha(dict["LineColor"], LineAlpha); */
-    /* } */
 
     // Set titles
     if (dict("Title")) hg->SetTitle(dict["Title"]);

@@ -71,6 +71,7 @@ struct ioOptMap {
 
     bool has(string _);
     bool operator()(string _);
+    ioOpt operator()(string name, ioOpt defVal);
 
     friend ostream& operator<< (ostream& os, const ioOptMap& _);
     ioOptMap operator+=(ioOptMap _);
