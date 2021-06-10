@@ -54,6 +54,8 @@ class ioGetter{
 struct ioBinVec {
     ioBinVec(int nbins, double lo, double hi);
     ioBinVec(vector<vector<double>>);
+    vector<double> bin_centers();
+    ioBinVec(TAxis* ax);
     /* ioBinVec operator+=(const ioBinVec& _); */
     /* friend ioBinVec operator+ (const ioBinVec lhs, const ioBinVec& rhs); */
 
