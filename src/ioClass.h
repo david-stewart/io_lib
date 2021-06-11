@@ -72,6 +72,7 @@ struct ioBinVec {
     double*        ptr;
     int            size;
     vector<double> vec;
+    void set_val(int i, double val);
 
     /* int nbins(); // return size_ptr-1 */
     operator int ();

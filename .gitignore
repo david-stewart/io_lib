@@ -5,9 +5,9 @@
 *.list
 include
 fastjet
-_**
+_*
 obj
 test*
-**.swp
+*.swp
 sandbox
 examples

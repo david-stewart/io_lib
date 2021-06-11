@@ -87,6 +87,15 @@ ioBinVec::ioBinVec(vector<vector<double>> V_in) {
     build_ptr();
 };
 
+void ioBinVec::set_val(int i, double val) {
+    if (i >= size) throw std::runtime_error(
+    Form("fatal in ioBinVec::set_val(), trying to change entry %i of vector size %i",
+        i, size)
+    );
+    ptr[i] = val;
+    vec[i] = val;
+};
+
 /* ioBinVec ioBinVec::operator+=(const ioBinVec& _) { */
     /* for (auto v : _.vec) vec.push_back(v); */
     /* delete[] ptr; */
