@@ -661,9 +661,7 @@ map<string,string> io_VecStrToMapStrStr (vector<string> data)
         throw std::runtime_error(
                 "Error in io_VecStrToMapStrStrg : must have even number of entries");
     map<string,string> M;
-    for (auto d : data) cout << " d -> " << d << endl;
     for (unsigned int i=0; i<(data.size()/2); ++i) {
-        cout << " i: " << i << "  " << data[i*2] << " " << data[i*2+1] << endl;
         M[data[i*2]] = data[i*2+1];
     }
     return M;
