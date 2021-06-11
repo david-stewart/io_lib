@@ -1,9 +1,9 @@
 #ifndef ioCfnc__h
 #define ioCfnc__h
+
 // This file is for io_fnc that require ioClasses, too
 #include "ioClass.h"
 #include "io_fnc.h"
-
 std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
         const char* file, 
         const char* rooResponseName,

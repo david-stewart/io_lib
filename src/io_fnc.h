@@ -139,6 +139,18 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 //        (2) if col == -1, then read all values
 
 //----------------
+
+map<string,string> io_VecStrToMapStrStr(vector<string>);
+map<string,string> ioReadMapStrStr(const char* file, ioOptMap options={}, 
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
+map<string,string> ioReadMapStrStr(const char* file, const char* tag, ioOptMap options={}, 
+        ioOptMap dict= {{"sort",false, "strip_commas",false,"column","all"}});
+
+vector<string> ioReadStrVec(const char* file, ioOptMap options={}, 
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
+vector<string> ioReadStrVec(const char* file, const char* tag, ioOptMap options={}, 
+        ioOptMap dict= {{"sort",false, "strip_commas",false,"column","all"}});
+
 vector<double> ioReadValVec(const char* file, ioOptMap options={}, 
         ioOptMap dict= {{"tag","none","sort",false, "strip_commas",true,"column","all"}});
 vector<double> ioReadValVec(const char* file, const char* tag, ioOptMap options={}, 

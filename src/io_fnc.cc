@@ -655,6 +655,120 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
 };
 
 //----------
+map<string,string> io_VecStrToMapStrStr (vector<string> data) 
+{
+    if (data.size() % 2) 
+        throw std::runtime_error(
+                "Error in io_VecStrToMapStrStrg : must have even number of entries");
+    map<string,string> M;
+    for (auto d : data) cout << " d -> " << d << endl;
+    for (unsigned int i=0; i<(data.size()/2); ++i) {
+        cout << " i: " << i << "  " << data[i*2] << " " << data[i*2+1] << endl;
+        M[data[i*2]] = data[i*2+1];
+    }
+    return M;
+};
+map<string,string> ioReadMapStrStr(const char* in_file, const char* tag, 
+        ioOptMap options, ioOptMap dict) 
+{
+    dict += options;
+    dict["tag"] = tag;
+    return io_VecStrToMapStrStr(ioReadStrVec(in_file, dict));
+};
+map<string,string> ioReadMapStrStr(const char* in_file, ioOptMap options, ioOptMap dict) {
+    dict += options;
+    return io_VecStrToMapStrStr(ioReadStrVec(in_file, dict));
+};
+
+
+vector<string> ioReadStrVec(const char* in_file, const char* tag, 
+        ioOptMap options, ioOptMap dict) {
+    dict += options;
+    dict["tag"] = tag;
+    return ioReadStrVec(in_file, dict);
+};
+vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict) {
+    dict += options;
+
+    bool use_column = (dict["column"].str()!="all");
+    int  which_column {0};
+    if  (use_column) { which_column = dict["column"]; }
+    bool use_tag {dict["tag"].str() != "none"};
+    string tag = use_tag ? dict["tag"] : "";
+    bool in_tag { !use_tag };
+    bool strip_commas { (bool) dict["strip_commas"]() };
+
+    // logic:
+    // per line:
+    //      if strip_commas replace all commas with spaces
+    //      if use_tag && !in_tag: ignore everything until the flag is found
+    //      if use_tag && in_tag: terminate in </tag> if found
+    //      if use_column: only read column entry
+
+    vector<string> vec;
+    ifstream file;
+    file.open(in_file);
+    ostringstream msg;
+    if (!file.is_open()) {
+        msg << "fatal error: could not open file \"" 
+            << in_file << " in ioReadStrVec" << endl;
+        throw std::runtime_error(msg.str());
+    }
+    string line;
+    /* bool   read_all_cols = (col==-1); */
+    bool found_end_tag {false};
+    bool found_start_tag {false};
+    while (getline(file,line)) {
+        line.append(" ");
+        if (strip_commas && (line.find(",") != string::npos)) {
+            TString trans = line;
+            trans.ReplaceAll(","," ");
+            line = trans;
+        }
+        stringstream words(line);
+        TString word;
+        int col {-1};
+        while (words >> word) {
+            if (use_tag) {
+                if ( in_tag ) {
+                    if (ioWordIsEndTag(word, tag)) { 
+                        found_end_tag  = true;
+                        break;
+                    }
+                } else {
+                    if (ioWordIsTag(word,tag)) {
+                        found_start_tag = true;
+                        in_tag = true;
+                    }
+                    continue;
+                }
+            }
+            if (ioIsAnyTag(word)) continue;
+            /* if (word.IsFloat()) { */
+            ++col;
+            if (!use_column || col==which_column) vec.push_back(word.Data());
+        }
+        if (found_end_tag ) break;
+    }
+    file.close();
+    if (use_tag && !found_start_tag) {
+        throw std::runtime_error(
+                "fatal: didn't find starting tag \"<"
+             + tag + ">\" in file \"" + in_file + "\"");
+    };
+    if (use_tag && !found_end_tag) {
+        throw std::runtime_error(
+                "fatal: didn't find end tag \"</"
+             + tag + ">\" in file \"" + in_file +"\"");
+    };
+             
+    if ( (bool) dict["sort"]() ) std::sort(vec.begin(), vec.end());
+    return vec;
+};
+
+
+
+
 vector<double> ioReadValVec(const char* in_file, const char* tag, 
         ioOptMap options, ioOptMap dict) {
     dict += options;

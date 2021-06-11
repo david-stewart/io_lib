@@ -60,5 +60,6 @@ while read line; do
 done < oi_lib_list
 
 # also do the pAu2015_common libraries
-cd pAu2015_common
-./make.sh
+# cd pAu2015_common
+# chmod u+x ./make.sh
+# ./make.sh
