@@ -1,0 +1,16 @@
+<phi-axis>
+    0   #phi_{Trigger}
+    1   #phi_{Recoil}
+    2   #phi_{Transverse}
+    100 #phi_{all}
+    79  seventy
+</phi-axis>
+
+<ea-names>
+    0    EA_{lo:70-90%}
+    1    EA_{med:30-70%}
+    2    EA_{hi:0-30%}
+    10   EA_{lo:70-100%}
+    20   EA_{lo:90-100%}
+    100  EA_{all}
+</ea-names>

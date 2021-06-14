@@ -140,6 +140,10 @@ vector<int> ioReadIntVec(const char* file, int col=0, bool sort=true, bool strip
 
 //----------------
 
+map<int,string>    ioReadIntStrMap(const char* file, ioOptMap options={},
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
+
+
 map<string,string> io_VecStrToMapStrStr(vector<string>);
 map<string,string> ioReadMapStrStr(const char* file, ioOptMap options={}, 
         ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
@@ -231,5 +235,7 @@ bool ioIsAnyTag    (TString word);
 // if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
 
 void io_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
+
+vector<double> io_print_first_blank(TH2D*);
 
 #endif

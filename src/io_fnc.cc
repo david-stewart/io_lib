@@ -605,6 +605,21 @@ int io_count_digits(int n, int min_val) {
 int ioSum(const vector<int> vec)  { return std::accumulate(vec.begin(), vec.end(), 0); };
 int ioSum(const vector<bool> vec) { return std::accumulate(vec.begin(), vec.end(), 0); };
 
+map<int,string>    ioReadIntStrMap(const char* file, ioOptMap options, ioOptMap dict){
+    dict += options;
+    /* cout << " map =1 : " << options["tag"].str() << endl; */
+    auto data = ioReadStrVec(file, options);
+    if (data.size() % 2) 
+        throw std::runtime_error(
+                "Error in io_ReadIntStrMap : must have even number of entries");
+    map<int,string> M;
+    for (unsigned int i=0; i<(data.size()/2); ++i) {
+        int index = atoi(data[i*2].c_str());
+        M[index] = data[i*2+1];
+    }
+    return M;
+};
+
 vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_commas) {
     vector<int> vec;
     ifstream file;
@@ -691,10 +706,13 @@ vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict
     bool use_column = (dict["column"].str()!="all");
     int  which_column {0};
     if  (use_column) { which_column = dict["column"]; }
+    /* cout << "a0 : " << dict["tag"].str() << endl; */
     bool use_tag {dict["tag"].str() != "none"};
     string tag = use_tag ? dict["tag"] : "";
     bool in_tag { !use_tag };
     bool strip_commas { (bool) dict["strip_commas"]() };
+
+    /* cout << " Tag: " << tag << endl; */
 
     // logic:
     // per line:
@@ -744,7 +762,12 @@ vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict
             if (ioIsAnyTag(word)) continue;
             /* if (word.IsFloat()) { */
             ++col;
-            if (!use_column || col==which_column) vec.push_back(word.Data());
+            if (!use_column || col==which_column) {
+                if (word.Contains("--") && !options.has("keep--")) {
+                    word = word.ReplaceAll("--"," ");
+                }
+                vec.push_back(word.Data());
+            }
         }
         if (found_end_tag ) break;
     }
@@ -1096,4 +1119,24 @@ void io_normByRow(TH2D* hg, double factor, bool use_max_val) {
     };
 };
 
+vector<double> io_print_first_blank(TH2D* hg) {
+    vector<double> vec;
+    int nY = hg->GetYaxis()->GetNbins();
+    int nX = hg->GetXaxis()->GetNbins();
+    for (int y = 1; y<=nY; ++y) {
+        bool found = false;
+        for (int x = 1; x<=nX; ++x) {
+            int ibin = hg->GetBin(x,y);
+            if (hg->GetBinContent(ibin) == 0) {
+                vec.push_back(hg->GetXaxis()->GetBinCenter(x));
+                found = true;
+                break;
+            }
+        }
+        if (!found) vec.push_back(hg->GetXaxis()->GetBinCenter(nX));
+    }
+    int i=0;
+    for (auto v : vec) cout << Form("  %3i  -> %5.2f",i++,v) << endl;
+    return vec;
+};
 
