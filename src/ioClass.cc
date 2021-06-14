@@ -1727,3 +1727,17 @@ void ioXsec::check_pthatbin(int bin) {
 /*     } */
 /* }; */
     
+ioIntStrFunctor::ioIntStrFunctor ( const char* file, ioOptMap options, ioOptMap dict)
+{
+    dict += options;
+    data = ioReadIntStrMap(file, dict);
+};
+const char* ioIntStrFunctor::operator()(int index) {
+    try {
+        return data[index].c_str();
+    }
+    catch (...) {
+        cout << " Key failure in ioIntStrFunctor with index " << index << endl;
+        throw;
+    };
+};

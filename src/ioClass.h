@@ -536,40 +536,11 @@ struct ioXsec{
     TH1D* hg_collected;
 };
 
-/* // object to record pthatbin outliers and plot them as desired */
-/* struct io_pThatOutliers { */
-/*     io_pThatOutliers( */
-/*         map<int,double> _pt_limits, */ 
-/*         double _pt_fakes=0., */
-/*         double _pt_misses=0. */
-/*     ); */
-
-/*     map<int,double> pt_limits; */
-/*     map<int, vector<double>> M_matches; */
-/*     map<int, vector<double>> T_matches; */
-/*     map<int, vector<double>> misses; */
-/*     map<int, vector<double>> fakes; */
-/*     bool is_outlier {false}; */
-/*     int  pthatbin; */
-/*     bool check_if_outlier(int pthatbin, double pt); */
-
-/*     void match(double M, double T); */
-/*     void miss(double T); */
-/*     void fake(double M); */
-
-/*     double pt_fakes; */
-/*     double pt_misses; */
-
-
-/*     void write_TGraph(int pthatbin, ioOptMap options={}, */ 
-/*           ioOptMap dict={{ */
-/*           "MarkerStyle", kFullCircle, */
-/*           "MarkerColor", kBlack, */
-/*           "MarkerFakeMiss", kOpenCircle, */
-/*           "name","outlier_"}} */
-/*     ); */
-/* }; */
-
+struct ioIntStrFunctor {
+    ioIntStrFunctor ( const char* file, ioOptMap options={}, 
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
+    const char* operator()(int);
+    map<int,string> data;
+};
 
 #endif
-

@@ -10,6 +10,7 @@
 #include "RooUnfoldResponse.h"
 #include "ioClass.h"
 #include "ioCfnc.h"
+#include "TRandom3.h"
 
 using std::vector;
 using std::sort;
@@ -36,58 +37,58 @@ struct ioJetMatcher_index {
     float dR;   // distance between the matches
 };
 
-class ioJetMatcher {
-    public:
-    TH1D* R2_distr_matches;
-    RooUnfoldResponse response;
-    RooUnfoldResponse* response_A; // 1/2 of the data
-    RooUnfoldResponse* response_B; // other 1/2 of data
+/* class ioJetMatcher { */
+/*     public: */
+/*     TH1D* R2_distr_matches; */
+/*     RooUnfoldResponse response; */
+/*     RooUnfoldResponse* response_A; // 1/2 of the data */
+/*     RooUnfoldResponse* response_B; // other 1/2 of data */
    
-    void addjet_MC(float eta, float phi, float pT);
-    void addjet_reco(float eta, float phi, float pT);
-    void do_matching_highfirst(double weight=1.);// Raghav's algorithm
-    void do_matching(double weight=1.); // my algorithm
+/*     void addjet_MC(float eta, float phi, float pT); */
+/*     void addjet_reco(float eta, float phi, float pT); */
+/*     void do_matching_highfirst(double weight=1.);// Raghav's algorithm */
+/*     void do_matching(double weight=1.); // my algorithm */
 
-    ioJetMatcher( RooUnfoldResponse response, float _jet_R=0.4 );
-    // other constructors use the io_fnc iMakeRooUnfoldResponse
-    ioJetMatcher( int nbins, double lo_bin, double hi_bin, 
-                  const char* tag="", const char* title="",
-                  float _jet_R=0.4 );
-    ioJetMatcher( int nbins, double* edges, 
-                  const char* tag="", const char* title="",
-                  float _jet_R=0.4 );
-    ioJetMatcher( int nb_meas,  double lo_meas,  double hi_mea,
-                  int nb_truth, double lo_truth, double hi_truth,
-                  const char* tag="", const char* title="",
-                  float _jet_R=0.4 );
-    ioJetMatcher( int nb_meas,  double* edge_meas,
-                  int nb_truth, double* edge_truth,
-                  const char* tag="", const char* title="",
-                  float _jet_R=0.4 );
-    // final *and best* constructor gives file, and tag names for binnings
-    ioJetMatcher( const char* edge_file, 
-                  const char* meas_tag,
-                  const char* truth_tag,
-                  const char* name_tag="",
-                  const char* title="",
-                  float _jet_R=0.4 
-    );
-    void init(float _jet_R);
-    bool fill_A{true};
+/*     ioJetMatcher( RooUnfoldResponse response, float _jet_R=0.4 ); */
+/*     // other constructors use the io_fnc iMakeRooUnfoldResponse */
+/*     ioJetMatcher( int nbins, double lo_bin, double hi_bin, */ 
+/*                   const char* tag="", const char* title="", */
+/*                   float _jet_R=0.4 ); */
+/*     ioJetMatcher( int nbins, double* edges, */ 
+/*                   const char* tag="", const char* title="", */
+/*                   float _jet_R=0.4 ); */
+/*     ioJetMatcher( int nb_meas,  double lo_meas,  double hi_mea, */
+/*                   int nb_truth, double lo_truth, double hi_truth, */
+/*                   const char* tag="", const char* title="", */
+/*                   float _jet_R=0.4 ); */
+/*     ioJetMatcher( int nb_meas,  double* edge_meas, */
+/*                   int nb_truth, double* edge_truth, */
+/*                   const char* tag="", const char* title="", */
+/*                   float _jet_R=0.4 ); */
+/*     // final *and best* constructor gives file, and tag names for binnings */
+/*     ioJetMatcher( const char* edge_file, */ 
+/*                   const char* meas_tag, */
+/*                   const char* truth_tag, */
+/*                   const char* name_tag="", */
+/*                   const char* title="", */
+/*                   float _jet_R=0.4 */ 
+/*     ); */
+/*     void init(float _jet_R); */
+/*     bool fill_A{true}; */
 
-    void reset();
-    void write();
-    /* void write(bool with_miss_fakes=true, */ 
-               /* bool scale_by_bin_width=true, */
-               /* bool write_unified2D=false); */
-    std::string tag;
+/*     void reset(); */
+/*     void write(); */
+/*     /1* void write(bool with_miss_fakes=true, *1/ */ 
+/*                /1* bool scale_by_bin_width=true, *1/ */
+/*                /1* bool write_unified2D=false); *1/ */
+/*     std::string tag; */
     
-    private: //internal data to do the matching
-    float jet_R2; // jet_R * jet_R   
-	vector<ioJetMatcher_float> data_MC;
-	vector<ioJetMatcher_float> data_reco;
+/*     private: //internal data to do the matching */
+/*     float jet_R2; // jet_R * jet_R */   
+/* 	vector<ioJetMatcher_float> data_MC; */
+/* 	vector<ioJetMatcher_float> data_reco; */
 
-};
+/* }; */
 
 struct ioJetMatcher_outlier {
     ioJetMatcher_outlier();
@@ -161,6 +162,7 @@ struct ioJetMatcherX {
             ioOptMap options={}, ioBinVec _hg2ptbins={81,-0.5,80.5}, 
             ioOptMap dict={{
                 "make_AB",1,
+                "ratio_AtoB",0.5,
                 "hg2_Xsec_vs_T",1,
                 "hg2_Xsec_vs_M",1,
                 "hg2_Xsec_vs_match",1,
@@ -185,7 +187,7 @@ struct ioJetMatcherX {
     bool b_hg2_Xsec_vs_match;
     bool b_hg2_Xsec_vs_fake;
     bool b_hg1_R2_match;
-    bool switch_AB{true};
+    /* bool switch_AB{true}; */
 
     RooUnfoldResponse* response_A; // 1/2 of the data
     RooUnfoldResponse* response_B; // other 1/2 of data
@@ -199,6 +201,9 @@ struct ioJetMatcherX {
     void addjet_reco(float eta, float phi, float pT);
     void do_matching(int pthatbin);
     void do_matching(pair<double,double> pthatrange);
+
+    TRandom3 _rand;
+    double ratio_AtoB;
 
     void reset();
     void write();

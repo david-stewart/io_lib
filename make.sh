@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/bash 
 for file in include lib obj; do
 if [[ ! -d ${file} ]]; then
     mkdir ${file}
@@ -19,14 +19,6 @@ done < ../io_lib_list
 cd ..
 
 
-# make a script that will compile all the the files
-# it looks like:
-#    root -l <<EOF
-#    gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");
-#    .L src/ioOptMap.cc+
-#    .L src/ioXsec_pAu2015.cc+
-#    etc...
-#    EOF
 temp_script=root_L_script.sh
 echo 'root -l <<EOF' > ${temp_script}
 echo 'gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");' >> ${temp_script}
@@ -59,7 +51,3 @@ while read line; do
     fi
 done < oi_lib_list
 
-# also do the pAu2015_common libraries
-# cd pAu2015_common
-# chmod u+x ./make.sh
-# ./make.sh
