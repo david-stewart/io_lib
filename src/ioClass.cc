@@ -1741,3 +1741,20 @@ const char* ioIntStrFunctor::operator()(int index) {
         throw;
     };
 };
+
+
+//StrStr
+ioStrStrFunctor::ioStrStrFunctor ( const char* file, ioOptMap options, ioOptMap dict)
+{
+    dict += options;
+    data = ioReadMapStrStr(file, dict);
+};
+const char* ioStrStrFunctor::operator()(const char* key) {
+    try {
+        return data[key].c_str();
+    }
+    catch (...) {
+        cout << " Key failure in ioStrStrFunctor with key " << key << endl;
+        throw;
+    };
+};

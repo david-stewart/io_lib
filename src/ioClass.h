@@ -542,5 +542,11 @@ struct ioIntStrFunctor {
     const char* operator()(int);
     map<int,string> data;
 };
+struct ioStrStrFunctor {
+    ioStrStrFunctor ( const char* file, ioOptMap options={}, 
+        ioOptMap dict= {{"tag","none","sort",false, "strip_commas",false,"column","all"}});
+    const char* operator()(const char*);
+    map<string,string> data;
+};
 
 #endif
