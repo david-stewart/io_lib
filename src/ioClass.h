@@ -549,4 +549,20 @@ struct ioStrStrFunctor {
     map<string,string> data;
 };
 
+struct ioFirst {
+    bool is_first{true};
+    ioFirst(){};
+    operator bool();
+    bool operator()();
+};
+
+struct ioCycleTrue {
+    int period;
+    int cnt;
+    ioCycleTrue(int period_in);
+    bool operator()();
+    operator bool();
+    void reset();
+};
+
 #endif

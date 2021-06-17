@@ -1758,3 +1758,33 @@ const char* ioStrStrFunctor::operator()(const char* key) {
         throw;
     };
 };
+
+ioFirst::operator bool() { 
+    if (is_first) {
+        is_first = false;
+        return true;
+    }
+    return false;
+};
+bool ioFirst::operator()() {
+    if (is_first) {
+        is_first = false;
+        return true;
+    }
+    return false;
+};
+
+ioCycleTrue::ioCycleTrue(int period_in) :
+    period { period_in }, cnt{0}
+{};
+bool ioCycleTrue::operator()() {
+    ++ cnt;
+    if (cnt == period) {
+        cnt = 0;
+        return true;
+    } else {
+        return false;
+    }
+};
+ioCycleTrue::operator bool() { return this->operator()(); };
+void ioCycleTrue::reset() { cnt = 0; };
