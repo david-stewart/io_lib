@@ -32,129 +32,6 @@ bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R)
 bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
     { return L.pT > R.pT; };
 
-// constructors: either provide a RooUnfoldResponse to copy, 
-// or provide enough information for them to be constructed
-/* void ioJetMatcher::init(float _jet_R) { */
-/* 	jet_R2 = _jet_R*_jet_R; */ 
-/*     R2_distr_matches = new TH1D(Form("R2_distr_matches_%s",response.GetName()), */
-/*             ";R-matches;N",100,0.,1.); */
-/*     /1* cout << jet_R2 << endl; *1/ */
-/*     data_MC.clear(); */ 
-/*     data_reco.clear(); */
-/*     response_A = (RooUnfoldResponse*) response.Clone(Form("%s_A",response.GetName())); */
-/*     response_B = (RooUnfoldResponse*) response.Clone(Form("%s_B",response.GetName())); */
-/* } */
-/* ioJetMatcher::ioJetMatcher( RooUnfoldResponse _response, float _jet_R) : */
-/*     response{_response } */
-/* { init(_jet_R); }; */
-/* // construct with new RooUnfoldResponse */
-/* ioJetMatcher::ioJetMatcher( int nbins, double lo_bin, double hi_bin, */ 
-/*     const char* tag, const char* title, float _jet_R) : */
-/*     response{ ioMakeRooUnfoldResponse(nbins, lo_bin, hi_bin, tag, title) } */
-/* { init(_jet_R); }; */
-/* // construct with new RooUnfoldResponse */
-/* ioJetMatcher::ioJetMatcher( int nbins, double* edges, */
-/*     const char* tag, const char* title, float _jet_R) : */
-/*     response{ ioMakeRooUnfoldResponse(nbins, edges, tag, title) } */
-/* { init(_jet_R); }; */
-/* // construct with new RooUnfoldResponse */
-/* ioJetMatcher::ioJetMatcher( */
-/*         int nb_measured, double lo_measured, double hi_measured, */
-/*         int nb_truth, double lo_truth, double hi_truth, */ 
-/*         const char* tag, const char* title, float _jet_R) : */
-/*     response{ ioMakeRooUnfoldResponse(nb_measured, lo_measured, hi_measured, */
-/*             nb_truth, lo_truth, hi_truth, tag, title) } */
-/* { init(_jet_R); }; */
-/* // construct with new RooUnfoldResponse */
-/* ioJetMatcher::ioJetMatcher( */
-/*         int nb_measured, double* edge_measured, */
-/*         int nb_truth, double* edge_truth, */
-/*         const char* tag, const char* title, float _jet_R) : */
-/*     response{ ioMakeRooUnfoldResponse(nb_measured, edge_measured, */
-/*             nb_truth, edge_truth, tag, title) } */
-/* { init(_jet_R); }; */
-/* // construct with new RooUnfoldResponse */
-/* ioJetMatcher::ioJetMatcher( */ 
-/*         const char* edge_file, */ 
-/*         const char* meas_tag, */
-/*         const char* truth_tag, */
-/*         const char* name_tag, */
-/*         const char* title, */
-/*         float _jet_R */
-/* ) { */
-/*     pair<int,double*> meas_bins  = ioReadValsPtr(edge_file, {{"tag",meas_tag}}); */
-/*     pair<int,double*> truth_bins = ioReadValsPtr(edge_file, {{"tag",truth_tag}}); */
-/*     response = ioMakeRooUnfoldResponse( */
-/*             meas_bins.first-1, meas_bins.second, */
-/*             truth_bins.first-1, truth_bins.second, */
-/*             name_tag, title); */
-/*     init(_jet_R); */
-/* }; */
-
-/* void ioJetMatcher::addjet_MC(float eta, float phi, float pT) { */
-/*     data_MC.push_back({eta,phi,pT}); */
-/* }; */
-
-/* void ioJetMatcher::addjet_reco(float eta, float phi, float pT) { */
-/*     data_reco.push_back({eta,phi,pT}); */
-/* }; */
-
-/* void ioJetMatcher::do_matching_highfirst(double W) { */
-/*     //sort into high to low pT order */
-/*     /1* std::sort(data_MC.begin(), data_MC.end(), std::greater<ioJetMatcher_float>()); *1/ */
-/*     /1* std::sort(data_reco.begin(), data_reco.end(), std::greater<ioJetMatcher_float>()); *1/ */
-
-/*     fill_A = !fill_A; */
-/*     for (auto& MC : data_MC) { */
-/*         // cut out out-of-bounds jet */
-/*         bool found_match {false}; */
-/*         for (auto& reco : data_reco) { */
-/*             if (reco.is_matched) continue; */
-/*             double delta_R2 { MC(reco,jet_R2) }; */
-/*             /1* if (MC(reco,jet_R2)!=0.) { *1/ */
-/*             if (delta_R2 != 0) { */
-/*                 R2_distr_matches->Fill(delta_R2); */
-/*                 reco.is_matched = true; */
-/*                 response.Fill(reco.pT, MC.pT, W); */
-/*                 if (fill_A) response_A->Fill(reco.pT, MC.pT, W); */
-/*                 else             response_B->Fill(reco.pT, MC.pT, W); */
-/*                 found_match = true; */
-/*                 break; */
-/*             } */
-/*         } */
-/*         if (!found_match) { */
-/*             response.Miss(MC.pT,W); */
-/*             if (fill_A) response_A->Miss(MC.pT, W); */
-/*             else             response_B->Miss(MC.pT, W); */
-/*         } */
-/*     } */
-/*     for (auto& reco : data_reco) { */
-/*         if (!reco.is_matched) { */
-/*             response.Fake(reco.pT,W); */
-/*             if (fill_A) response_A->Fake(reco.pT, W); */
-/*             else             response_B->Fake(reco.pT, W); */
-/*         }// enter a fake */
-/*     } */
-/*     /1* cout << " entries: " << response.Hresponse()->GetEntries() << " " *1/ */ 
-/*                          /1* << response_A->Hresponse()->GetEntries() << " " *1/ */ 
-/*                          /1* << response_B->Hresponse()->GetEntries(); *1/ */
-/*     reset(); */
-/*     // algorithm: */
-/*     // starting with the highest to lowest MC jet -- try and match to the highest to lowest reco jets */
-/*     // and keep first match */
-
-/* }; */
-/* void ioJetMatcher::reset() { */
-/*     data_MC.clear(); */
-/*     data_reco.clear(); */
-/* }; */
-/* void ioJetMatcher::write() { */
-/*     R2_distr_matches->Write(); */
-/*     response.Write(); */
-/*     response_A->Write(); */
-/*     response_B->Write(); */
-/* }; */
-
 ioJetMatcher_outlier::ioJetMatcher_outlier() {};
 void ioJetMatcher_outlier::init(
         map<int,double> boundaries,
@@ -264,6 +141,7 @@ ioJetMatcherX::ioJetMatcherX (const char* _name, ioXsec& _Xsec,
     name {_name}, 
     Xsec{_Xsec}, 
     response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)},
+    response_noweight{ioMakeRooUnfoldResponse(Form("%s_noweight",_name),bin_file,tag_M,tag_T)},
     bounds_T{bin_file,tag_T},
     bounds_M{bin_file,tag_M},
     _rand{}
@@ -356,6 +234,7 @@ void ioJetMatcherX::do_matching(int pthatbin) {
                 if (T_outliers(pthatbin, MC.pT))   T_outliers.add_match(pthatbin, reco.pT, MC.pT);
                 if (M_outliers(pthatbin, reco.pT)) M_outliers.add_match(pthatbin, reco.pT, MC.pT);
                 response.Fill(reco.pT, MC.pT, W);
+                response_noweight.Fill(reco.pT, MC.pT);
                 if (b_FillA)  response_A->Fill(reco.pT, MC.pT, W);
                 else            response_B->Fill(reco.pT, MC.pT, W);
                 break;
@@ -363,6 +242,7 @@ void ioJetMatcherX::do_matching(int pthatbin) {
         }
         if (!found_match) {
             response.Miss(MC.pT,W);
+            response_noweight.Miss(MC.pT);
             if (T_outliers(pthatbin, MC.pT))   T_outliers.add_miss(pthatbin, MC.pT);
             if (b_FillA) response_A->Miss(MC.pT, W);
             else           response_B->Miss(MC.pT, W);
@@ -376,6 +256,7 @@ void ioJetMatcherX::do_matching(int pthatbin) {
             if (M_outliers(pthatbin, reco.pT)) M_outliers.add_fake(pthatbin, reco.pT);
             if (fake_outliers(pthatbin, reco.pT)) fake_outliers.add_fake(pthatbin, reco.pT);
             response.Fake(reco.pT,W);
+            response_noweight.Fake(reco.pT);
             if (b_FillA) response_A->Fake(reco.pT, W);
             else           response_B->Fake(reco.pT, W);
         }// enter a fake
@@ -389,6 +270,7 @@ void ioJetMatcherX::reset() {
 void ioJetMatcherX::write() {
     /* R2_distr_matches->Write(); */
     response.Write();
+    response_noweight.Write();
     if (b_make_AB) {
         response_A->Write();
         response_B->Write();

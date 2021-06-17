@@ -1,15 +1,18 @@
 <note> These "limits" are to cut off the tails of the embedding pt 
 jet spectrum per pthatbin where the statistics are bad </note>
 
-<emb-F_jet-bound_truth>
-20 24 29 35 51 58 66 73 85
-</emb-F_jet-bound_truth>
+<emb_F_jet_bound_truth>
+ 14. 18. 21. 26. 39. 49. 55. 65. 73.
+</emb_F_jet_bound_truth>
 
-<emb-full-jet-limits>
-20 24 29 35 51 58 66 73 85
-</emb-full-jet-limits>
+<emb_F_jet_bound_measured>
+ 20. 24. 29. 35. 51. 58. 66. 74. 80.
+</emb_F_jet_bound_measured>
 
+<emb_C_jet_bound_measured>
+ 15. 19. 19. 26. 39. 48. 54. 64. 66.
+</emb_C_jet_bound_measured>
 
-<emb-ch-jet-limits>
-
-</emb-ch-jet-limits>
+<emb_C_jet_bound_truth>
+ 13. 16. 17. 22. 31. 43. 51. 59. 67.
+</emb_C_jet_bound_truth>

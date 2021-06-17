@@ -145,6 +145,7 @@ struct ioJetMatcherX {
     public:
     string name;
     ioXsec& Xsec;
+    RooUnfoldResponse response_noweight;
     RooUnfoldResponse response;
     ioInBounds bounds_T;
     ioInBounds bounds_M;
