@@ -44,6 +44,7 @@ struct ioJetMatcher {
     ioXsec& Xsec;
     RooUnfoldResponse response_noweight;
     RooUnfoldResponse response;
+    RooUnfoldResponse response_cut;
     ioXYbounder out_of_match_bounds;
 
     /* vector<double> fakes; */

@@ -1799,7 +1799,7 @@ ioXYbounder::ioXYbounder(
     X { ioReadValVec(file, {{"tag",tagX,"sort",true}}) },
     Y { ioReadValVec(file, {{"tag",tagY,"sort",false}}) },
     size { (int) X.size() },
-    lodef{lodef_val},
+    lodef{ lodef_val == -0.999 && size >= 1 ? X[0] : lodef_val },
     hidef{ hidef_val == 0. ? X[size-1] : hidef_val }
 {};
 
