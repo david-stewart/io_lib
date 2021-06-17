@@ -1,5 +1,6 @@
-S-full-raw  #frac{1}{N_{trig}}--#frac{dN^{full}_{jets-raw}}{d#it{p}_{T,jets-raw}^{full}}
-dNdpt-full-raw  #frac{dN^{full}_{jets-raw}}{d#it{p}_{T,jets-raw}^{full}}
+S-full-raw      #frac{1}{N_{trig}}--#frac{dN^{full}_{jets-raw}}{d#it{p}_{T,jets-raw}^{full}}
+dNdpt-full-raw  #frac{dN^{raw}_{jets-full}}{d#it{p}_{T,jets-full}^{raw}}
+dNdpt-full      #frac{dN_{jets-full}}{d#it{p}_{T,jets-full}}
 pT          #it{p}_{T}
 pT-fulljet  #it{p}_{T,full-jet}
 
