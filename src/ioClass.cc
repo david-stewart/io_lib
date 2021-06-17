@@ -1794,13 +1794,17 @@ ioXYbounder::ioXYbounder() : X {}, Y{}, size{0}, lodef{0.}, hidef{0.}
 
 ioXYbounder::ioXYbounder(
     const char* file, const char* tagX, 
-    const char* tagY, double lodef_val, double hidef_val
+    const char* tagY, ioOptMap opt
 ) :
     X { ioReadValVec(file, {{"tag",tagX,"sort",true}}) },
     Y { ioReadValVec(file, {{"tag",tagY,"sort",false}}) },
     size { (int) X.size() },
-    lodef{lodef_val},
-    hidef{ hidef_val == 0. ? X[size-1] : hidef_val }
+    lodef{ opt.has("default-lo") ? opt["default-lo"]() : 
+           size > 0 ? Y[0] : 0.
+    },
+    hidef{ opt.has("default-hi") ? opt["default-hi"]() : 
+           size > 0 ? Y[size-1] : 0.
+    }
 {};
 
 bool ioXYbounder::operator()(double x, double y) {

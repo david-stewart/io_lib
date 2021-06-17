@@ -583,8 +583,10 @@ struct ioXYbounder {
     double lodef;  // default value if x not found within X
     double hidef;  //
     bool operator()(double x,double y); // returns of val Y is out of bounds at X
-    ioXYbounder(const char* file, const char* tagX, const char* tagY, double lodef_val=0.,
-            double hidef_val=0.);
+    ioXYbounder(const char* file, const char* tagX, const char* tagY, 
+            ioOptMap options={}); // options are hidef for default-hi and default-lo
+                                 // if not set will just use the first and last values in 
+                                 // Y for under and overflow
     ioXYbounder(); // default to always returning false for no bounds set
 };
 

@@ -40,6 +40,8 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     Xsec{_Xsec}, 
     response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)},
     response_noweight{ioMakeRooUnfoldResponse(Form("%s_noweight",_name),bin_file,tag_M,tag_T)},
+    response_cut{ioMakeRooUnfoldResponse(Form("%s_cut",_name),bin_file,tag_M,tag_T)},
+    hg2_cut{"hg2_cut","title;measured;truth",80,-10.,70.,80,-10.,70.},
     _rand{}
 {
     dict += options;
@@ -104,6 +106,7 @@ bool ioJetMatcher::do_matching(int pthatbin) {
     // should be filled
 
     /* switch_AB = !switch_AB; */
+    bool out_bounds_cut {false};
     for (auto& MC : data_MC) {
         bool found_match {false};
         for (auto& reco : data_reco) {
@@ -112,9 +115,9 @@ bool ioJetMatcher::do_matching(int pthatbin) {
             if (delta_R2 != 0) {
                 // cut the event if matched pair is out of bounds
                 if (out_of_match_bounds(MC.pT,reco.pT)) {
-                    data_MC.clear();
-                    data_reco.clear();
-                    return false;
+                    out_bounds_cut = true;
+                    response_cut.Fill(reco.pT, MC.pT);
+                    hg2_cut.Fill(reco.pT, MC.pT);
                 }
                 found_match = true;
                 reco.is_matched = true;
@@ -127,6 +130,11 @@ bool ioJetMatcher::do_matching(int pthatbin) {
     }
     for (auto& reco : data_reco) {
         if (!reco.is_matched) fakes.push_back(reco.pT);
+    }
+    if (out_bounds_cut) {
+        data_MC.clear();
+        data_reco.clear();
+        return false;
     }
 
     // now that is it not an outlier event, fill the data
@@ -174,6 +182,7 @@ void ioJetMatcher::write() {
     /* R2_distr_matches->Write(); */
     response.Write();
     response_noweight.Write();
+    response_cut.Write();
     if (b_make_AB) {
         response_A->Write();
         response_B->Write();
