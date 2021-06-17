@@ -1806,7 +1806,7 @@ ioXYbounder::ioXYbounder(
 bool ioXYbounder::operator()(double x, double y) {
     if (size == 0) return false;
     int bin = (int)(std::lower_bound(X.begin(), X.end(), x) - X.begin());
-    cout << " bin: " << bin << endl;
+    /* cout << " bin: " << bin << endl; */
     if (bin == 0) return y>lodef;
     else if (bin == size) return y>hidef;
     else return y>Y[bin];

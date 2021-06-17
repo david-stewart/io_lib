@@ -43,7 +43,7 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     _rand{}
 {
     dict += options;
-    if (dict.has("match_bounds")) {
+    if (dict.has("match_bounds_file")) {
         out_of_match_bounds = 
         {dict["match_bounds_file"], dict["pt_true"], dict["pt_measured"] };
     }
