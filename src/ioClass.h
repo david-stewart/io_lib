@@ -565,4 +565,27 @@ struct ioCycleTrue {
     void reset();
 };
 
+struct ioCycleSpacer {
+    ioCycleTrue cycle;
+    string spacer;
+    int n_width;
+    void reset();
+    ioCycleSpacer(int period, int n_width=0, const char* def_spacer=" ");
+    friend ostream& operator<<(ostream& os, ioCycleSpacer& self);
+};
+
+struct ioXYbounder {
+    // put in two vectors: (sorted) X & (not-sorted) Y
+    // then when asking about input x, it will find bin-X and return bound-Y
+    vector<double> X;
+    vector<double> Y;
+    int size;
+    double lodef;  // default value if x not found within X
+    double hidef;  //
+    bool operator()(double x,double y); // returns of val Y is out of bounds at X
+    ioXYbounder(const char* file, const char* tagX, const char* tagY, double lodef_val=0.,
+            double hidef_val=0.);
+    ioXYbounder(); // default to always returning false for no bounds set
+};
+
 #endif

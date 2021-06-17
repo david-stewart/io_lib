@@ -1788,3 +1788,42 @@ bool ioCycleTrue::operator()() {
 };
 ioCycleTrue::operator bool() { return this->operator()(); };
 void ioCycleTrue::reset() { cnt = 0; };
+
+ioXYbounder::ioXYbounder() : X {}, Y{}, size{0}, lodef{0.}, hidef{0.}
+{};
+
+ioXYbounder::ioXYbounder(
+    const char* file, const char* tagX, 
+    const char* tagY, double lodef_val, double hidef_val
+) :
+    X { ioReadValVec(file, {{"tag",tagX,"sort",true}}) },
+    Y { ioReadValVec(file, {{"tag",tagY,"sort",false}}) },
+    size { (int) X.size() },
+    lodef{lodef_val},
+    hidef{ hidef_val == 0. ? X[size-1] : hidef_val }
+{};
+
+bool ioXYbounder::operator()(double x, double y) {
+    if (size == 0) return false;
+    int bin = (int)(std::lower_bound(X.begin(), X.end(), x) - X.begin());
+    cout << " bin: " << bin << endl;
+    if (bin == 0) return y>lodef;
+    else if (bin == size) return y>hidef;
+    else return y>Y[bin];
+};
+
+ioCycleSpacer::ioCycleSpacer(int period, int _n_width, const char* _spacer) :
+    cycle{period}, spacer{_spacer}, n_width{_n_width} 
+{
+    cycle.cnt=-1;
+};
+
+ostream& operator<<(ostream& os, ioCycleSpacer& cs) {
+    if (cs.cycle) os << endl;
+    os << cs.spacer;
+    if (cs.n_width) os << setw(cs.n_width);
+    return os;
+};
+
+void ioCycleSpacer::reset() { cycle.cnt=-1; };
+
