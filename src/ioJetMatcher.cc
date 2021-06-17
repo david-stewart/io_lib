@@ -43,8 +43,10 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     _rand{}
 {
     dict += options;
-    if (dict.has("match_bounds")) out_of_match_bounds = 
-        {dict["match_bounds"], dict["pt_true"], dict["pt_measured"] };
+    if (dict.has("match_bounds")) {
+        out_of_match_bounds = 
+        {dict["match_bounds_file"], dict["pt_true"], dict["pt_measured"] };
+    }
     ratio_AtoB = dict["ratio_AtoB"]();
 
     ioBinVec binsM { bin_file, tag_M };
