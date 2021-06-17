@@ -23,7 +23,8 @@
 
 using std::pair;
 
-TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm=false);
+TH1D* ioDivideTH1(TH1* num, TH1* den, ioOptMap opt={}, 
+      ioOptMap dict={{"norm",0,"style-den",0}});
 
 // Scale a TH2* histogram by columns (or rows) by values in TH1D*
 // dimensions must add up
@@ -237,5 +238,18 @@ bool ioIsAnyTag    (TString word);
 void io_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
 
 vector<double> io_print_first_blank(TH2D*);
+
+pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet, 
+        double quant_lo=0.3, double quant_hi=0.99, 
+        const char* tag="", double sigma_rat_guess=0.1);
+// return the fit, along with a dictionary of:
+// a0 : height of Gaus fit
+// a1 : mean of Gaus fit
+// a2 : width of Gaus fit
+// JES : a1 - pt_jet
+// JER : a2 / pt_jet
+// pt_jet : copy of pt_jet in
+// bound_lo : quantile from quant_lo
+// bound_hi : quantile from quant_hi
 
 #endif

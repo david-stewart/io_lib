@@ -224,16 +224,23 @@ vector<string> io_split_string(string str){
     return vec;
 };
 
-TH1D* ioDivideTH1(TH1* num, TH1* den, bool norm) {
+TH1D* ioDivideTH1(TH1* num, TH1* den, ioOptMap opt, ioOptMap dict) {
+    dict += opt;
+
     double norm_num {1};
     double norm_den {1};
 
-    if (norm) {
+    if (dict["norm"]()) {
         norm_num = num->Integral();
         norm_den = den->Integral();
     };
 
-    TH1D* ret = (TH1D*) num->Clone(ioUniqueName());
+    TH1D* ret;
+    if (dict["style-den"]==1) {
+        ret = (TH1D*) den->Clone(ioUniqueName());
+    } else {
+        ret = (TH1D*) num->Clone(ioUniqueName());
+    }
 
     for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
         double n = num->GetBinContent(j) / norm_num;
@@ -1140,3 +1147,33 @@ vector<double> io_print_first_blank(TH2D* hg) {
     return vec;
 };
 
+
+pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet, 
+        double quant_lo, double quant_hi, 
+        const char* tag, double sigma_rat_guess) 
+{
+    string my_tag = (strcmp(tag,"")==0) ? ioUniqueName() : tag;
+    double center = hg->GetXaxis()->GetBinCenter(hg->GetMaximumBin());
+    auto quant = ioQuantiles(hg,{quant_lo,quant_hi});
+    if (quant[0] >= center || quant[1] <= center) {
+        throw std::runtime_error(Form(
+    "Fatal in ioFitJESJER : the max value bin at %f doesn't lie between quantiles (%f,%f) at (%f,%f)",
+    center, quant_lo, quant_hi, quant[0], quant[1]));
+    }
+    TF1* f1 = new TF1(my_tag.c_str(),"gaus(0)",quant[0],quant[1]);
+    f1->SetParameter(0, hg->GetMaximum());
+    f1->SetParameter(1, center);
+    f1->SetParameter(2, center*0.1);
+    hg->Fit(my_tag.c_str(),"","",quant[0],quant[1]);
+    return {f1, {{
+            "a0",f1->GetParameter(0),
+            "a1",f1->GetParameter(1),
+            "a2",f1->GetParameter(2),
+            "pt_jet", pt_jet,
+            "JES", (f1->GetParameter(1) - pt_jet),
+            "JER", (f1->GetParameter(2) / pt_jet),
+            "bound_lo", quant[0],
+            "bound_hi", quant[1],
+            "quant_lo", quant_lo,
+            "quant_hi", quant_hi}}};
+};
