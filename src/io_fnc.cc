@@ -1156,9 +1156,21 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
     double center = hg->GetXaxis()->GetBinCenter(hg->GetMaximumBin());
     auto quant = ioQuantiles(hg,{quant_lo,quant_hi});
     if (quant[0] >= center || quant[1] <= center) {
-        throw std::runtime_error(Form(
-    "Fatal in ioFitJESJER : the max value bin at %f doesn't lie between quantiles (%f,%f) at (%f,%f)",
-    center, quant_lo, quant_hi, quant[0], quant[1]));
+        cout << "Can't fit in ioFitJESJER : the max value bin at "
+             << Form("%f doesn't lie between quantiles (%f,%f) at (%f,%f)",
+                     center, quant_lo, quant_hi, quant[0], quant[1]) << endl;
+        return {nullptr, {{
+            "a0",0.,
+            "a1",0.,
+            "a2",0.,
+            "pt_jet", pt_jet,
+            "JES", 0.,
+            "JER", 0.,
+            "bound_lo", 0.,
+            "bound_hi", 0.,
+            "quant_lo", 0.,
+            "quant_hi", 0.}}
+        };
     }
     TF1* f1 = new TF1(my_tag.c_str(),"gaus(0)",quant[0],quant[1]);
     f1->SetParameter(0, hg->GetMaximum());
