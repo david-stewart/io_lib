@@ -338,61 +338,6 @@ class ioMsgTree {
         void slurp_file(const char* which_file); // write a given file to input
 };
 
-
-// ioIntVec
-// NOTE: This is not currently implemented, as it is currently lower priority.
-// -------------------------------
-//   Data is a table with
-//            tag1   tag2   tag3
-//   runid.0  true   false  true
-//   runid.1  true   true   true
-//   runid.2  false  false  true
-//   runid.3  true   false  false
-// -------------------------------
-//
-//
-/* struct ioIntVec { */
-/*     // constructors and ostream */
-/*     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} ); */
-/*     ioIntVec( const char* file_name, ofstream& log, bool echo_print=true, vector<string>_tags={}); */
-/*     string ioIntVec_constructor( const char* file_name, bool echo_print, vector<string>_tags={} ); */
-
-
-/*     // data members */
-/*     /1* map<int,vector<int>> data_map {}; // runid -> vector<bool> *1/ */
-
-/*     vector<int> keys; */
-/*     vector<vector<int>> data; */
-
-/*     vector<string> tags {};   // names of all the columns */
-
-/*     // access data and manipulate data */
-/*     int             i_tag(string tag); // returns column value of tag */
-/*     vector<int>     tag_cols(vector<string> _tags, const char* err_msg_name=""); */
-/*     bool            has_tag(string tag); */
-/*     ioIntVec&       swap_tags(string tag0, string tag1); // swap column locations */
-/*     ioIntVec&       subset(vector<string> tag); */
-/*     ioIntVec&       rm_tags(vector<string> tag); */
-/*     ioIntVec&       add_tag(string tag, int default_val=-1); */ 
-/*     void            rename_tag(string, string); */
-/*     bool            has_key(int key);     // checks if it has key */
-/*     vector<int>&    operator[](int key);   // returns the vector at entry */
-/*     int             size();   // size of map */
-
-/*     vector<int>     vals(string tag, vector<bool> mask={}, bool keep_on_true=true); // keep all values */
-
-/*     vector<int>     vals(string tag, string mask); // keep all values */
-/*     vector<int>     vals(string tag, vector<string> mask); // TODO [ ] new */
-/*     vector<int>     vals(string tag, vector<bool>); // TODO [ ] new */
-
-/*     vector<int>     get_keys(vector<bool> mask, bool keep_on_true=true); // keep all values */
-/*                     // from mask */
-/*     vector<bool>    is_any(vector<pair<string,bool>> mask_keep_true); // per row, see if any match bool */
-/*     vector<bool>    is_all(vector<pair<string,bool>> mask_keep_true); // per row, see if all match bool */
-
-/*     friend ostream& operator<<(ostream& os, ioIntVec& dt); */
-/*     void            write_to_file(const char* file_name, vector<string> comments={}); */
-/* }; */
 struct ioIntVec {
     // A class that has at it's heart a vector<vector<int>> of data
     // The first row of data is are the keys of the data, for a kind of data frame table
@@ -589,6 +534,8 @@ struct ioXYbounder {
             ioOptMap options={}); // options are hidef for default-hi and default-lo
                                  // if not set will just use the first and last values in 
                                  // Y for under and overflow
+    ioXYbounder(vector<double> x, vector <double> y, ioOptMap options={}); 
+    // options are hidef for default-hi and default-lo
     ioXYbounder(); // default to always returning false for no bounds set
 };
 

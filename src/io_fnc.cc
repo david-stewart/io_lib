@@ -1177,3 +1177,7 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "quant_lo", quant_lo,
             "quant_hi", quant_hi}}};
 };
+const char* io_cutdiff(int a, int b, const char* fmt) {
+    int diff {b-a};
+    return Form(fmt,b,diff,(double)diff/a);
+};

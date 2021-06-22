@@ -242,6 +242,8 @@ vector<double> io_print_first_blank(TH2D*);
 pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet, 
         double quant_lo=0.3, double quant_hi=0.99, 
         const char* tag="", double sigma_rat_guess=0.1);
+
+const char* io_cutdiff(int a, int b, const char* fmt = "%6i(%6i,%5.2f)");
 // return the fit, along with a dictionary of:
 // a0 : height of Gaus fit
 // a1 : mean of Gaus fit
