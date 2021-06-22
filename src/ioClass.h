@@ -90,11 +90,12 @@ struct ioBinVec {
 struct ioInBounds {
     double lo_bound;
     double hi_bound;
-    bool operator()(double);
+    bool operator()(double); // return if in bounds
     void init(ioBinVec);
     ioInBounds(ioBinVec);
     ioInBounds(const char* file, const char* tag="");
     ioInBounds(double, double);
+    friend ostream& operator<<(ostream& os, ioInBounds& rhs);
 };
 
 

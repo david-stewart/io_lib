@@ -13,11 +13,19 @@
 </Xsec_Pythia6>
 </Xsection>
 
-<nEvents>
+<nEvents-with-out-of-bounds>
   375688 217673 110640
   168818 517798 176345
    57644  52945  45052
+</nEvents-with-out-of-bounds>
+
+<nEvents>
+    375692 217677 110643 
+    168800 517313 175062 
+     56985  52318  44455 
 </nEvents>
+
+
 
 <nEvents_orig> 
     375735, 217715, 110680,

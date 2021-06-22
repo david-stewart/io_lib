@@ -46,7 +46,17 @@ struct ioJetMatcher {
     RooUnfoldResponse response;
     RooUnfoldResponse response_cut;
     TH2D hg2_cut;
+    TRandom3 _rand;
+    ioInBounds in_reco_bounds;
+    ioInBounds in_meas_bounds;
+
+    TH1D* miss;
+    TH1D* fake;
+    TH2D* matched;
+    double fake_limit;
+
     ioXYbounder out_of_match_bounds;
+
 
     /* vector<double> fakes; */
     /* vector<double> missed; */
@@ -94,11 +104,11 @@ struct ioJetMatcher {
     TH2D* hg2_Xsec_vs_fake{nullptr};
     TH1D* hg1_R2_match{nullptr};
 
+
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);
     bool do_matching(int pthatbin); // return true if successful matching
 
-    TRandom3 _rand;
     double ratio_AtoB;
 
     void write();

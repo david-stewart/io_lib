@@ -10,19 +10,27 @@
     0. 2750. 8292. 24159. 57433
 </BBCES_4bin>
 
+<crazy_T>
+    5 
+    <crazy_M>
+    10 15 20 25 30 35 40 
+    </crazy_M>
+    45 50 
+</crazy_T>
+
 
 <jetpt_prelim_T>
-   3. 4. 
+   3  4  5  6 
    <jetpt_prelim_M> 
-       5. 6. 8. 10. 15. 20. 25. 36. 
+             8. 10. 15. 20. 25. 36. 
    </jetpt_prelim_M> 
-   50.
+   50
 </jetpt_prelim_T>
 
 <jetpt_byones_T>
-   3. 4. 
+       6 7 8 9 
    <jetpt_byones_M>
-       5 6 7 8 9 10 11 12 13 14 15 16 17 
+       10 11 12 13 14 15 16 17 
        18 19 20 21 22 23 24 25 26 27 28 29 30
        31 32 33 34 35 36
    </jetpt_byones_M>

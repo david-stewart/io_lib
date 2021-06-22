@@ -173,6 +173,11 @@ ioInBounds::ioInBounds(ioBinVec bins) { init(bins); };
 ioInBounds::ioInBounds(double lo, double hi) :
     lo_bound{lo}, hi_bound(hi) {}; 
 
+ostream& operator<<(ostream& os, ioInBounds& rhs) {
+    os << " ioInBounds("<<rhs.lo_bound<<","<<rhs.hi_bound<<")"<<endl;
+    return os;
+};
+
 // ioPads class (with helper class ioPadDim)
 void ioPadDim::check_input() {
     if (   low   < 0. || low   > 1. 
