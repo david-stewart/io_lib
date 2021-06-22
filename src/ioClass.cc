@@ -1821,6 +1821,14 @@ bool ioXYbounder::operator()(double x, double y) {
     else return y>Y[bin];
 };
 
+double ioXYbounder::operator()(double x) {
+    if (size == 0) return -1;
+    int bin = (int)(std::lower_bound(X.begin(), X.end(), x) - X.begin());
+    if (bin == 0) return lodef;
+    else if (bin == size) return hidef;
+    else return Y[bin];
+};
+
 ioCycleSpacer::ioCycleSpacer(int period, int _n_width, const char* _spacer) :
     cycle{period}, spacer{_spacer}, n_width{_n_width} 
 {
