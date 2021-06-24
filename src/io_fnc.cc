@@ -1189,3 +1189,105 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "quant_lo", quant_lo,
             "quant_hi", quant_hi}}};
 };
+
+
+/* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true) { */
+/*     TAxis* Xaxis = hg->GetXaxis(); */
+/*     TAxis* Yaxis = hg->GetYaxis(); */
+/*     int nXbins = Xaxis->GetNbins(); */
+/*     int nYbins = Xaxis->GetNbins(); */
+/*     if (cut_underover_flow) { */
+        
+IOS_keepcut_stats io_keepcutbin(TH1* h, int ibin, double minval, double zero_val, double zero_err) {
+    IOS_keepcut_stats stats{};
+    double val = h->GetBinContent(ibin);
+    if (val == 0 && h->GetBinError(ibin)==0) return {};
+    if (val < minval) {
+        ++stats.n_cut;
+        stats.sum_cut = val-zero_val;
+        stats.was_cut = true;
+        h->SetBinContent(ibin, zero_val);
+
+        if (zero_val != 0 && zero_err == 0.)  h->SetBinError(ibin, sqrt(zero_val)); 
+        else  h->SetBinError(ibin, 0.); 
+
+        int x, y, z;
+        h->GetBinXYZ(ibin,x,y,z);
+        stats.x = h->GetXaxis()->GetBinCenter(x);
+        stats.y = h->GetYaxis()->GetBinCenter(y);
+    } else {
+        ++stats.n_keep;
+        stats.sum_keep = val;
+    }
+    /* if (stats.was_cut) cout << " - " << stats.x << " " << stats.y << endl; */
+return stats;
+};
+
+IOS_keepcut_stats io_cullsmallbins(
+        TH1* h, 
+        double min_val, 
+        IO area, 
+        bool remove_overunderflow) 
+{
+    if (remove_overunderflow) 
+        for (auto i : io_binvec(h, IO::overunderflow)) io_setbinzero(h,i);
+
+    IOS_keepcut_stats stats;
+    for (auto i : io_binvec(h, area)) {
+        stats += io_keepcutbin(h, i, min_val);
+        /* if (stats.was_cut) cout << stats.x << " " << stats.y << endl; */
+        /* cout << " stats: " << stats.was_cut << endl; */
+    }
+    return stats;
+};
+
+vector<int> io_binvec(TH1* h, IO loc) {
+    vector<int> vec{};
+    if (h->GetYaxis()->GetNbins() == 1) {
+        switch (loc) {
+            case IO::overunderflow:
+                vec = { 0, h->GetXaxis()->GetNbins()+1 };
+                break;
+            case IO::all:
+                vec = { 0, h->GetXaxis()->GetNbins()+1 };
+                // no break -- continue to next block
+            case IO::in:
+                for (int i{1}; i<=h->GetXaxis()->GetNbins(); ++i) 
+                    vec.push_back(i);
+                break;
+            default: break;
+        }
+    } else {
+        int nX = h->GetXaxis()->GetNbins();
+        int nY = h->GetYaxis()->GetNbins();
+        switch (loc) {
+            case IO::overunderflow: 
+                for (auto x{0}; x<=nX+1; ++x) vec.push_back(h->GetBin(x,0));
+                for (auto x{0}; x<=nX+1; ++x) vec.push_back(h->GetBin(x,nY+1));
+                for (auto y{1}; y<=nY;   ++y) vec.push_back(h->GetBin(0,y));
+                for (auto y{1}; y<=nY;   ++y) vec.push_back(h->GetBin(nX+1,y));
+                break;
+            case IO::all:
+                vec = io_binvec(h, IO::overunderflow);
+                // no break -- continue to next block
+            case IO::in:
+                for (auto y{1}; y<nY+1; ++y)
+                for (auto x{1}; x<nX+1; ++x)
+                        vec.push_back(h->GetBin(x,y));
+                break;
+            default: break;
+        }
+    }
+    return vec;
+};
+
+double io_setbinzero(TH1* hg, int bin, double val, double err)
+{ 
+    double p_val = hg->GetBinContent(bin);
+    hg->SetBinContent(bin, val);
+    if (val != 0. && err == 0.) err = sqrt(val);
+    hg->SetBinError(bin, err);
+    return p_val;
+};
+
+

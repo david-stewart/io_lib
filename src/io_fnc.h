@@ -8,12 +8,15 @@
 #include <iostream>
 #include "TLatex.h"
 #include "TPaveText.h"
-#include "io_fmt.h"
 #include "TH2D.h"
 #include "TPRegexp.h"
 #include "TF1.h"
 #include "TProfile2D.h"
 
+
+#include "io_fmt.h"
+#include "io_IOS.h"
+#include "io_enum.h"
 #include "ioOptMap.h"
 #include "RooUnfoldResponse.h"
 
@@ -251,5 +254,20 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
 // pt_jet : copy of pt_jet in
 // bound_lo : quantile from quant_lo
 // bound_hi : quantile from quant_hi
+
+IOS_keepcut_stats io_keepcutbin(TH1*, int ibin, double minval, 
+        double zero_val=0., double zero_err=0.);
+
+IOS_keepcut_stats io_cullsmallbins(TH1*, double min_val, IO area=IO::in, 
+                                   bool remove_underoverflow=true);
+/* enum class IO { overunderflow, in, all }; */
+vector<int> io_binvec(TH1* _h, IO=IO::in);
+
+// set the bin to the new value, return the sum of change of values
+double io_setbinzero(TH1* hg, int bin, double val=0, double err=0.);
+
+// function to trim all bins < n_min from a TH2D or TH1D
+/* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */
+/* void ioTrimSmallBins(TH1D* hg, int Nmin, bool cut_underover_flow=true); */
 
 #endif
