@@ -1190,7 +1190,6 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "quant_hi", quant_hi}}};
 };
 
-
 /* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true) { */
 /*     TAxis* Xaxis = hg->GetXaxis(); */
 /*     TAxis* Yaxis = hg->GetYaxis(); */
@@ -1291,3 +1290,7 @@ double io_setbinzero(TH1* hg, int bin, double val, double err)
 };
 
 
+const char* io_cutdiff(int a, int b, const char* fmt) {
+    int diff {b-a};
+    return Form(fmt,b,diff,(double)diff/a);
+};

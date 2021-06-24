@@ -18,13 +18,29 @@
     45 50 
 </crazy_T>
 
+<jetpt_5_T>
+         5
+   <jetpt_5_M> 
+         10. 15. 20. 25. 30. 35. 
+   </jetpt_5_M> 
+   40 45 55
+</jetpt_5_T>
+
+<jetpt_a_T>
+         7. 8. 9.
+   <jetpt_a_M> 
+         10. 15. 20. 25. 35. 
+   </jetpt_a_M> 
+   45 55
+</jetpt_a_T>
+
 
 <jetpt_prelim_T>
-   3  4  5  6 
+   3  4  5  6  7.
    <jetpt_prelim_M> 
-             8. 10. 15. 20. 25. 36. 
+       10. 15. 20. 25. 30.
    </jetpt_prelim_M> 
-   50
+   35 40 45 50
 </jetpt_prelim_T>
 
 <jetpt_byones_T>
@@ -57,7 +73,7 @@
 <prelim_Raghav_M>
    7. 8. 9.
    <prelim_Raghav_T> 
-       5. 6. 8. 10. 15. 20. 25. 36. 
+                10. 15. 20. 25. 36. 
    </prelim_Raghav_T> 
    50.
 </prelim_Raghav_M>

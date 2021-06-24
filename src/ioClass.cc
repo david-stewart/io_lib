@@ -1794,6 +1794,17 @@ bool ioCycleTrue::operator()() {
 ioCycleTrue::operator bool() { return this->operator()(); };
 void ioCycleTrue::reset() { cnt = 0; };
 
+ioXYbounder::ioXYbounder(vector<double> x, vector <double> y, ioOptMap opt) :
+    X{x}, Y{y},
+    size { (int) X.size() },
+    lodef{ opt.has("default-lo") ? opt["default-lo"]() : 
+           size > 0 ? Y[0] : 0.
+    },
+    hidef{ opt.has("default-hi") ? opt["default-hi"]() : 
+           size > 0 ? Y[size-1] : 0.
+    }
+{};
+
 ioXYbounder::ioXYbounder() : X {}, Y{}, size{0}, lodef{0.}, hidef{0.}
 {};
 

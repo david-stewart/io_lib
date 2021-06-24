@@ -50,20 +50,17 @@ struct ioJetMatcher {
     ioInBounds in_reco_bounds;
     ioInBounds in_meas_bounds;
 
-    TH1D* miss;
-    TH1D* fake;
-    TH2D* matched;
+    TH1D       hg_pthb_cnt;
+    vector<TH1D> v_miss{};
+    vector<TH1D> v_T{};
+    vector<TH1D> v_M{};
+    vector<TH1D> v_fake{};
+    vector<TH2D> v_match{};
+
     double fake_limit;
-
-    ioXYbounder out_of_match_bounds;
-
-
-    /* vector<double> fakes; */
-    /* vector<double> missed; */
-    /* vector<pair<double,double>> matches; */
-    /* ioInBounds bounds_T; */
-    /* ioInBounds bounds_M; */
-    /* bool cut_outliers{false}; */
+    ioXYbounder out_of_match_bounds {};
+    bool b_ptht_Mlimit{false};
+    array<ioXYbounder,9> pthb_Mlimit; // pT-hat-bin Measured Limit
 
     /* int* eventid; */ 
     /* int* runid; */
@@ -77,31 +74,29 @@ struct ioJetMatcher {
             ioOptMap dict={{
                 "make_AB",1,
                 "ratio_AtoB",0.5,
-                "hg2_Xsec_vs_T",1,
-                "hg2_Xsec_vs_M",1,
-                "hg2_Xsec_vs_match",1,
-                "hg2_Xsec_vs_fake",1,
+                "Xsec_vs_T",1,
+                "Xsec_vs_M",1,
+                "Xsec_vs_match",1,
+                "Xsec_vs_fake",1,
+                "Xsec_vs_miss",1,
                 "hg1_R2_match",1,
-                "R",0.4,
-                "cut_outliers",0
+                "R",0.4
             }}
     );
+    ~ioJetMatcher(){};
     double pt_fakes, pt_misses;
 
-    bool b_make_AB;
-    bool b_hg2_Xsec_vs_T;
-    bool b_hg2_Xsec_vs_M;
-    bool b_hg2_Xsec_vs_match;
-    bool b_hg2_Xsec_vs_fake;
-    bool b_hg1_R2_match;
+    bool b_make_AB       {false};
+    bool b_Xsec_vs_miss  {false};
+    bool b_Xsec_vs_T     {false};
+    bool b_Xsec_vs_M     {false};
+    bool b_Xsec_vs_fake  {false};
+    bool b_Xsec_vs_match {false};
+    bool b_hg1_R2_match  {false};
     /* bool switch_AB{true}; */
 
     RooUnfoldResponse* response_A; // 1/2 of the data
     RooUnfoldResponse* response_B; // other 1/2 of data
-    TH2D* hg2_Xsec_vs_T{nullptr};
-    TH2D* hg2_Xsec_vs_M{nullptr};
-    TH2D* hg2_Xsec_vs_match{nullptr};
-    TH2D* hg2_Xsec_vs_fake{nullptr};
     TH1D* hg1_R2_match{nullptr};
 
 
