@@ -44,7 +44,9 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     hg2_cut{Form("hg2_cut_%s",_name),"title;measured;truth",80,-10.,70.,80,-10.,70.},
     _rand{},
     in_reco_bounds {bin_file,tag_M},
-    in_meas_bounds {bin_file,tag_T}
+    in_meas_bounds {bin_file,tag_T},
+    hg_pthb_cnt { "pthg_cnt","Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+        Xsec.nbins_pthat, -0.5, Xsec.nbins_pthat-0.5 }
 {
     dict += options;
     bool debug = dict.has("debug");
@@ -74,12 +76,29 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
         cout << " debug: fake_limit " << fake_limit << endl;
         cout << " out_of_match_bounds.size " << out_of_match_bounds.size << endl;
     }
-    
 
-    /* if (dict.has("match_bounds_file")) { */
-        /* out_of_match_bounds = */ 
-        /* {dict["match_bounds_file"], dict["pt_true"], dict["pt_measured"] }; */
-    /* } */
+    if (dict.has("pthb_Mlimit_file") && dict.has("JER_limit") 
+            && dict.has("match_fake_limit")) {
+        b_ptht_Mlimit = true;
+        auto pt_true = ioReadValVec(dict["pthb_Mlimit_file"],"pt_jet_bin_upbound");
+        auto match_fake_limit = dict["match_fake_limit"]();
+        auto JER_limit  = dict["JER_limit"]();
+        for (int ibin{0}; ibin<Xsec.nbins_pthat; ++ibin) {
+            vector<double> pt_meas_limit;
+            auto JES = ioReadValVec(dict["pthb_Mlimit_file"],Form("JES__%i",ibin));
+            auto JER = ioReadValVec(dict["pthb_Mlimit_file"],Form("JER__%i",ibin));
+            for (unsigned int i{0}; i<JES.size(); ++i) {
+                pt_meas_limit.push_back(pt_true[i]+JES[i]+JER_limit*JER[i]+match_fake_limit);
+                if (debug) cout << Form(
+                 " debug : bin %i Truth %4.1f  JES %5.2f JER %4.2f nJERlim %3.1f fakept_lim %4.2f -> M_lim %4.2f",
+                 ibin,pt_true[i], JES[i], JER[i], JER_limit, match_fake_limit, 
+                                (pt_true[i]+JES[i]+JER_limit*JER[i]+match_fake_limit)) << endl;
+                
+            }
+            pthb_Mlimit[ibin] = {pt_true,pt_meas_limit};
+        }
+    }
+
     ratio_AtoB = dict["ratio_AtoB"]();
 
     ioBinVec binsM { bin_file, tag_M };
@@ -161,6 +180,7 @@ bool ioJetMatcher::do_matching(int pthatbin) {
 
     // Find fakes, misses, and matches first, so that if an outlier event
     // is found, it can be filled without filling any other event.
+    ioXYbounder& Mlimits { b_ptht_Mlimit ? pthb_Mlimit[pthatbin] : out_of_match_bounds };
 
     bool out_bounds_cut {false};
     for (auto& MC : data_MC) {
@@ -170,7 +190,7 @@ bool ioJetMatcher::do_matching(int pthatbin) {
             double delta_R2 { MC(reco,jet_R2) };
             if (delta_R2 != 0) {
                 // cut the event if matched pair is out of bounds
-                if (out_of_match_bounds(MC.pT,reco.pT)) {
+                if (Mlimits(MC.pT,reco.pT)) {
                     out_bounds_cut = true;
                     response_cut.Fill(reco.pT, MC.pT,W);
                     hg2_cut.Fill(reco.pT, MC.pT);
@@ -201,6 +221,7 @@ bool ioJetMatcher::do_matching(int pthatbin) {
     }
 
     // now that is it not an outlier event, fill the data
+    hg_pthb_cnt.Fill((double)pthatbin);
     double pthat_val { (0.5)*(Xsec.pthatbins[pthatbin]+
                        Xsec.pthatbins[pthatbin+1]) };
     bool fillA = _rand.Uniform() < ratio_AtoB;
@@ -214,9 +235,9 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         else       response_B->Fill(match.first, match.second,W);
 
 
-        if (b_Xsec_vs_match) v_match[pthatbin].Fill(match.first, match.second,W);
-        if (b_Xsec_vs_T)     v_T[pthatbin].Fill(match.second,W);
-        if (b_Xsec_vs_M)     v_M[pthatbin].Fill(match.first,W);
+        if (b_Xsec_vs_match) v_match[pthatbin].Fill(match.first, match.second);
+        if (b_Xsec_vs_T)     v_T[pthatbin].Fill(match.second);
+        if (b_Xsec_vs_M)     v_M[pthatbin].Fill(match.first);
 
         if (b_hg1_R2_match) hg1_R2_match->Fill(v_delta_R2[n]);
         ++n;
@@ -227,15 +248,15 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         // tag split
         if (fillA) response_A->Miss(miss, W);
         else       response_B->Miss(miss, W);
-        if (b_Xsec_vs_miss) v_miss[pthatbin].Fill(miss,W);
-        if (b_Xsec_vs_T)    v_T[pthatbin].Fill(miss,W);
+        if (b_Xsec_vs_miss) v_miss[pthatbin].Fill(miss);
+        if (b_Xsec_vs_T)    v_T[pthatbin].Fill(miss);
     }
     for (auto& fake : fakes) {
         response.Fake(fake,W);
         response_noweight.Fake(fake);
 
-        if (b_Xsec_vs_fake) v_fake[pthatbin].Fill(fake,W);
-        if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake,W);
+        if (b_Xsec_vs_fake) v_fake[pthatbin].Fill(fake);
+        if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake);
 
         if (fillA) response_A->Fake(fake, W);
         else       response_B->Fake(fake, W);
@@ -247,6 +268,7 @@ bool ioJetMatcher::do_matching(int pthatbin) {
 
 void ioJetMatcher::write() {
     /* R2_distr_matches->Write(); */
+    hg_pthb_cnt.Write();
     hg2_cut.Write();
     response.Write();
     response_noweight.Write();

@@ -50,6 +50,7 @@ struct ioJetMatcher {
     ioInBounds in_reco_bounds;
     ioInBounds in_meas_bounds;
 
+    TH1D       hg_pthb_cnt;
     vector<TH1D> v_miss{};
     vector<TH1D> v_T{};
     vector<TH1D> v_M{};
@@ -58,6 +59,8 @@ struct ioJetMatcher {
 
     double fake_limit;
     ioXYbounder out_of_match_bounds {};
+    bool b_ptht_Mlimit{false};
+    array<ioXYbounder,9> pthb_Mlimit; // pT-hat-bin Measured Limit
 
     /* int* eventid; */ 
     /* int* runid; */
@@ -80,6 +83,7 @@ struct ioJetMatcher {
                 "R",0.4
             }}
     );
+    ~ioJetMatcher(){};
     double pt_fakes, pt_misses;
 
     bool b_make_AB       {false};
@@ -93,10 +97,6 @@ struct ioJetMatcher {
 
     RooUnfoldResponse* response_A; // 1/2 of the data
     RooUnfoldResponse* response_B; // other 1/2 of data
-    /* TH2D* hg2_Xsec_vs_T{nullptr}; */
-    /* TH2D* hg2_Xsec_vs_M{nullptr}; */
-    /* TH2D* hg2_Xsec_vs_match{nullptr}; */
-    /* TH2D* hg2_Xsec_vs_fake{nullptr}; */
     TH1D* hg1_R2_match{nullptr};
 
 
