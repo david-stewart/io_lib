@@ -57,6 +57,14 @@ struct ioJetMatcher {
     vector<TH1D> v_fake{};
     vector<TH2D> v_match{};
 
+    vector<TH1D> A_miss{};
+    vector<TH1D> A_fake{};
+    vector<TH2D> A_match{};
+
+    vector<TH1D> B_miss{};
+    vector<TH1D> B_fake{};
+    vector<TH2D> B_match{};
+
     double fake_limit;
     ioXYbounder out_of_match_bounds {};
     bool b_ptht_Mlimit{false};
@@ -86,7 +94,7 @@ struct ioJetMatcher {
     ~ioJetMatcher(){};
     double pt_fakes, pt_misses;
 
-    bool b_make_AB       {false};
+    /* bool b_make_AB       {false}; */
     bool b_Xsec_vs_miss  {false};
     bool b_Xsec_vs_T     {false};
     bool b_Xsec_vs_M     {false};

@@ -106,7 +106,6 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
 
     ioBinVec binsT { bin_file, tag_T };
     pt_fakes = binsT[0];
-    b_make_AB       = (dict["make_AB"]==1);
 
     int nbins = Xsec.nbins_pthat;
     ioBinVec bins_M { bin_file, tag_M };
@@ -115,6 +114,12 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
         b_Xsec_vs_miss = true;
         for (int i{0}; i<nbins; ++i) {
             v_miss.push_back({Form("miss_%i__%s",i,_name),
+                Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
+                bins_M, bins_M});
+            A_miss.push_back({Form("A_miss_%i__%s",i,_name),
+                Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
+                bins_M, bins_M});
+            B_miss.push_back({Form("B_miss_%i__%s",i,_name),
                 Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
                 bins_M, bins_M});
         }
@@ -141,12 +146,26 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
             v_fake.push_back({Form("fake_%i__%s",i,_name),
                 Form("Fake jets for #hat{#it{p}}_{T}-bin %i;#it{p}_{T};N",i),
                 bins_M, bins_M});
+            A_fake.push_back({Form("A_fake_%i__%s",i,_name),
+                Form("Fake jets for #hat{#it{p}}_{T}-bin %i;#it{p}_{T};N",i),
+                bins_M, bins_M});
+            B_fake.push_back({Form("B_fake_%i__%s",i,_name),
+                Form("Fake jets for #hat{#it{p}}_{T}-bin %i;#it{p}_{T};N",i),
+                bins_M, bins_M});
         }
     }
     if (dict["Xsec_vs_match"]==1) {
         b_Xsec_vs_match = true;
         for (int i{0}; i<nbins; ++i) {
             v_match.push_back({Form("match_%i__%s",i,_name),
+                Form("Matched jets for #hat{#it{p}}_{T}-bin %i;"
+                    "#it{p}_{T}-measured;#it{p}_{T}-truth;",i),
+                bins_M, bins_M, bins_T, bins_T});
+            A_match.push_back({Form("A_match_%i__%s",i,_name),
+                Form("Matched jets for #hat{#it{p}}_{T}-bin %i;"
+                    "#it{p}_{T}-measured;#it{p}_{T}-truth;",i),
+                bins_M, bins_M, bins_T, bins_T});
+            B_match.push_back({Form("B_match_%i__%s",i,_name),
                 Form("Matched jets for #hat{#it{p}}_{T}-bin %i;"
                     "#it{p}_{T}-measured;#it{p}_{T}-truth;",i),
                 bins_M, bins_M, bins_T, bins_T});
@@ -162,12 +181,10 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     
     jet_R2 = dict["R"]()*dict["R"]();
 
-    if (b_make_AB) {
-        response_A = (RooUnfoldResponse*)
-            response.Clone(Form("%s_A",response.GetName()));
-        response_B = (RooUnfoldResponse*)
-            response.Clone(Form("%s_B",response.GetName()));
-    }
+    response_A = (RooUnfoldResponse*)
+        response.Clone(Form("%s_A",response.GetName()));
+    response_B = (RooUnfoldResponse*)
+        response.Clone(Form("%s_B",response.GetName()));
     ioBinVec pthatbins { Xsec.pthatbins };
 }
 
@@ -235,7 +252,11 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         else       response_B->Fill(match.first, match.second,W);
 
 
-        if (b_Xsec_vs_match) v_match[pthatbin].Fill(match.first, match.second);
+        if (b_Xsec_vs_match) {
+            v_match[pthatbin].Fill(match.first, match.second);
+            if (fillA) A_match[pthatbin].Fill(match.first, match.second);
+            else       B_match[pthatbin].Fill(match.first, match.second);
+        }
         if (b_Xsec_vs_T)     v_T[pthatbin].Fill(match.second);
         if (b_Xsec_vs_M)     v_M[pthatbin].Fill(match.first);
 
@@ -248,14 +269,22 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         // tag split
         if (fillA) response_A->Miss(miss, W);
         else       response_B->Miss(miss, W);
-        if (b_Xsec_vs_miss) v_miss[pthatbin].Fill(miss);
+        if (b_Xsec_vs_miss) {
+            v_miss[pthatbin].Fill(miss);
+            if (fillA) A_miss[pthatbin].Fill(miss);
+            else       B_miss[pthatbin].Fill(miss);
+        }
         if (b_Xsec_vs_T)    v_T[pthatbin].Fill(miss);
     }
     for (auto& fake : fakes) {
         response.Fake(fake,W);
         response_noweight.Fake(fake);
 
-        if (b_Xsec_vs_fake) v_fake[pthatbin].Fill(fake);
+        if (b_Xsec_vs_fake) {
+            v_fake[pthatbin].Fill(fake);
+            if (fillA) A_fake[pthatbin].Fill(fake);
+            else       B_fake[pthatbin].Fill(fake);
+        }
         if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake);
 
         if (fillA) response_A->Fake(fake, W);
@@ -273,16 +302,22 @@ void ioJetMatcher::write() {
     response.Write();
     response_noweight.Write();
     response_cut.Write();
-    if (b_make_AB) {
-        response_A->Write();
-        response_B->Write();
-    }
+    response_A->Write();
+    response_B->Write();
 
     for (auto& h : v_T)      h.Write();
     for (auto& h : v_M)      h.Write();
     for (auto& h : v_fake)   h.Write();
     for (auto& h : v_miss)   h.Write();
     for (auto& h : v_match)  h.Write();
+
+    for (auto& h : A_fake)   h.Write();
+    for (auto& h : A_miss)   h.Write();
+    for (auto& h : A_match)  h.Write();
+
+    for (auto& h : B_fake)   h.Write();
+    for (auto& h : B_miss)   h.Write();
+    for (auto& h : B_match)  h.Write();
 
     if (b_hg1_R2_match)  hg1_R2_match->Write();
 };
