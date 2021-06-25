@@ -63,6 +63,7 @@ struct ioBinVec {
     ioBinVec(vector<double>, bool range_double=true);
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
     ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
+    ioBinVec(TH1*, const char axis='x');
     void init(vector<double>, bool range_double=true);
     /* void update(); */
     // all constructors use build_ptr
