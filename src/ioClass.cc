@@ -43,6 +43,16 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
     return obj;
 };
 
+ioRanger::ioRanger(double _lo_range, double _hi_range, double _lo_out, double _hi_out) :
+    lo_range {_lo_range},
+    hi_range {_hi_range},
+    lo_out   {_lo_out},
+    hi_out   {_hi_out}
+{};
+double ioRanger::operator()(double x) {
+    return lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range);
+};
+
 // for ioBinVec
 vector<double> ioBinVec::bin_centers() {
     vector<double> V;
