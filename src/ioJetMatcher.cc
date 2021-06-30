@@ -45,7 +45,7 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     _rand{},
     in_reco_bounds {bin_file,tag_M},
     in_meas_bounds {bin_file,tag_T},
-    hg_pthb_cnt { "pthg_cnt","Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+    hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         Xsec.nbins_pthat, -0.5, Xsec.nbins_pthat-0.5 }
 {
     dict += options;
@@ -115,13 +115,13 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
         for (int i{0}; i<nbins; ++i) {
             v_miss.push_back({Form("miss_%i__%s",i,_name),
                 Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
-                bins_M, bins_M});
+                bins_T, bins_T});
             A_miss.push_back({Form("A_miss_%i__%s",i,_name),
                 Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
-                bins_M, bins_M});
+                bins_T, bins_T});
             B_miss.push_back({Form("B_miss_%i__%s",i,_name),
                 Form("Misses for #hat{#it{p}}_{T}-bin %i;#it{p}_{T}-miss;N",i),
-                bins_M, bins_M});
+                bins_T, bins_T});
         }
     }
     if (dict["Xsec_vs_T"]==1) {
