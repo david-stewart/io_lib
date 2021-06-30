@@ -1,0 +1,19 @@
+
+<platex_names>
+    pi #pi
+    antipi #pi^{-}
+    K K
+    antiK K^{-}
+    p p
+    pbar #bar{p}
+</platex_names>
+
+<latex_names>
+    #pi #pi^{-} K
+    K^{-} p #bar{p}
+</latex_names>
+
+<pnames>
+    pi antipi K antiK p pbar
+</pnames>
+
