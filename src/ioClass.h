@@ -223,8 +223,8 @@ struct ioIntSet {
     /* bool add_data(const ioIntSet&); // union with a second set */
     bool has(int);
     ioIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
-    ioIntSet(const char* in_file, ofstream& log, int col=0, bool print=true, bool strip_commas=true);
-    ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
+    ioIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);
+    std::ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
                           // warning: may not be meaningful with sort, and existence
     ioIntSet& operator+=(const ioIntSet& rhs);
@@ -239,7 +239,7 @@ struct ioIntList {
     bool operator()(int); // check if argument is in the list
     bool has(int);
     bool has_not(int);
-    ioIntList(const char* in_file, ofstream& log, bool print=true);
+    ioIntList(const char* in_file, std::ofstream& log, bool print=true);
     ioIntList(const char* in_file, bool print=true);
     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
     private:
@@ -262,7 +262,7 @@ struct ioIntMap {
             int index_column,
             int data_column,
             bool echo_print,
-            ofstream& log,
+            std::ofstream& log,
             vector<int> skip_vals={}
     );
     private:
@@ -354,7 +354,7 @@ struct ioIntVec {
     // The first row of data is are the keys of the data, for a kind of data frame table
     // This is a poorman's implementation
     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} );
-    ioIntVec( const char* file_name, ofstream& log, bool echo_print=true, vector<string>_tags={});
+    ioIntVec( const char* file_name, std::ofstream& log, bool echo_print=true, vector<string>_tags={});
     string ioIntVec_constructor( const char* file_name, bool echo_print, vector<string>_tags={} );
 
 
