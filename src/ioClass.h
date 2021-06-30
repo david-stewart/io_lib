@@ -48,6 +48,16 @@ class ioGetter{
 //      See notes below.
 // --------------------------------------------------------------------------------------
 
+struct ioRanger {
+    // used to give relative location in range
+    double lo_range;
+    double hi_range;
+    double lo_out;
+    double hi_out;
+    double operator()(double x); // returns ratio between lo_out and hi_out of X in range
+    ioRanger(double in_range_lo, double in_range_hi, double out_range_lo=0., double out_range_hi=1.);
+    //lo and hi out default to the range
+};
 
 
 
@@ -63,6 +73,7 @@ struct ioBinVec {
     ioBinVec(vector<double>, bool range_double=true);
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
     ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
+    ioBinVec(TH1*, const char axis='x');
     void init(vector<double>, bool range_double=true);
     /* void update(); */
     // all constructors use build_ptr

@@ -43,6 +43,16 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
     return obj;
 };
 
+ioRanger::ioRanger(double _lo_range, double _hi_range, double _lo_out, double _hi_out) :
+    lo_range {_lo_range},
+    hi_range {_hi_range},
+    lo_out   {_lo_out},
+    hi_out   {_hi_out}
+{};
+double ioRanger::operator()(double x) {
+    return lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range);
+};
+
 // for ioBinVec
 vector<double> ioBinVec::bin_centers() {
     vector<double> V;
@@ -85,6 +95,28 @@ ioBinVec::ioBinVec(vector<vector<double>> V_in) {
     for (auto    v : VEC) 
         vec.push_back(v);
     build_ptr();
+};
+ioBinVec::ioBinVec(TH1* h, const char axis) {
+    TAxis* ax;
+    switch (axis) {
+        case 'x':
+        case 'X':
+            ax = h->GetXaxis();
+            break;
+        case 'y':
+        case 'Y':
+            ax = h->GetYaxis();
+            break;
+        case 'z':
+        case 'Z':
+            ax = h->GetZaxis();
+            break;
+        default:
+            throw std::runtime_error("in ioBinVec initializer, must select axis 'xXyYzZ'");
+    }
+    vector<double> build_vec;
+    for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
+    init(build_vec);
 };
 
 void ioBinVec::set_val(int i, double val) {
