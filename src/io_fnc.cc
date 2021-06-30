@@ -932,6 +932,50 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
 /*     } */
 /*     return new TGraph(n,xpts,ypts); */
 /* }; */
+TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err, vector<bool> use) {
+    if (x.size() != y.size() || x.size() != y_err.size()) 
+        throw std::runtime_error(
+                "ioMakeTGraphErrors(vec, vec, vec, vec={}) required vectors of same length");
+    if (x_err.size() != 0 && x_err.size() != x.size())
+        throw std::runtime_error(
+                "ioMakeTGraphErrors(vec, vec, vec, vec) x_errs.size() not 0 and not x.size()");
+    if (use.size() != 0 && use.size() != x.size())
+        throw std::runtime_error(
+                "ioMakeTGraphErrors(vec, vec, vec, vec) use.size() not 0 and not x.size()");
+
+    if (use.size() != 0) {
+        vector<double> x0, y0, y0_err, x0_err;
+        for (int i{0}; i<(int)use.size();++i) {
+            if (use[i]) {
+                x0.push_back(x[i]);
+                y0.push_back(y[i]);
+                x0_err.push_back( x_err.size() == 0 ? 0. : x_err[i] );
+                y0_err.push_back( y_err[i] );
+            }
+        }
+        x=x0;
+        y=y0;
+        x_err=x0_err;
+        y_err=y0_err;
+    }
+
+    const unsigned int n = x.size();
+    /* cout << " size: " << n << " " << x.size() << " " << y.size() << " " << x_err.size() << " " << y_err.size() << endl; */
+    double* xpts = new double[n];
+    double* ypts = new double[n];
+    double* yerr = new double[n];
+    double* xerr = new double[n];
+    bool use_x_err { x_err.size() != 0 };
+
+    for (unsigned int i{0}; i<n; ++i) {
+        xpts[i] = x[i];
+        ypts[i] = y[i];
+        yerr[i] = y_err[i];
+        xerr[i] = ( use_x_err ? x_err[i] : 0. );
+    }
+    return new TGraphErrors(n,xpts,ypts,xerr,yerr);
+};
+
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
     if (x.size() != y.size()) 
         throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length");
@@ -1165,7 +1209,9 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "a2",0.,
             "pt_jet", pt_jet,
             "JES", 0.,
+            "JES_err",0.,
             "JER", 0.,
+            "JER_err", 0.,
             "bound_lo", 0.,
             "bound_hi", 0.,
             "quant_lo", 0.,
@@ -1183,7 +1229,9 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "a2",f1->GetParameter(2),
             "pt_jet", pt_jet,
             "JES", (f1->GetParameter(1) - pt_jet),
+            "JES_err", (f1->GetParError(1)),
             "JER", (f1->GetParameter(2) ),
+            "JER_err", (f1->GetParError(2)),
             "bound_lo", quant[0],
             "bound_hi", quant[1],
             "quant_lo", quant_lo,

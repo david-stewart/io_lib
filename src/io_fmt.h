@@ -11,6 +11,8 @@
 #include "TLine.h"
 #include "TPad.h"
 #include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TMultiGraph.h"
 
 // default dictionary options for formating TH1D
 
@@ -37,6 +39,8 @@ TH2D* io_fmt (TH2D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict()
 
 //repeat of the above, but for TGraph
 TGraph* io_fmt (TGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TGraphErrors* io_fmt (TGraphErrors* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TMultiGraph* io_fmt (TMultiGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TGraph* io_fmt (TGraph* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 
 # endif

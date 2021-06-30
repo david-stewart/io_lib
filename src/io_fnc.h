@@ -12,6 +12,7 @@
 #include "TPRegexp.h"
 #include "TF1.h"
 #include "TProfile2D.h"
+#include "TGraphErrors.h"
 
 
 #include "io_fmt.h"
@@ -188,6 +189,7 @@ double* ioSetValsPtr(vector<double>);
 //         skip_commas will remove all commas from all lines
 
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
+TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err={}, vector<bool> use={});
 /* TGraph* ioMakeTGraph(vector<double> x, vector<double> y); */
 
 // find the bin in a vector

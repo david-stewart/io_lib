@@ -327,6 +327,7 @@ struct ioHgStats {
 
     ioHgStats(TH1D* hg, bool cut_zeros=false);
     ioHgStats(TProfile* hg, bool cut_zeros=false, bool weight_by_entries=false);
+    ioHgStats(vector<double> x_vals, vector<double> vals, vector<double> errs, bool cut_zeros = false);
 
     int count_points();
     vector<int> bin_indices();

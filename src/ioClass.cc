@@ -711,6 +711,34 @@ int ioIntMap::size() { return data_map.size(); };
 
 
 // ioHgStats
+ioHgStats::ioHgStats(vector<double> ax_vals, vector<double> _vals, vector<double> _errs, bool cut_zeros) {
+    if (ax_vals.size() != _vals.size() || _vals.size() != _errs.size())
+        throw std::runtime_error(
+                "ioHgStats(vec, vec, vec) required vectors of same length");
+    if (ax_vals.size() < 2) 
+        throw std::runtime_error(
+                "ioHgStats(vec, vec, vec) required vectors size > 1");
+    vals = _vals;
+    errs = _errs;
+    nbins = ax_vals.size();
+
+    double *p = new double[nbins+1];
+    p[0] = ax_vals[0]-0.5*(ax_vals[1]-ax_vals[0]);
+    for (int i{1}; i<nbins; ++i) p[i] = 0.5*(ax_vals[i-1]+ax_vals[i]);
+    p[nbins] = ax_vals[nbins-1]+0.5*(ax_vals[nbins-1]-ax_vals[nbins-2]);
+    axis = new TAxis(nbins, p);
+
+    if (cut_zeros) {
+        for (auto i{0}; i<nbins;++i) {
+            weight.push_back( vals[i] == 0 ? 0. : 1.);
+        }
+    } else {
+        for (auto i{0}; i<nbins; ++i) {
+            weight.push_back(1.);
+        }
+    }
+    calc_stats();
+};
 ioHgStats::ioHgStats(TH1D* hg, bool cut_zeros) {
     vals = io_vecBinContent(hg);
     errs = io_vecBinError  (hg);
