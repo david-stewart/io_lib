@@ -51,3 +51,9 @@ while read line; do
     fi
 done < oi_lib_list
 
+
+if [ ! -L include/io_enum.h ]; then
+    cd include
+        ln -s ../src/io_enum.h .
+    cd ..
+fi
