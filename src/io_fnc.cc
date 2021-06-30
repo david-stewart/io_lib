@@ -1,4 +1,5 @@
 #include "io_fnc.h"
+#include "ioClass.h"
 #include "RooUnfoldBayes.h"
 #include "RooUnfoldResponse.h"
 #include "TProfile2D.h"
@@ -933,15 +934,22 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
 /*     return new TGraph(n,xpts,ypts); */
 /* }; */
 TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err, vector<bool> use) {
+    ioMinMax nsize;
+    nsize.fill(x.size());
+    nsize.fill(y.size());
+    nsize.fill(y_err.size());
+    if (x_err.size() != 0) nsize.fill(x_err.size());
+    if (use.size() != 0)   nsize.fill(use.size());
+
     if (x.size() != y.size() || x.size() != y_err.size()) 
-        throw std::runtime_error(
-                "ioMakeTGraphErrors(vec, vec, vec, vec={}) required vectors of same length");
+        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+             << " Therefor using shortest vector of size " <<  nsize.max << endl;
     if (x_err.size() != 0 && x_err.size() != x.size())
-        throw std::runtime_error(
-                "ioMakeTGraphErrors(vec, vec, vec, vec) x_errs.size() not 0 and not x.size()");
+        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+             << " Therefor using shortest vector of size " <<  nsize.max << endl;
     if (use.size() != 0 && use.size() != x.size())
-        throw std::runtime_error(
-                "ioMakeTGraphErrors(vec, vec, vec, vec) use.size() not 0 and not x.size()");
+        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+             << " Therefor using shortest vector of size " <<  nsize.max << endl;
 
     if (use.size() != 0) {
         vector<double> x0, y0, y0_err, x0_err;
@@ -959,7 +967,7 @@ TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<doub
         y_err=y0_err;
     }
 
-    const unsigned int n = x.size();
+    const unsigned int n = nsize.max;
     /* cout << " size: " << n << " " << x.size() << " " << y.size() << " " << x_err.size() << " " << y_err.size() << endl; */
     double* xpts = new double[n];
     double* ypts = new double[n];
