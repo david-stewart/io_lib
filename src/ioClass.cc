@@ -1418,6 +1418,25 @@ void ioIntVec::write_to_file(const char* which_file, vector<string>comments) {
     f_out.close();
 };
 
+void ioMinMaxPtr::operator()(double _, void* p){
+    if (!has_data) {
+        has_data = true;
+        min_ptr = p;
+        max_ptr = p;
+        min_val = _;
+        max_val = _;
+    } else {
+        if (_ > max_val) {
+            max_val = _;
+            max_ptr = p;
+        }
+        if (_ < min_val) {
+            min_val = _;
+            min_ptr = p;
+        }
+    }
+};
+
 ioMinMax::ioMinMax(string _name) : name{_name} {};
 long long int ioMinMax::fill(double val) {
     if (n_entries == 0) {

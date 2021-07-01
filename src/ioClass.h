@@ -395,6 +395,16 @@ struct ioIntVec {
     void            write_to_file(const char* file_name, vector<string> comments={});
 };
 
+struct ioMinMaxPtr {
+    ioMinMaxPtr(){};
+    double min_val;
+    double max_val;
+    bool has_data{false};
+    void* min_ptr{nullptr};
+    void* max_ptr{nullptr};
+    void operator()(double, void* ptr=nullptr);
+};
+
 struct ioMinMax {
     ioMinMax(string _name="");
 
