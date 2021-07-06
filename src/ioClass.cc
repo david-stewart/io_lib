@@ -53,7 +53,6 @@ double ioRanger::operator()(double x) {
     return lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range);
 };
 
-// for ioBinVec
 vector<double> ioBinVec::bin_centers() {
     vector<double> V;
     for (int i{0}; i<(int)vec.size()-1; ++i) V.push_back(0.5*(vec[i]+vec[i+1]));
@@ -95,6 +94,10 @@ ioBinVec::ioBinVec(vector<vector<double>> V_in) {
     for (auto    v : VEC) 
         vec.push_back(v);
     build_ptr();
+};
+// copy constructor
+ioBinVec::ioBinVec(const ioBinVec& cp) {
+    init(cp.vec, true);
 };
 ioBinVec::ioBinVec(TH1* h, const char axis) {
     TAxis* ax;
@@ -1597,6 +1600,11 @@ ioIntSet::ioIntSet(const char* in_file, ofstream& log, int col, bool print, bool
 };
 ioIntSet::ioIntSet(const char* in_file, int col, bool print, bool strip_commas) {
     read_file(in_file, col, print, strip_commas);
+};
+ioIntSet::ioIntSet(const char* file, const char* tag) {
+    for (auto val : ioReadValVec(file,tag,{{"sort",true}})) {
+        list.push_back((int)val);
+    }
 };
 bool ioIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); };
 bool ioIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };

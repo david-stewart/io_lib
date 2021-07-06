@@ -1350,3 +1350,35 @@ const char* io_cutdiff(int a, int b, const char* fmt) {
     int diff {b-a};
     return Form(fmt,b,diff,(double)diff/a);
 };
+
+TH1* ioSetCntErrors(TH1* hg) {
+    for (int i{0}; i<hg->GetNcells(); ++i) {
+        if (hg->GetBinContent(i) != 0) {
+            hg->SetBinError(i, TMath::Sqrt(hg->GetBinContent(i)));
+        }
+    }
+    return hg;
+};
+TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverflow) {
+    // Add all content from bin centers in hg_from to values in corresponding bins in hg_to
+    if (rm_underoverflow) hg_fr->ClearUnderflowAndOverflow();
+    int x0, y0, z0;
+    TAxis* x_ax = hg_fr->GetXaxis();
+    TAxis* y_ax = hg_fr->GetYaxis();
+    TAxis* z_ax = hg_fr->GetZaxis();
+
+    if (true) for (int i{0}; i<hg_fr->GetNcells(); ++i) {
+        double val { hg_fr->GetBinContent(i) }; 
+        if (val==0) continue;
+        hg_fr->GetBinXYZ(i,x0,y0,z0);
+        int i_to { hg_to->FindBin(
+                x_ax->GetBinCenter(x0),
+                y_ax->GetBinCenter(y0),
+                z_ax->GetBinCenter(z0)) };
+        hg_to->SetBinContent( i_to, hg_to->GetBinContent(i_to) + val );
+    }
+    if (rm_underoverflow) hg_to->ClearUnderflowAndOverflow();
+    if (set_cnt_errors) ioSetCntErrors(hg_to);
+    return hg_to;
+};
+

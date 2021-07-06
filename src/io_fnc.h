@@ -13,6 +13,7 @@
 #include "TF1.h"
 #include "TProfile2D.h"
 #include "TGraphErrors.h"
+#include "ioOptMap.h"
 
 
 #include "io_fmt.h"
@@ -20,6 +21,7 @@
 #include "io_enum.h"
 #include "ioOptMap.h"
 #include "RooUnfoldResponse.h"
+/* #include "ioClass.h" */
 
 #define IO_pi      3.14159265
 #define IO_twopi   6.28318531
@@ -269,6 +271,13 @@ vector<int> io_binvec(TH1* _h, IO=IO::in);
 
 // set the bin to the new value, return the sum of change of values
 double io_setbinzero(TH1* hg, int bin, double val=0, double err=0.);
+
+TH1* ioSetCntErrors(TH1* hg);
+TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_from, 
+        bool set_bin_errors=false,
+        bool rm_under_overflow=true); // returs the hg_to
+// Add content of hg_from to bins in hg_to
+//
 
 // function to trim all bins < n_min from a TH2D or TH1D
 /* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */

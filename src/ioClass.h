@@ -74,6 +74,7 @@ struct ioBinVec {
     ioBinVec(const char* file, ioOptMap options={}, bool use_binspacer=true); 
     ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
     ioBinVec(TH1*, const char axis='x');
+    ioBinVec(const ioBinVec&);
     void init(vector<double>, bool range_double=true);
     /* void update(); */
     // all constructors use build_ptr
@@ -222,6 +223,7 @@ struct ioIntSet {
     bool operator()(int); // check if argument is in the list
     /* bool add_data(const ioIntSet&); // union with a second set */
     bool has(int);
+    ioIntSet(const char* in_file, const char* tag);
     ioIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
     ioIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);
     std::ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
