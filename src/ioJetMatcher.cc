@@ -409,19 +409,19 @@ ioJetMatcherGoodBins::ioJetMatcherGoodBins (
         hg_goodmatch = new TH2D("hg_goodbins__local",";Measured;Truth",
                 gbins_M, gbins_M, gbins_T, gbins_T );
         for (int i{0}; i<nXsec; ++i) {
-            goodmatchbins.push_back({goodbin_file, Form("match_%i",i)});
+            goodmatchbins.push_back({goodbin_file, Form("match_pthb_%i",i)});
         }
 
         hg_goodmiss = new TH1D("hg_goodmiss__local",";Measured;Truth",
                 gbins_T, gbins_T );
         for (int i{0}; i<nXsec; ++i) {
-            goodmissbins.push_back({goodbin_file, Form("goodbins_pthat_%i",i)});
+            goodmissbins.push_back({goodbin_file, Form("miss_pthb_%i",i)});
         }
 
         hg_goodfake = new TH1D("hg_goodfake__local",";Measured;Truth",
                 gbins_M, gbins_M );
         for (int i{0}; i<nXsec; ++i) {
-            goodfakebins.push_back({goodbin_file, Form("goodbins_pthat_%i",i)});
+            goodfakebins.push_back({goodbin_file, Form("miss_pthb_%i",i)});
         }
     }
 }
