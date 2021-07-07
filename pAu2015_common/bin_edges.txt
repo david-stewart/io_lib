@@ -10,7 +10,7 @@
     0. 2750. 8292. 24159. 57433
 </BBCES_4bin>
 
-<comment> These are deciles of transverse to corrected tower trigger
+<comment> These are deciles of transverse to corrected tower trigger </comment>
 <EAtrans_10bin> 
  0.0      0.41328  0.62286  0.80471 0.9811
  1.16467  1.36455  1.59887  1.90578 2.3796  15.
