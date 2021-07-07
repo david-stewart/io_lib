@@ -9,7 +9,7 @@ done
 # working on src files
 # ------------------------------
 
-# line the header files
+# link the header files
 cd include
 while read line; do
     if [ ! -L io${line}.h ]; then
@@ -23,12 +23,13 @@ temp_script=root_L_script.sh
 echo 'root -l <<EOF' > ${temp_script}
 echo 'gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");' >> ${temp_script}
 while read line; do
+    echo "cout << \".L src/io${line}.cc+\" << endl;" >> ${temp_script}
     echo ".L src/io${line}.cc+" >> ${temp_script}
 done < io_lib_list
 echo 'EOF' >> ${temp_script}
 chmod u+x ${temp_script}
 ./${temp_script}
-rm ${temp_script}
+# rm ${temp_script}
 
 cd lib
 while read line; do
