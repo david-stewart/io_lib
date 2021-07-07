@@ -22,6 +22,8 @@ struct ioJetMatcherGoodBins {
     int nXsec;
     double jet_R2; // jet_R * jet_R   
     TH1D  hg_pthb_cnt;
+    TH1D  hg_pthb_cnt_A;
+    TH1D  hg_pthb_cnt_B;
     bool debug;
     double ratio_AtoB;
     TH1D hg1_R2_match;

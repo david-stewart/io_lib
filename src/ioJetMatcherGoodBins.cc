@@ -21,6 +21,10 @@ ioJetMatcherGoodBins::ioJetMatcherGoodBins (
     jet_R2 { (double)(options["R"].val()) * (double)(options["R"].val()) },
     hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         nXsec, -0.5, (double) nXsec-0.5 },
+    hg_pthb_cnt_A { Form("pthg_cnt_%s_A",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+        nXsec, -0.5, (double) nXsec-0.5 },
+    hg_pthb_cnt_B { Form("pthg_cnt_%s_B",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+        nXsec, -0.5, (double) nXsec-0.5 },
     debug{ (bool)options["debug"] },
     ratio_AtoB { options["ratio_AtoB"].val() },
     hg1_R2_match {
@@ -161,6 +165,9 @@ bool ioJetMatcherGoodBins::do_matching(int iXsecBin) {
     // now that is it not an outlier event, fill the data
     hg_pthb_cnt.Fill((double)iXsecBin);
     bool fillA = _rand.Uniform() < ratio_AtoB;
+    if (fillA) hg_pthb_cnt_A.Fill((double)iXsecBin);
+    else       hg_pthb_cnt_B.Fill((double)iXsecBin);
+    
     int n{0};
     for (auto& match : matches) {
         /* cout << " auto " << match.first << " " << match.second << endl; */
@@ -194,6 +201,8 @@ bool ioJetMatcherGoodBins::clear_MCreco() {
 };
 void ioJetMatcherGoodBins::write() {
     hg_pthb_cnt.Write();
+    hg_pthb_cnt_A.Write();
+    hg_pthb_cnt_B.Write();
     hg1_R2_match.Write();
 
     for (auto& h : v_T)      h.Write();
