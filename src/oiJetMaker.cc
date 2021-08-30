@@ -7,14 +7,29 @@ oiJetMaker::oiJetMaker(ioOptMap _opt, ioOptMap _defaults) :
     calc_areas { opt["calc_areas"]() == 1 },
     ghost_max_rap { opt["ghost_max_rap"]() },
     ghost_R       { opt["ghost_R"]() },
-    jet_def { opt["jet_def"] == "antikt"    ? fastjet::antikt_algorithm
-            : opt["jet_def"] == "kt"        ? fastjet::kt_algorithm
-            : opt["jet_def"] == "cambridge" ? fastjet::cambridge_algorithm 
+    jet_def { opt["jet_def"].str() == "antikt"    ? fastjet::antikt_algorithm
+            : opt["jet_def"].str() == "kt"        ? fastjet::kt_algorithm
+            : opt["jet_def"].str() == "cambridge" ? fastjet::cambridge_algorithm 
             : fastjet::antikt_algorithm, jet_R
     },
+    /* jet_selection {  fastjet::SelectorAbsEtaMax(jetrap)}, */
     jet_selection { !fastjet::SelectorIsPureGhost() && fastjet::SelectorAbsEtaMax(jetrap)},
     min_jet_pt { opt["min_jet_pt"]() }
-{};
+{
+    /* if (jet_def.jet_algorithm() == fastjet::antikt_algorithm) cout << " antikt! " << endl; */
+    /* if (jet_def.jet_algorithm() == fastjet::kt_algorithm) cout << " kT! " << endl; */
+    /* if (jet_def.jet_algorithm() == fastjet::cambridge_algorithm) cout << " cambrdige! " << endl; */
+    /* cout << " opt[] " << opt["jet_def"] << "  jet_R " << jet_R << " " << jet_def.R() << endl; */
+    /* cout << opt << " end OPT " << endl; */
+    /* string JD { opt["jet_def"].str() == "antikt"    ? "fastjet::antikt_algorithm" */
+            /* : opt["jet_def"].str() == "kt"        ? "fastjet::kt_algorithm" */
+            /* : opt["jet_def"].str() == "cambridge" ? "fastjet::cambridge_algorithm" */
+            /* : " DEFAULT"}; */
+    /* cout << "JD: " << JD << endl; */
+    /* cout << " _opt " << _opt << "||" << endl; */
+ /* cout << Form("JetR : %f, jetrap : %f, min_jet_pt: %f", */
+        /* jet_R, jetrap, min_jet_pt) << endl; */
+};
 
 void oiJetMaker::add_particle(double pt, double eta, double phi){
     particles.push_back(PseudoJet());
@@ -105,6 +120,8 @@ int oiJetMaker::size() { return njets; };
 __oiJetMaker_Jet& oiJetMaker::operator[](int i) { return jets[i]; };
 
 int oiJetMaker::cluster_jets() {
+    /* cout << " calc_areas: " << calc_areas << " jet_R " << jet_R << "  min_jet_pt " << min_jet_pt << endl; */
+    /* cout << " PAR: " << particles.size() << endl; */
     if (calc_areas) {
         fastjet::AreaDefinition area_def( 
             fastjet::active_area_explicit_ghosts, 
@@ -133,6 +150,7 @@ int oiJetMaker::cluster_jets() {
         };
     }
     njets = jets.size();
+    /* cout << " njets:: " << njets << endl; */
     return njets;
 };
 double oiJetMaker::pt(int i) {

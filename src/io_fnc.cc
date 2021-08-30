@@ -999,13 +999,13 @@ TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
 
 // find the bin in a vector
 int iowhichbin0(double val, vector<double>& vec) {
-    return (int)(std::lower_bound(vec.begin(), vec.end(), val) - vec.begin());
+    return (int)(std::upper_bound(vec.begin(), vec.end(), val) - vec.begin()-1);
 } ;
 int iowhichbin0(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val)-1);
 } ;
 int iowhichbin1(double val, vector<double>& vec) {
-    return (int)(std::lower_bound(vec.begin(), vec.end(), val) - vec.begin())+1;
+    return (int)(std::upper_bound(vec.begin(), vec.end(), val) - vec.begin());
 } ;
 int iowhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));

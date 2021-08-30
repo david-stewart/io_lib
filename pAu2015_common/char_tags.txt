@@ -6,11 +6,19 @@
     79  seventy
 </phi-axis>
 
+<ea-bbc-names>
 <ea-names>
-    0    EA_{lo:70-90%}
-    1    EA_{med:30-70%}
-    2    EA_{hi:0-30%}
-    10   EA_{lo:70-100%}
-    20   EA_{lo:90-100%}
-    100  EA_{all}
+    0    EA_{BBC-lo:70-90%}
+    1    EA_{BBC-med:30-70%}
+    2    EA_{BBC-hi:0-30%}
+    10   EA_{BBC-lo:70-100%}
+    20   EA_{BBC-lo:90-100%}
+    100  EA_{BBC-all}
 </ea-names>
+</ea-bbc-names>
+
+<ea-trans-names>
+    0    EA_{trans-lo:70-100%}
+    1    EA_{trans-med:30-70%}
+    2    EA_{trans-hi:0-30%}
+</ea-trans-names>
