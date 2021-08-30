@@ -472,14 +472,9 @@ void ioPads::init() {
 
     const char* t_name = Form("canv_%s",ioUniqueName(101));
     canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
-    /* cout << " a0 " << endl; */
     io_fmt(canvas);
-    /* cout << " a1 " << endl; */
     canvas->Draw();
-    /* cout << " a2 " << endl; */
     canvas->cd();
-    /* cout << " a3 " << endl; */
-
 
     // add all pads
     add_pad(pad_dimensions);
@@ -1546,6 +1541,17 @@ ioIntSet& ioIntSet::operator+=(const ioIntSet& rhs) {
     sort(list.begin(),list.end());
     return *this;
 };
+ioIntSet& ioIntSet::operator-=(const ioIntSet& rhs) {
+    vector<int> new_list;
+    for (auto val : list) {
+        if (!binary_search(rhs.list.begin(),rhs.list.end(),val)) {
+            new_list.push_back(val);
+        }
+    }
+    /* for (auto v : new_vals) list.push_back(v); */
+    list = new_list;
+    return *this;
+};
 ioIntSet& ioIntSet::operator*=(const ioIntSet& sec) {
     vector<int> new_list;
     for (auto val : sec.list)
@@ -1553,6 +1559,14 @@ ioIntSet& ioIntSet::operator*=(const ioIntSet& sec) {
             new_list.push_back(val);
     list = new_list;
     return *this;
+};
+
+void ioIntSet::write_to_file(const char* file_name, vector<string> comments) {
+    ofstream fout;
+    fout.open(file_name);
+    for (auto& comment : comments) fout << "// " << comment << endl;
+    for (auto v : list) fout << v << endl;
+    fout.close();
 };
 
 
@@ -1591,6 +1605,7 @@ ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool
     }
     return msg;
 };
+/* ioIntSet::ioIntSet() {}; */
 ostream& operator<<(ostream& os, ioIntSet& dt) { 
     for (auto& v : dt.list) cout << v << endl;
     return os;
