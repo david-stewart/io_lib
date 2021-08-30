@@ -566,6 +566,10 @@ bool io_isAbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){
     float dphi = TMath::Abs(io_dphi(phi0,phi1));
     return (dphi>=lo_bound && dphi<=hi_bound);
 };
+bool io_isAbsTrans358Phi(float phi0, float phi1, float lo_bound, float hi_bound){
+    float dphi = TMath::Abs(io_dphi(phi0,phi1));
+    return (dphi>=lo_bound && dphi<=hi_bound);
+};
 
 float io_02pi(float &phi){
     while (phi<0)       phi += IO_twopi;
@@ -919,6 +923,62 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
         vals[i] = vec[i0+i];
     }
     return {size_req, vals};
+};
+
+TGraph* ioMakeTGraph(TH1D* hg, bool invert, bool skip_zeros, bool normalize) {
+    if (normalize) hg->Scale(1./hg->Integral());
+    vector<double> x, y;
+    TAxis* axis = hg->GetXaxis();
+    for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) {
+        if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue;
+        x.push_back(axis->GetBinCenter(i));
+        y.push_back(hg->GetBinContent(i));
+    }
+    TGraph* gr;
+    double lo = hg->GetXaxis()->GetBinLowEdge(1);
+    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
+    if (invert) {
+        gr = ioMakeTGraph(y,x);
+        // set the limits
+        gr->SetMinimum(lo);
+        gr->SetMaximum(hi);
+    } else {
+        gr = ioMakeTGraph(x,y);
+        gr->GetXaxis()->SetLimits(lo,hi);
+    }
+    return gr;
+};
+
+TGraph* ioMakeTGraph(TProfile* pr, bool invert, bool skip_zeros, bool normalize) {
+    TH1D* hg = (TH1D*) pr->ProjectionX(ioUniqueName());
+    if (normalize) hg->Scale(1./hg->Integral());
+    return ioMakeTGraph(hg,invert,skip_zeros);
+};
+
+TGraphErrors* ioMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool normalize ) {
+    vector<double> x, x_err, y, y_err;
+    TAxis* axis = hg->GetXaxis();
+    if (normalize) hg->Scale(1./hg->Integral());
+    for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) {
+        if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue;
+        x.push_back(axis->GetBinCenter(i));
+        x_err.push_back(0.);
+        y.push_back(hg->GetBinContent(i));
+        y_err.push_back(hg->GetBinError(i));
+        
+    }
+    TGraphErrors* gr;
+    double lo = hg->GetXaxis()->GetBinLowEdge(1);
+    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
+    if (invert) {
+        gr = ioMakeTGraphErrors(y,x,x_err,y_err);
+        gr->SetMinimum(lo);
+        gr->SetMaximum(hi);
+    } else {
+        gr = ioMakeTGraphErrors(x,y,y_err,x_err);
+        gr->GetXaxis()->SetLimits(lo,hi);
+    }
+    return gr;
 };
 
 /* TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y) { */

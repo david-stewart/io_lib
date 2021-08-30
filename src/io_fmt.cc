@@ -259,6 +259,8 @@ TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
 
     // Set axes styles
 
+    if (dict("TitleSize")) hg->SetTitleSize(dict["TitleSize"].val());
+    if (dict("TitleFont")) hg->SetTitleFont(dict["TitleFont"].val());
     // x Axis
     if (dict("xAxisTitleFont"))
         hg->GetXaxis()->SetTitleFont(dict["xAxisTitleFont"]);
@@ -303,6 +305,36 @@ TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetZaxis()->SetLabelSize(dict["zAxisLabelSize"].val());
     if (dict("zAxisLabelOffset"))
         hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
+    
+    // Set Axis ranges with {x||y||z}AxisRange{Lo||Hi}
+    if (dict("xAxisRangeLo") || dict("xAxisRangeHi")) {
+        if (!dict("xAxisRangeLo") || !dict("xAxisRangeHi")) {
+            cout << " Warning in io_fmt: has xAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting xAxisRange." << endl;
+        } else {
+            hg->GetXaxis()->SetRangeUser(dict["xAxisRangeLo"].val(), dict["xAxisRangeHi"].val());
+        }
+    }
+    if (dict("yAxisRangeLo") || dict("yAxisRangeHi")) {
+        if (!dict("yAxisRangeLo") || !dict("yAxisRangeHi")) {
+            cout << " Warning in io_fmt: has yAxisRange{Lo||Hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting yAxisRange." << endl;
+        } else {
+            hg->GetYaxis()->SetRangeUser(dict["yAxisRangeLo"].val(), dict["yAxisRangeHi"].val());
+        }
+    }
+    if (dict("zAxisRangeLo") || dict("zAxisRangeHi")) {
+        if (!dict("zAxisRangeLo") || !dict("zAxisRangeHi")) {
+            cout << " Warning in io_fmt: has zAxisRange{lo||hi} but not both. Needs both."<<endl;
+            cout << " -> Not setting zAxisRange." << endl;
+        } else {
+            hg->GetZaxis()->SetRangeUser(dict["zAxisRangeLo"].val(), dict["zAxisRangeHi"].val());
+        }
+    }
+    // Set Ndivisions
+    if (dict("xAxisNdivisions")) hg->GetXaxis()->SetNdivisions(dict["xAxisNdivisions"]);
+    if (dict("yAxisNdivisions")) hg->GetYaxis()->SetNdivisions(dict["yAxisNdivisions"]);
+    if (dict("zAxisNdivisions")) hg->GetZaxis()->SetNdivisions(dict["zAxisNdivisions"]);
     return hg;
 };
 
@@ -359,6 +391,8 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
 
     // Set titles
     if (dict("Title")) hg->SetTitle(dict["Title"]);
+    if (dict("TitleSize")) hg->SetTitleSize(dict["TitleSize"].val());
+    if (dict("TitleFont")) hg->SetTitleFont(dict["TitleFont"].val());
     if (dict("xAxisTitle")) hg->GetXaxis()->SetTitle(dict["xAxisTitle"]);
     if (dict("yAxisTitle")) hg->GetYaxis()->SetTitle(dict["yAxisTitle"]);
 
@@ -646,6 +680,9 @@ TGraph* io_fmt (TGraph* hg, ioOptMap _override, ioOptMap dict) {
             hg->GetXaxis()->SetLimits(dict["xAxisRangeLo"].val(), dict["xAxisRangeHi"].val());
         }
     }
+    if (dict("xAxisNdivisions")) hg->GetXaxis()->SetNdivisions(dict["xAxisNdivisions"]);
+    if (dict("yAxisNdivisions")) hg->GetYaxis()->SetNdivisions(dict["yAxisNdivisions"]);
+
     if (dict("yAxisRangeLo")) hg->SetMinimum(dict["yAxisRangeLo"].val());
     if (dict("yAxisRangeHi")) hg->SetMaximum(dict["yAxisRangeHi"].val());
     return hg;
@@ -743,6 +780,9 @@ TGraphErrors* io_fmt (TGraphErrors* hg, ioOptMap _override, ioOptMap dict) {
     }
     if (dict("yAxisRangeLo")) hg->SetMinimum(dict["yAxisRangeLo"].val());
     if (dict("yAxisRangeHi")) hg->SetMaximum(dict["yAxisRangeHi"].val());
+
+    if (dict("xAxisNdivisions")) hg->GetXaxis()->SetNdivisions(dict["xAxisNdivisions"]);
+    if (dict("yAxisNdivisions")) hg->GetYaxis()->SetNdivisions(dict["yAxisNdivisions"]);
     return hg;
 };
 TMultiGraph* io_fmt (TMultiGraph* hg, ioOptMap _override, ioOptMap dict) {

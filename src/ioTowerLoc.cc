@@ -66,6 +66,8 @@ TGraph* ioTowerLoc_TGraph(vector<int> i_towers, double x_offset, double y_offset
 
 TH2D* ioTowerLoc_TH2D(){
     TH2D* hg = new TH2D(ioUniqueName(),";#eta;#phi",40,__ioTowerEtaBounds,120,__ioTowerPhiBounds);
+    hg->GetXaxis()->SetTickLength(0.);
+    hg->GetYaxis()->SetTickLength(0.);
     hg->SetStats(0);
     return hg;
 };

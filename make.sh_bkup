@@ -12,9 +12,8 @@ done
 # link the header files
 cd include
 while read line; do
-    cline=${line%$'\r'}
-    if [ ! -L io${cline}.h ]; then
-        ln -s ../src/io${cline}.h .
+    if [ ! -L io${line}.h ]; then
+        ln -s ../src/io${line}.h .
     fi
 done < ../io_lib_list
 cd ..
@@ -24,9 +23,8 @@ temp_script=root_L_script.sh
 echo 'root -l <<EOF' > ${temp_script}
 echo 'gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");' >> ${temp_script}
 while read line; do
-    cline=${line%$'\r'}
-    echo "cout << \".L src/io${cline}.cc+\" << endl;" >> ${temp_script}
-    echo ".L src/io${cline}.cc+" >> ${temp_script}
+    echo "cout << \".L src/io${line}.cc+\" << endl;" >> ${temp_script}
+    echo ".L src/io${line}.cc+" >> ${temp_script}
 done < io_lib_list
 echo 'EOF' >> ${temp_script}
 chmod u+x ${temp_script}
@@ -35,23 +33,21 @@ chmod u+x ${temp_script}
 
 cd lib
 while read line; do
-    cline=${line%$'\r'}
-    if [ ! -L libio${cline}.so ]; then
-        ln -s ../src/io${cline}_cc.so libio${cline}.so
+    if [ ! -L libio${line}.so ]; then
+        ln -s ../src/io${line}_cc.so libio${line}.so
     fi
-    if [ ! -L io${cline}_cc_ACLiC_dict_rdict.pcm ]; then
-        ln -s ../src/io${cline}_cc_ACLiC_dict_rdict.pcm
+    if [ ! -L io${line}_cc_ACLiC_dict_rdict.pcm ]; then
+        ln -s ../src/io${line}_cc_ACLiC_dict_rdict.pcm
     fi
 done < ../io_lib_list
 cd ..
 
 # make the src/oi files
 while read line; do
-    cline=${line%$'\r'}
-    make -f src/Makefile lib/liboi${cline}.so
-    if [ ! -L include/oi${cline}.h ]; then
+    make -f src/Makefile lib/liboi${line}.so
+    if [ ! -L include/oi${line}.h ]; then
         cd include
-        ln -s ../src/oi${cline}.h .
+        ln -s ../src/oi${line}.h .
         cd ..
     fi
 done < oi_lib_list

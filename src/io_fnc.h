@@ -26,6 +26,8 @@
 #define IO_pi      3.14159265
 #define IO_twopi   6.28318531
 #define IO_piless1 2.14159265
+#define IO_3to8pi  1.88495559
+#define IO_5to8pi  1.96349541
 
 using std::pair;
 
@@ -127,6 +129,7 @@ TLegend* ioNewTLegend();
 
 float io_dphi(float phi0, float phi1); // phi1 - phi0, returns in range (-pi,pi)
 bool  io_isAbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound=IO_piless1); // checks if is transverse to pi
+bool  io_isAbsTrans358pi(float phi0, float phi1, float lo_bound=IO_3to8pi, float hi_bound=IO_5to8pi); // checks if is transverse to pi
 float io_02pi(float &phi); // puts phi in range [0,2pi]
 float io_02pi(float  phi); // same as above
 
@@ -191,7 +194,12 @@ double* ioSetValsPtr(vector<double>);
 //         skip_commas will remove all commas from all lines
 
 TGraph* ioMakeTGraph(vector<double> x, vector<double> y);
-TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err={}, vector<bool> use={});
+TGraph* ioMakeTGraph(TH1D* hg, bool invert_XY=false, bool skip_zeros=true, bool normalize=false);
+TGraph* ioMakeTGraph(TProfile* pr, bool invert_XY=false, bool skip_zeros=true, bool normalize=false);
+
+TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, 
+                                 vector<double> x_err={}, vector<bool> use={});
+TGraphErrors* ioMakeTGraphErrors(TH1D* hg, bool invert_XY=false, bool skip_zeros=true, bool normalize=false );
 /* TGraph* ioMakeTGraph(vector<double> x, vector<double> y); */
 
 // find the bin in a vector

@@ -219,6 +219,8 @@ struct ioPads {
 };
 
 struct ioIntSet {
+    /* ioIntSet(); */
+    /* void sort(); */
     vector<int> list {};
     bool operator()(int); // check if argument is in the list
     /* bool add_data(const ioIntSet&); // union with a second set */
@@ -230,10 +232,12 @@ struct ioIntSet {
     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
                           // warning: may not be meaningful with sort, and existence
     ioIntSet& operator+=(const ioIntSet& rhs);
+    ioIntSet& operator-=(const ioIntSet& rhs); // remove union
     ioIntSet& operator*=(const ioIntSet& rhs); // get the union
     friend ostream& operator<<(ostream& os, ioIntSet& dt);
     int size();
     void clear();
+    void write_to_file(const char* file_name, vector<string> comments={});
 };
 
 struct ioIntList {
@@ -355,7 +359,7 @@ class ioMsgTree {
 struct ioIntVec {
     // A class that has at it's heart a vector<vector<int>> of data
     // The first row of data is are the keys of the data, for a kind of data frame table
-    // This is a poorman's implementation
+    // This is a poor man's implementation
     ioIntVec( const char* file_name, bool echo_print=true, vector<string>_tags={} );
     ioIntVec( const char* file_name, std::ofstream& log, bool echo_print=true, vector<string>_tags={});
     string ioIntVec_constructor( const char* file_name, bool echo_print, vector<string>_tags={} );
