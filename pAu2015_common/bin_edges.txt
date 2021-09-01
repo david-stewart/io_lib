@@ -153,3 +153,10 @@
   15.4  16.6  18.0  19.6  21.5
   23.8  30.0
 </trackpt_resolution>
+
+<track_res_fit_pi>         0.00816143  0.01607393  0.00306316  <track_res_fit_pi>       
+<track_res_fit_antipi>     0.01088202  0.01418532  0.00310607  <track_res_fit_antipi>   
+<track_res_fit_K>          0.00342095  0.01844102  0.00336841  <track_res_fit_K>        
+<track_res_fit_antiK>      0.00779303  0.01441333  0.00356509  <track_res_fit_antiK>    
+<track_res_fit_p>          0.02337522  0.00715981  0.00416086  <track_res_fit_p>        
+<track_res_fit_pbar>       0.02232209  0.00952510  0.00391845  <track_res_fit_pbar>     
