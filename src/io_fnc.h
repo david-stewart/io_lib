@@ -74,7 +74,7 @@ double ioPadyRat(double y_in); // get y-coordinatio of ratio y_in
 void ioDrawTLineHorizontal(double y, ioOptMap options={});
 void ioDrawTLineVertical(double x, ioOptMap options={});
 
-double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q);
+/* double io_get_box_integral(TH2D* hg, vector<double>p, vector<double>q); */
 double io_get_box_integral(TProfile* hg, pair<double,double>p={0.,0.}, pair<double,double>q={0.,0.});
 double io_get_box_mean(TProfile2D* hg, pair<double,double>p={0.,0.}, pair<double,double>q={0.,0.});
 
