@@ -167,3 +167,10 @@
 <trackpt_mu+3sig_antiK>     0.02888656  1.03727380  0.00926847  </trackpt_mu+3sig_antiK>   
 <trackpt_mu+3sig_p>         0.07176077  1.01804080  0.01127001  </trackpt_mu+3sig_p>       
 <trackpt_mu+3sig_pbar>      0.06681327  1.02748682  0.01004769  </trackpt_mu+3sig_pbar>    
+
+<trackpt_mu+3sig_iter_pi>        0.02454268  1.04816396  0.00945054  </trackpt_mu+3sig_iter_pi>      
+<trackpt_mu+3sig_iter_antipi>    0.03260966  1.04271422  0.00927156  </trackpt_mu+3sig_iter_antipi>  
+<trackpt_mu+3sig_iter_K>         0.01171361  1.05203518  0.01049305  </trackpt_mu+3sig_iter_K>       
+<trackpt_mu+3sig_iter_antiK>     0.02266972  1.04321310  0.01071239  </trackpt_mu+3sig_iter_antiK>   
+<trackpt_mu+3sig_iter_p>         0.06317751  1.02340004  0.01256068  </trackpt_mu+3sig_iter_p>       
+<trackpt_mu+3sig_iter_pbar>      0.05595688  1.03488338  0.01122253  </trackpt_mu+3sig_iter_pbar>    
