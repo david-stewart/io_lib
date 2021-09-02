@@ -154,9 +154,16 @@
   23.8  30.0
 </trackpt_resolution>
 
-<track_res_fit_pi>         0.00816143  0.01607393  0.00306316  <track_res_fit_pi>       
-<track_res_fit_antipi>     0.01088202  0.01418532  0.00310607  <track_res_fit_antipi>   
-<track_res_fit_K>          0.00342095  0.01844102  0.00336841  <track_res_fit_K>        
-<track_res_fit_antiK>      0.00779303  0.01441333  0.00356509  <track_res_fit_antiK>    
-<track_res_fit_p>          0.02337522  0.00715981  0.00416086  <track_res_fit_p>        
-<track_res_fit_pbar>       0.02232209  0.00952510  0.00391845  <track_res_fit_pbar>     
+<track_res_fit_pi>         0.00816143  0.01607393  0.00306316  </track_res_fit_pi>       
+<track_res_fit_antipi>     0.01088202  0.01418532  0.00310607  </track_res_fit_antipi>   
+<track_res_fit_K>          0.00342095  0.01844102  0.00336841  </track_res_fit_K>        
+<track_res_fit_antiK>      0.00779303  0.01441333  0.00356509  </track_res_fit_antiK>    
+<track_res_fit_p>          0.02337522  0.00715981  0.00416086  </track_res_fit_p>        
+<track_res_fit_pbar>       0.02232209  0.00952510  0.00391845  </track_res_fit_pbar>     
+
+<trackpt_mu_3sig_pi>        0.02842693  1.04378776  0.00800612  </trackpt_mu_3sig_pi>      
+<trackpt_mu_3sig_antipi>    0.03886298  1.03700014  0.00794661  </trackpt_mu_3sig_antipi>  
+<trackpt_mu_3sig_K>         0.01494731  1.04878264  0.00899664  </trackpt_mu_3sig_K>       
+<trackpt_mu_3sig_antiK>     0.02888656  1.03727380  0.00926847  </trackpt_mu_3sig_antiK>   
+<trackpt_mu_3sig_p>         0.07176077  1.01804080  0.01127001  </trackpt_mu_3sig_p>       
+<trackpt_mu_3sig_pbar>      0.06681327  1.02748682  0.01004769  </trackpt_mu_3sig_pbar>    
