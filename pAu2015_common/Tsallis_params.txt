@@ -1,0 +1,19 @@
+ Tsallis fit parameters from pp collisions
+ fn: A / [(1+sqrt(x^2+m0^2)-m0) / (T*n))] 
+ The parameters are ordered as <tag> mass A T n </tag>
+<Tsallis_pp_pi>        0.135000  5.5037062016  0.1277746601  9.7595242213 </Tsallis_pp_pi>
+<Tsallis_pp_antipi>    0.135000  5.5865021613  0.1270067077  9.7325864610 </Tsallis_pp_antipi>
+<Tsallis_pp_K>         0.493677  0.1386983308  0.1929685766 11.8247896754 </Tsallis_pp_K>
+<Tsallis_pp_antiK>     0.493677  0.1386983308  0.1929685766 11.8247896754 </Tsallis_pp_antiK>
+<Tsallis_pp_p>         0.938272  0.0749981986  0.1758814596 10.5452494601 </Tsallis_pp_p>
+<Tsallis_pp_pbar>      0.938272  0.0642725426  0.1691919676 10.0635969116 </Tsallis_pp_pbar>
+
+ Tsallis fit parameters from dAu collisions
+ fn: A / [(1+sqrt(x^2+m0^2)-m0) / (T*n))] 
+ The parameters are ordered as <tag> mass A T n </tag>
+<Tsallis_dAu_pi>       0.135000 13.1377700117  0.1525501142 10.1869046869 </Tsallis_dAu_pi>
+<Tsallis_dAu_antipi>   0.135000 13.6251153259  0.1505198390 10.0949606259 </Tsallis_dAu_antipi>
+<Tsallis_dAu_K>        0.493677  0.4615505225  0.2215729988 11.6137583853 </Tsallis_dAu_K>
+<Tsallis_dAu_antiK>    0.493677  0.4675391506  0.2192846303 11.4475846094 </Tsallis_dAu_antiK>
+<Tsallis_dAu_p>        0.938272  0.2873036847  0.2114254603 11.4410990835 </Tsallis_dAu_p>
+<Tsallis_dAu_pbar>     0.938272  0.2257531137  0.2195209347 13.0260305553 </Tsallis_dAu_pbar>
