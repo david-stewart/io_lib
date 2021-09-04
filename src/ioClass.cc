@@ -1957,3 +1957,329 @@ ostream& operator<<(ostream& os, ioCycleSpacer& cs) {
 
 void ioCycleSpacer::reset() { cycle.cnt=-1; };
 
+
+
+ioPtrDbl::ioPtrDbl(TAxis* ax, double bin_loc, bool get_widths) {
+    int n_bins = ax->GetNbins();
+    if (get_widths) {
+        double ratio { -bin_loc };
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(bin_loc);
+    } else if (bin_loc == 0.5) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinCenter(i));
+    } else if (bin_loc == 0.) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinLowEdge(i));
+    } else if (bin_loc == 1.) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinUpEdge(i));
+    } else {
+        for (int i{1}; i<=n_bins; ++i) {
+            double W = ax->GetBinWidth(i);
+            double L  = ax->GetBinLowEdge(i);
+            vec.push_back(L+W*bin_loc);
+        }
+    }
+    build_ptr();
+}; 
+
+ioPtrDbl::ioPtrDbl(vector<double> V){
+    for (auto v : V) vec.push_back(v);
+    build_ptr();
+};
+ioPtrDbl::ioPtrDbl(TH1* hg, bool get_errors) {
+    if (get_errors) {
+        for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) {
+            vec.push_back(hg->GetBinError(i));
+        }
+    } else {
+        for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) {
+            vec.push_back(hg->GetBinContent(i));
+        }
+    }
+    build_ptr();
+};
+
+ioPtrDbl::ioPtrDbl(const ioPtrDbl& ihs) {
+    for (auto v : ihs.vec) vec.push_back(v);
+    build_ptr();
+};
+
+void ioPtrDbl::build_ptr() {
+    size = vec.size();
+    ptr = new double[size];
+    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+};
+
+ioPtrDbl& ioPtrDbl::update() {
+    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+    return *this;
+};
+
+ioPtrDbl::operator int () { return size; };
+ioPtrDbl::operator double* () { return ptr; };
+ioPtrDbl::operator vector<double> () { return vec; };
+
+ioPtrDbl::ioPtrDbl(const char* file, const char* tag) {
+    auto read_vec = ioReadValVec(file,tag);
+    for (auto v: read_vec) vec.push_back(v);
+    build_ptr();
+};
+ioPtrDbl::ioPtrDbl(int n) {
+    for (auto i{0}; i<n; ++i) vec.push_back(0);
+    build_ptr();
+};
+
+ioPtrDbl::~ioPtrDbl() {
+    delete[] ptr;
+};
+vector<double>::iterator ioPtrDbl::begin() { return vec.begin(); };
+vector<double>::iterator ioPtrDbl::end()   { return vec.end(); };
+
+double& ioPtrDbl::operator[](int i) { return vec[i]; };
+ostream& operator<<(ostream& os, ioPtrDbl& io) {
+    for (auto v : io) cout << " " << v;
+    cout << endl;
+    return os;
+};
+int ioPtrDbl::throw_error() {
+        throw std::runtime_error(" fatal in ioPtrDbl::operator+=, sizes don't match");
+        return -1;
+};
+
+ioPtrDbl& ioPtrDbl::operator+=(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error();
+    for (auto i{0}; i<size; ++i) vec[i] += rhs.vec[i];
+    update();
+    return *this;
+};
+ioPtrDbl& ioPtrDbl::operator-=(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error();
+    for (auto i{0}; i<size; ++i) vec[i] -= rhs.vec[i];
+    update();
+    return *this;
+};
+ioPtrDbl& ioPtrDbl::operator*=(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error();
+    for (auto i{0}; i<size; ++i) vec[i] *= rhs.vec[i];
+    return update();
+};
+ioPtrDbl& ioPtrDbl::operator/=(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error();
+    for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i];
+    return update();
+};
+ioPtrDbl& ioPtrDbl::operator*=(const double rhs) {
+    for (auto i{0}; i<size; ++i) vec[i] *= rhs;
+    return update();
+};
+ioPtrDbl& ioPtrDbl::operator+=(const double rhs) {
+    for (auto i{0}; i<size; ++i) vec[i] += rhs;
+    return update();
+};
+ioPtrDbl& ioPtrDbl::operator-=(const double rhs) {
+    for (auto i{0}; i<size; ++i) vec[i] -= rhs;
+    return update();
+};
+
+ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
+    if (lhs.size != rhs.size) {
+        throw std::runtime_error(" fatal in ioPtrDbl+ioPtrDbl, sizes don't match");
+    }
+    ioPtrDbl r_val{lhs};
+    r_val += rhs;
+    return r_val.update();
+};
+ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
+    if (lhs.size != rhs.size) {
+        throw std::runtime_error(" fatal in ioPtrDbl-ioPtrDbl, sizes don't match");
+    }
+    ioPtrDbl r_val{lhs};
+    r_val-=rhs;
+    return r_val.update();
+};
+ioPtrDbl  operator% (const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
+    auto diff = lhs-rhs;
+    diff *= diff;
+    return diff;
+};
+
+ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, pair<double,double> x_rat) : tgase{_tgase}
+{
+    size = tgase->GetN(); 
+    if (x_rat.first>=0) set_rat_xbins(x_rat.first, x_rat.second);
+};
+
+ioSysErrors::ioSysErrors(TH1* hg, pair<double,double> x_rat) {
+    ioPtrDbl x     {hg->GetXaxis()};
+    ioPtrDbl err_x {hg->GetXaxis(), 0.5, true};
+    /* cout << " x: " << x << endl; */
+    /* cout << " err_x: " << err_x << endl; */
+
+    ioPtrDbl y     {hg};
+    ioPtrDbl err_y {hg,true};
+    /* cout << " y: " << y << endl; */
+    /* cout << " err_y: " << err_y << endl; */
+    
+    tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y,err_y);
+    size = x.size;
+    /* cout << " x-new: " << x << endl; */
+    /* cout << " y-new: " << y << endl; */
+
+    if (x_rat.first>=0) set_rat_xbins(x_rat.first, x_rat.second);
+};
+
+ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;};
+
+ioSysErrors& ioSysErrors::swap_xy () {
+    double* x = new double[size];
+    double* y = new double[size];
+
+    double* x_old = tgase->GetX();
+    double* y_old = tgase->GetY();
+
+    std::copy(x_old, &(x_old[size]), y);
+    std::copy(y_old, &(y_old[size]), x);
+    auto tgase_new = new TGraphAsymmErrors(size,x,y);
+
+    for (int i{0}; i<size; ++i) {
+        tgase_new->SetPointError( 
+                tgase->GetErrorYlow(i), tgase->GetErrorYhigh(i),
+                tgase->GetErrorXlow(i), tgase->GetErrorXhigh(i));
+    }
+    delete tgase;
+    tgase = tgase_new;
+    return *this;
+};
+
+ioSysErrors::ioSysErrors(const ioSysErrors& rhs) {
+    tgase = (TGraphAsymmErrors*) rhs.tgase->Clone();
+    size = tgase->GetN();
+    vec_data = rhs.vec_data;
+};
+
+ioSysErrors& ioSysErrors::calc_mean(vector<ioPtrDbl> data) {
+    if (size != 0) {
+        cout << " Warning in ioSysErrors::calc_mean() there is a already a TGraphAsymmErrors " 
+             << " which will be used as the mean; calc_mean() not being used. " << endl;
+        return *this;
+    }
+    // replace the Y values of tgase with the mean
+    for (auto dat : data) vec_data.push_back(dat);
+    int n = vec_data.size();
+    if (n==0) {
+        cout << " Warning in ioSysErrors::calc_mean() there are not added data "
+             << " which will be used as the mean; calc_mean() not being used. " << endl;
+        return *this;
+    }
+    ioPtrDbl mean { vec_data[0] };
+    for (int i{1}; i<n; ++i) mean += vec_data[i];
+    mean /= n;
+    // reset the mean
+    for (auto i{0}; i<size; ++i) tgase->SetPointY(i,mean[i]);
+    return *this;
+};
+
+ioSysErrors& ioSysErrors::calc_quadrature(vector<ioPtrDbl> _data) {
+    for (auto dat : _data) vec_data.push_back(dat);
+    if (vec_data.size()==0) {
+        cout << " Warning in ioSysErrors::calc_quadrature() there are not added data "
+             << " which will be used as the mean; calc_quadrature() not being used. " << endl;
+        return *this;
+    }
+
+    ioPtrDbl sum {vec_data[0].size};
+    ioPtrDbl y { getY() };
+    for (auto& dat : vec_data) {
+        sum += dat % y;
+    };
+    for (auto& val : sum) val = TMath::Sqrt(val);
+    for (auto i{0}; i<size; ++i) {
+        tgase->SetPointEYlow(i,sum[i]);
+        tgase->SetPointEYhigh(i,sum[i]);
+    }
+    return *this;
+};
+ioPtrDbl ioSysErrors::getY() {
+    ioPtrDbl y {size};
+    double* y_dat = tgase->GetY();
+    for (int i{0}; i<size; ++i) y[i] = y_dat[i];
+    y.update();
+    return y;
+};
+ioPtrDbl ioSysErrors::getYlow() {
+    ioPtrDbl y {size};
+    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i);
+    y.update();
+    return y;
+};
+ioPtrDbl ioSysErrors::getYhigh() {
+    ioPtrDbl y {size};
+    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i);
+    y.update();
+    return y;
+};
+ioSysErrors& ioSysErrors::calc_bounds(vector<ioPtrDbl> _data) {
+    for (auto dat : _data) vec_data.push_back(dat);
+    if (vec_data.size()==0) {
+        cout << " Warning in ioSysErrors::calc_bounds() there are not added data "
+             << " which will be used as the mean; calc_bounds() not being used. " << endl;
+        return *this;
+    }
+
+    ioPtrDbl  y   { getY() };
+    ioPtrDbl _min { y };
+    ioPtrDbl _max { y };
+
+    for (auto& dat : vec_data) {
+        for (auto i{0}; i<size; ++i) {
+            if (dat[i] < _min[i]) _min[i] = dat[i];
+            if (dat[i] > _max[i]) _max[i] = dat[i];
+        }
+    };
+    for (auto i{0}; i<size; ++i) {
+        tgase->SetPointEYlow(i,_min[i]);
+        tgase->SetPointEYhigh(i,_max[i]);
+    }
+    return *this;
+};
+ioSysErrors& ioSysErrors::calc_symmetric_bounds(vector<ioPtrDbl> _data) {
+    for (auto dat : _data) vec_data.push_back(dat);
+    if (vec_data.size()==0) {
+        cout << " Warning in ioSysErrors::calc_symmetric_bounds() there are not added data "
+             << " which will be used as the mean; calc_symmetric_bounds() not being used. " << endl;
+        return *this;
+    }
+
+    ioPtrDbl  y   { getY() };
+    ioPtrDbl _min { y };
+    ioPtrDbl _max { y };
+
+    for (auto& dat : vec_data) {
+        for (auto i{0}; i<size; ++i) {
+            if (dat[i] < _min[i]) _min[i] = dat[i];
+            if (dat[i] > _max[i]) _max[i] = dat[i];
+        }
+    };
+    for (auto i{0}; i<size; ++i) {
+        double val = TMath::Abs(_min[i]);
+        if (TMath::Abs(_max[i]) > val) val = TMath::Abs(_max[i]);
+        tgase->SetPointEYlow(i,val);
+        tgase->SetPointEYhigh(i,val);
+    }
+    return *this;
+};
+
+ioSysErrors& ioSysErrors::set_rat_xbins(double rat_lo, double rat_hi) {
+    double* x = tgase->GetX();
+    for (int i{0}; i<size; ++i) {
+        double length = tgase->GetErrorXlow(i) + tgase->GetErrorXhigh(i);
+        double new_err = length*(rat_hi-rat_lo)/2.;
+
+        double left  = x[i] - tgase->GetErrorXlow(i);
+        double new_center = x[i]-tgase->GetErrorXlow(i)+length/2*(rat_lo+rat_hi);
+        tgase->SetPointEXlow(i, new_err);
+        tgase->SetPointEXhigh(i, new_err);
+        tgase->SetPointX(i,new_center);
+    }
+    return *this;
+};
+TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; };
+ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };

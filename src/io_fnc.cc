@@ -98,6 +98,21 @@ void ioDrawTLineBox(double x0, double y0, double x1, double y1,
     ioDrawTLine( x0, y1, x0, y0, options);
 };
 
+void ioDrawBoxErrors(TGraphAsymmErrors* tgas,
+        ioOptMap options, ioOptMap dict)
+{
+    dict += options;
+    double* x = tgas->GetX();
+    double* y = tgas->GetY();
+    for (int i=0; i<tgas->GetN(); ++i) {
+        double x0 = x[i] - tgas->GetErrorXlow(i);
+        double x1 = x[i] + tgas->GetErrorXhigh(i);
+        double y0 = y[i] - tgas->GetErrorYlow(i);
+        double y1 = y[i] + tgas->GetErrorYhigh(i);
+        ioDrawTLineBox(x0,y0,x1,y1,options);
+    }
+};
+
 double ioPadxRat(double x_in){
     gPad->Update();
     /* cout << " x_in " << x_in << endl; */

@@ -73,6 +73,9 @@ ioOptMap ioOptMap::operator+=(ioOptMap _) {
     for (auto& key : _.dict) dict[key.first] = key.second; return *this; 
 };
 ioOptMap operator+ (ioOptMap lhs, const ioOptMap& rhs) { lhs += rhs; return lhs; };
+ioOptMap& ioOptMap::update(ioOptMap _) {
+    for (auto& key : _.dict) dict[key.first] = key.second; return *this; 
+}
 
 
 

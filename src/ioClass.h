@@ -568,4 +568,117 @@ struct ioXYbounder {
 };
 
 
+
+/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert, array<double,3> x_center, bool skip_zeros, bool normalize ) { */
+/*     vector<double> x, x_err, y, y_err; */
+/*     TAxis* axis = hg->GetXaxis(); */
+/*     if (normalize) hg->Scale(1./hg->Integral()); */
+/*     for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) { */
+/*         if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue; */
+/*         x.push_back(axis->GetBinCenter(i)); */
+/*         x_err.push_back(0.); */
+/*         y.push_back(hg->GetBinContent(i)); */
+/*         y_err.push_back(hg->GetBinError(i)); */
+        
+/*     } */
+/*     TGraphErrors* gr; */
+/*     double lo = hg->GetXaxis()->GetBinLowEdge(1); */
+/*     double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins()); */
+/*     if (invert) { */
+/*         gr = ioMakeTGraphErrors(y,x,x_err,y_err); */
+/*         gr->SetMinimum(lo); */
+/*         gr->SetMaximum(hi); */
+/*     } else { */
+/*         gr = ioMakeTGraphErrors(x,y,y_err,x_err); */
+/*         gr->GetXaxis()->SetLimits(lo,hi); */
+/*     } */
+/*     return gr; */
+/* }; */
+
+/* TGraphAsymmErrors* ioMakeTGASE(int n, ioBinVec x, ioBinVec y, ioBinVec exleft, ioBinVec exright, */
+/*          ioBinVec eyleft, ioBinVec eyright={}); */
+
+/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert_XY=false, */ 
+/*         array<double,3> x_center={0.,1.,-1.}, // left/right/center ratio of bin; */ 
+/*                                               // center=-1 or < left defaults to middle of left */ 
+/*                                               // and right */
+/*         bool skip_zeros=true); */
+/* /1* TGraph* ioMakeTGraph(vector<double> x, vector<double> y); *1/ */
+
+struct ioPtrDbl {
+    ioPtrDbl(TAxis* ax, double bin_loc=0.5, bool get_widths=false);  //<-
+    ioPtrDbl(vector<double>); // <-
+    ioPtrDbl(TH1*, bool get_errors=false); // also Errors // <-
+    ioPtrDbl(const ioPtrDbl&); // <-
+    ioPtrDbl(const char* file, const char* tag); // <-
+    ioPtrDbl(int i); // <-
+    ioPtrDbl(){};
+
+    // internal
+    vector<double> vec{};
+    double*        ptr{nullptr};
+    int            size{0};
+
+    /* void init(vector<double>, bool range_double=true); */
+    void build_ptr();
+    ioPtrDbl& update();
+    // read the vec from a file with ioReadValVec
+    ~ioPtrDbl();
+    /* void set_val(int i, double val); */
+
+    /* int nbins(); // return size_ptr-1 */
+    operator int ();
+    operator double* ();
+    operator vector<double> ();
+    double& operator[](int); 
+    friend ostream& operator<<(ostream& os, ioPtrDbl& val);
+    int throw_error();
+
+    ioPtrDbl& operator +=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator -=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator *=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator /=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator *=(const double rhs);
+    ioPtrDbl& operator +=(const double rhs);
+    ioPtrDbl& operator -=(const double rhs);
+
+
+    vector<double>::iterator begin();
+    vector<double>::iterator end();
+};
+ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
+ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
+ioPtrDbl  operator% (const ioPtrDbl& lhs, const ioPtrDbl& rhs);
+
+
+
+struct ioSysErrors {
+    ioSysErrors();
+    ioSysErrors(const ioSysErrors&);
+    ioSysErrors(TH1*, pair<double,double> x_rat={-1,-1});
+    ioSysErrors(TGraphAsymmErrors*, pair<double,double> x_rat={-1,-1});
+    ioSysErrors& swap_xy ();
+
+    /* ioSysErrors& set (TH1*); // sets x,y, and errors */
+    /* ioSysErrors& set (TGraphAsymmErrors*); // sets x,y, and errors */
+
+    int size{0};
+    TGraphAsymmErrors* tgase {nullptr};
+    ioPtrDbl getY();
+    ioPtrDbl getYlow();
+    ioPtrDbl getYhigh();
+
+    vector<ioPtrDbl> vec_data   {}; // to add in quadrature
+    ioSysErrors& add_data   (ioPtrDbl);
+
+    ioSysErrors& calc_mean(vector<ioPtrDbl> data={});
+    ioSysErrors& calc_quadrature(vector<ioPtrDbl> data ={}); // calculate quadratue relative to the mean
+    ioSysErrors& calc_bounds(vector<ioPtrDbl> data ={}); // calculate bounds relative to mean
+    ioSysErrors& calc_symmetric_bounds(vector<ioPtrDbl> data ={});
+
+    ioSysErrors& set_rat_xbins(double rat_lo, double rat_hi);
+    operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
+    TGraphAsymmErrors* operator-> ();
+};
+
 #endif

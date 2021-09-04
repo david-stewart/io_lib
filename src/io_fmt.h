@@ -4,6 +4,7 @@
 
 #include "TH1D.h"
 #include "TH2D.h"
+#include "THStack.h"
 #include "ioOptMap.h"
 #include "TCanvas.h"
 #include "TProfile.h"
@@ -12,6 +13,7 @@
 #include "TPad.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
 #include "TMultiGraph.h"
 
 // default dictionary options for formating TH1D
@@ -37,9 +39,12 @@ TH1D* io_fmt (TH1D* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__
 
 TH2D* io_fmt (TH2D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 
+THStack* io_fmt (THStack* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+
 //repeat of the above, but for TGraph
 TGraph* io_fmt (TGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TGraphErrors* io_fmt (TGraphErrors* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TGraphAsymmErrors* io_fmt (TGraphAsymmErrors* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TMultiGraph* io_fmt (TMultiGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TGraph* io_fmt (TGraph* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 
