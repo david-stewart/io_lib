@@ -28,6 +28,7 @@ TFile* ioGetter::get_file(string _f_name) {
 };
 
 TObject* ioGetter::operator()(string f_name, string object_name) {
+    TFile *s_current = gDirectory->GetFile();
     TFile *f = get_file(f_name);
     TObject* obj;
     f->GetObject(object_name.c_str(), obj);
@@ -40,6 +41,8 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
     /* obj->SetName(unique_name()); */
     if (got.count(object_name) != 0) got[object_name].push_back(obj);
     else got[object_name].push_back({obj});
+
+    if (s_current!=nullptr) s_current->cd();
     return obj;
 };
 
@@ -184,7 +187,6 @@ double ioBinVec::bin_overflow() {
 };
 ostream& operator<<(ostream& os, ioBinVec& io) {
     for (auto v : io) cout << " " << v;
-    cout << endl;
     return os;
 };
 
@@ -262,63 +264,129 @@ bool ioPadDim::operator==(ioPadDim& B) const {
         && p_up  == B.p_up
         && up    == B.up;
 };
-vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin,
-        double overall_left, double overall_right){
-    vector<ioPadDim> vec;
-    double space = {(1.-(left_margin+right_margin)*nPads-overall_left-overall_right)/nPads};
-    if (space<=0) throw std::runtime_error(
-            "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
-    double left = overall_left;
-    for (int i{0}; i<nPads; ++i) {
-        /* cout << "i: " << i << endl; */
-        vec.push_back( {left,left+left_margin, 
-                left+left_margin+space, left+left_margin+space+right_margin});
-        left += left_margin+space+right_margin;
+
+/* ioPadDimSet::ioPadDimSet( int _nPads, // negative to flip direction */
+    /* vector<double> _lefts, vector<double> _rights ) : */
+        /* nPads{_nPads}, lefts{_lefts}, rights{_rights} */ 
+/* {}; */
+ioPadDimSet::ioPadDimSet(vector<double> _lefts, vector<double> _rights ) :
+          rights{_rights} 
+{
+    /* cout << " a0 " << endl; */
+    /* for (auto v : _lefts) cout << " " << v; cout << endl; */
+    if (_lefts.size() == 0) nPads = 1;
+    else if (_lefts[0] >= 1.) {
+        cout << " a1 " << endl;
+        nPads = (int) _lefts[0];
+        for (int i{0}; i<(int)_lefts.size()-1; ++i) lefts.push_back(_lefts[i+1]);
+    } else {
+        nPads = 1;
+        lefts = _lefts;
     }
-    return vec;
+    cout << " a1 " << endl;
 };
 
-vector<ioPadDim> ioPadDimSet(
-        int nPads, 
-        double leftM,  // first left margin
-        bool b_reverse, // swap the ordering (for y it's nice to go from top to bottom)
-        double rightM, // last right margin
-        double left_margin, // how far in on the canvas pad
-        double right_margin, // how far in on the canvas pad
-        double left_in, // inner left margins
-        double right_in // inner right margins
-        ){
-    vector<ioPadDim> vec;
-    double space = {(1.-(left_in+right_in)*(nPads-1)
-            -left_margin-right_margin-leftM-rightM)/nPads};
-    /* double space = {(1.-(left_in+right_in)*(nPads-1) */
-    /* -left_margin-right_margin-left_in-right_in)/nPads}; */
-    if (space<=0) throw std::runtime_error(
-            "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas");
-
-    if (nPads == 1) {
-        vec.push_back( {
-                left_margin, 
-                left_margin+leftM, 
-                left_margin+leftM+space, 
-                left_margin+leftM+space+right_margin});
-        return vec;
-    }
-    vec.push_back( {
-            left_margin, 
-            left_margin+leftM, 
-            left_margin+leftM+space, 
-            left_margin+leftM+space+right_in});
-    double left = left_margin+leftM+space+right_in;
-    for (int i{1}; i<nPads-1; ++i) {
-        vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_in} );
-        left=left+left_in+space+right_in;
-    }
-    vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_margin} );
-
-    if (b_reverse) reverse(vec.begin(), vec.end());
-    return vec;
+ioPadDim ioPadDimSet::make_pad(double left, 
+            double left_margin, double pad_width, 
+            double right_margin) 
+{
+    return ioPadDim{ left, 
+                     left+left_margin,
+                     left+left_margin+pad_width,
+                     left+left_margin+pad_width+right_margin };
 };
+
+vector<ioPadDim> ioPadDimSet::calc_pads() {
+    /* cout << "nPads: " << nPads << endl; */
+    /* cout << " left: ";  for (auto v : lefts )  cout << " " << v; cout << endl; */
+    /* cout << " left: ";  for (auto v : rights ) cout << " " << v; cout << endl; */
+    int npads = nPads;
+    bool flip_direction = false;
+    if (npads < 1) { 
+        npads = -npads; 
+        flip_direction=true;
+    };
+    vector<ioPadDim> pads (npads) ;
+
+    double first_left = (lefts.size() > 0) ? lefts[0] : 0.2;
+    double inner_left = (lefts.size() > 1) ? lefts[1] : 0.0001;
+    double page_left  = (lefts.size() > 2) ? lefts[2] : 0.01;
+
+    double last_right  = (rights.size() > 0) ? rights[1] : 0.0001;
+    double inner_right = (rights.size() > 1) ? rights[0] : 0.0;
+    double page_right  = (rights.size() > 2) ? rights[2] : 0.01;
+
+    if (npads == 0) throw std::runtime_error(
+        "fatal in ioPadDimSet must request at least one pad");
+    if (npads == 1) {
+        double pad_width = 1.-first_left-page_left-last_right-page_right;
+        if (pad_width<=0) throw std::runtime_error(
+                "fatal in ioPadDimSet margins have consumed more than 100\% of TCanvas");
+        pads[0] = make_pad( page_left, first_left, pad_width, last_right );
+        return pads;
+    } 
+
+    double pad_width { (1.-(first_left+page_left+last_right+page_right+
+            (inner_left+inner_right)*(npads-1)))/npads };
+    if (pad_width<=0) throw std::runtime_error(
+            "fatal in ioPadDimSet margins have consumed more than 100\% of TCanvas");
+
+    int index = flip_direction ? 0 : npads-1;
+    pads[index] = make_pad(page_left, first_left, pad_width, inner_right);
+    double left = pads[index].up;
+
+    for (int i=1;i<npads-1;++i) {
+        int index = flip_direction ? npads-i-1 : i;
+        pads[index] = make_pad(left, inner_left, pad_width, inner_right);
+        left = pads[index].up;
+    }
+    pads[flip_direction ? npads-1 : 0] = make_pad(left, inner_left, pad_width, last_right);
+    return pads;
+};
+
+/* ioPadDimSet::operator vector<ioPadDim> () { return calc_pads(); }; */
+
+/* vector<ioPadDim> ioPadDimSet( */
+/*         int nPads, */ 
+/*         double leftM,  // first left margin */
+/*         bool b_reverse, // swap the ordering (for y it's nice to go from top to bottom) */
+/*         double rightM, // last right margin */
+/*         double left_margin, // how far in on the canvas pad */
+/*         double right_margin, // how far in on the canvas pad */
+/*         double left_in, // inner left margins */
+/*         double right_in // inner right margins */
+/*         ){ */
+/*     vector<ioPadDim> vec; */
+/*     double space = {(1.-(left_in+right_in)*(nPads-1) */
+/*             -left_margin-right_margin-leftM-rightM)/nPads}; */
+/*     /1* double space = {(1.-(left_in+right_in)*(nPads-1) *1/ */
+/*     /1* -left_margin-right_margin-left_in-right_in)/nPads}; *1/ */
+/*     if (space<=0) throw std::runtime_error( */
+/*             "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas"); */
+
+/*     if (nPads == 1) { */
+/*         vec.push_back( { */
+/*                 left_margin, */ 
+/*                 left_margin+leftM, */ 
+/*                 left_margin+leftM+space, */ 
+/*                 left_margin+leftM+space+right_margin}); */
+/*         return vec; */
+/*     } */
+/*     vec.push_back( { */
+/*             left_margin, */ 
+/*             left_margin+leftM, */ 
+/*             left_margin+leftM+space, */ 
+/*             left_margin+leftM+space+right_in}); */
+/*     double left = left_margin+leftM+space+right_in; */
+/*     for (int i{1}; i<nPads-1; ++i) { */
+/*         vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_in} ); */
+/*         left=left+left_in+space+right_in; */
+/*     } */
+/*     vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_margin} ); */
+
+/*     if (b_reverse) reverse(vec.begin(), vec.end()); */
+/*     return vec; */
+/* }; */
 
 ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
         _canvas_width, int _canvas_height) :
@@ -328,60 +396,37 @@ ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
     if (_canvas_height) canvas_height = _canvas_height;
     /* init(); */
 };
-ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) {
-    if (_pad_dim.size() % 2 != 0) {
-        cout << "Error in constructor ioPads(vector<ioPadDim>...) :" << endl;
-        cout << "   vector<ioPadDim> does *not* have even number of elements" << endl;
-        throw std::runtime_error(" fatal: Odd number of constructor elements.");
-    }
-    int i{0};
-    while (i< (int)_pad_dim.size()-2) {
-        pad_dimensions.push_back({_pad_dim[i],_pad_dim[i+1]});
-        i -= 2;
-    };
-    if (c_wide) canvas_width = c_wide;
-    if (c_height) canvas_height = c_height;
-    /* init(); */
-};
+/* ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) { */
+/*     if (_pad_dim.size() % 2 != 0) { */
+/*         cout << "Error in constructor ioPads(vector<ioPadDim>...) :" << endl; */
+/*         cout << "   vector<ioPadDim> does *not* have even number of elements" << endl; */
+/*         throw std::runtime_error(" fatal: Odd number of constructor elements."); */
+/*     } */
+/*     int i{0}; */
+/*     while (i< (int)_pad_dim.size()-2) { */
+/*         pad_dimensions.push_back({_pad_dim[i],_pad_dim[i+1]}); */
+/*         i -= 2; */
+/*     }; */
+/*     if (c_wide) canvas_width = c_wide; */
+/*     if (c_height) canvas_height = c_height; */
+/*     /1* init(); *1/ */
+/* }; */
 /* ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) { */
-ioPads::ioPads ( int nYpads, int nXpads, double y_margin, double x_margin, 
-        int c_wide, int c_height ){ // default of 1 and 2 pad TPad sets
-    // make a set of pads with y_margin on bottom, x_margin on left, 0.05 on top and right,
-    // and solid packed between
-    vector<ioPadDim> y_dim{};
-    vector<ioPadDim> x_dim{};
+ioPads::ioPads ( int nYpads, int nXpads, int c_wide, int c_height, 
+            ioPadDimSet Ypads, ioPadDimSet Xpads) {
 
-    if (nYpads==1) y_dim.push_back({0.,y_margin,0.95,0.99});
-    else {
-        double space { (1.-0.05-y_margin)/nYpads };
-        y_dim.push_back({0.95-space,0.95-space,0.95,0.99});
-        for (int i=1;i<nYpads-1;++i) {
-            double top { 0.95 - i*space };
-            double bottom { top - space };
-            y_dim.push_back({bottom,bottom,top,top});
-        }
-        y_dim.push_back({0.,y_margin,y_margin+space,y_margin+space});
-    }
-
-    if (nXpads==1) x_dim.push_back({0.,x_margin,0.95,0.99});
-    else {
-        double space { (1.-0.05-x_margin)/nXpads };
-        x_dim.push_back({0.,x_margin,x_margin+space,x_margin+space});
-        for (int i=1;i<nXpads-1;++i) {
-            double left  { x_margin + i*space };
-            double right { left + space };
-            x_dim.push_back( {left,left,right,right} );
-        }
-        x_dim.push_back({0.95-space, 0.95-space, 0.95, 0.99});
-    }
-    for (auto& x : x_dim) 
-        for (auto& y : y_dim)
-            pad_dimensions.push_back({y,x});
-
-    nRow = y_dim.size();
-    if (c_wide) canvas_width = c_wide;
+    if (c_wide)   canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
-    /* init(); */
+
+    Ypads.nPads = nYpads;
+    Xpads.nPads = nXpads;
+
+    /* vector<ioPadDim> y_dim{}; */
+    /* vector<ioPadDim> x_dim{}; */
+    
+    for (auto x_pad : Xpads.calc_pads())
+        for (auto y_pad : Ypads.calc_pads())
+            pad_dimensions.push_back( {y_pad, x_pad} );
 };
 ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) {
     if (x_dim.size()==1) {
@@ -1962,8 +2007,7 @@ void ioCycleSpacer::reset() { cycle.cnt=-1; };
 ioPtrDbl::ioPtrDbl(TAxis* ax, double bin_loc, bool get_widths) {
     int n_bins = ax->GetNbins();
     if (get_widths) {
-        double ratio { -bin_loc };
-        for (int i{1}; i<=n_bins; ++i) vec.push_back(bin_loc);
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinWidth(i)*bin_loc);
     } else if (bin_loc == 0.5) {
         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinCenter(i));
     } else if (bin_loc == 0.) {
@@ -2036,46 +2080,88 @@ vector<double>::iterator ioPtrDbl::end()   { return vec.end(); };
 double& ioPtrDbl::operator[](int i) { return vec[i]; };
 ostream& operator<<(ostream& os, ioPtrDbl& io) {
     for (auto v : io) cout << " " << v;
-    cout << endl;
     return os;
 };
-int ioPtrDbl::throw_error() {
-        throw std::runtime_error(" fatal in ioPtrDbl::operator+=, sizes don't match");
+int ioPtrDbl::throw_error(const char* msg) {
+        throw std::runtime_error(Form(" fatal in ioPtrDbl::%s, sizes don't match",msg));
         return -1;
 };
 
 ioPtrDbl& ioPtrDbl::operator+=(const ioPtrDbl& rhs) {
-    if (size != rhs.size) throw_error();
+    if (size != rhs.size) throw_error("operator+=");
     for (auto i{0}; i<size; ++i) vec[i] += rhs.vec[i];
     update();
     return *this;
 };
 ioPtrDbl& ioPtrDbl::operator-=(const ioPtrDbl& rhs) {
-    if (size != rhs.size) throw_error();
+    if (size != rhs.size) throw_error("operator-=");
     for (auto i{0}; i<size; ++i) vec[i] -= rhs.vec[i];
     update();
     return *this;
 };
 ioPtrDbl& ioPtrDbl::operator*=(const ioPtrDbl& rhs) {
-    if (size != rhs.size) throw_error();
+    if (size != rhs.size) throw_error("operator-=");
     for (auto i{0}; i<size; ++i) vec[i] *= rhs.vec[i];
     return update();
 };
+ioPtrDbl& ioPtrDbl::abs() {
+    for (auto& v : vec) if (v<0.) v = -v;
+    return update();
+};
+ioPtrDbl& ioPtrDbl::sqrt() {
+    for (auto& v : vec) v = TMath::Sqrt(v);
+    return update();
+};
+ioPtrDbl& ioPtrDbl::zero_negatives() {
+    for (auto& v : vec) if (v<0.) v = 0;
+    return update();
+};
+ioPtrDbl& ioPtrDbl::abs_diff(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("abs_diff");
+    *this -= rhs;
+    this->abs();
+    return update();
+};
+ioPtrDbl& ioPtrDbl::square_diff(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("abs_diff");
+    *this -= rhs;
+    *this *= *this;
+    return update();
+};
+ioPtrDbl& ioPtrDbl::make_min(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("make_min");
+    for (auto i{0}; i<size; ++i) {
+        if (rhs.vec[i] < vec[i]) vec[i] = rhs.vec[i];
+    }
+    return update();
+};
+ioPtrDbl& ioPtrDbl::make_max(const ioPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("make_max");
+    for (auto i{0}; i<size; ++i) {
+        if (rhs.vec[i] > vec[i]) vec[i] = rhs.vec[i];
+    }
+    return update();
+};
 ioPtrDbl& ioPtrDbl::operator/=(const ioPtrDbl& rhs) {
-    if (size != rhs.size) throw_error();
+    cout << " z3 " << size << " " << rhs.size << endl;
+    if (size != rhs.size) throw_error("operator/=");
     for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i];
     return update();
 };
+ioPtrDbl& ioPtrDbl::operator/=(const double rhs) {
+    for (auto& v : vec) v /= rhs;
+    return update();
+};
 ioPtrDbl& ioPtrDbl::operator*=(const double rhs) {
-    for (auto i{0}; i<size; ++i) vec[i] *= rhs;
+    for (auto& v : vec) v *= rhs;
     return update();
 };
 ioPtrDbl& ioPtrDbl::operator+=(const double rhs) {
-    for (auto i{0}; i<size; ++i) vec[i] += rhs;
+    for (auto& v : vec) v += rhs;
     return update();
 };
 ioPtrDbl& ioPtrDbl::operator-=(const double rhs) {
-    for (auto i{0}; i<size; ++i) vec[i] -= rhs;
+    for (auto& v : vec) v -= rhs;
     return update();
 };
 
@@ -2094,11 +2180,6 @@ ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
     ioPtrDbl r_val{lhs};
     r_val-=rhs;
     return r_val.update();
-};
-ioPtrDbl  operator% (const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
-    auto diff = lhs-rhs;
-    diff *= diff;
-    return diff;
 };
 
 ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, pair<double,double> x_rat) : tgase{_tgase}
@@ -2126,7 +2207,11 @@ ioSysErrors::ioSysErrors(TH1* hg, pair<double,double> x_rat) {
     if (x_rat.first>=0) set_rat_xbins(x_rat.first, x_rat.second);
 };
 
-ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;};
+/* ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;}; */
+ioSysErrors& ioSysErrors::add_data(vector<ioPtrDbl> data) { 
+    for (auto& dat : data) vec_data.push_back(dat);
+    return *this;
+};
 
 ioSysErrors& ioSysErrors::swap_xy () {
     double* x = new double[size];
@@ -2156,12 +2241,7 @@ ioSysErrors::ioSysErrors(const ioSysErrors& rhs) {
 };
 
 ioSysErrors& ioSysErrors::calc_mean(vector<ioPtrDbl> data) {
-    if (size != 0) {
-        cout << " Warning in ioSysErrors::calc_mean() there is a already a TGraphAsymmErrors " 
-             << " which will be used as the mean; calc_mean() not being used. " << endl;
-        return *this;
-    }
-    // replace the Y values of tgase with the mean
+    // set the mean values to those of all added data
     for (auto dat : data) vec_data.push_back(dat);
     int n = vec_data.size();
     if (n==0) {
@@ -2170,7 +2250,9 @@ ioSysErrors& ioSysErrors::calc_mean(vector<ioPtrDbl> data) {
         return *this;
     }
     ioPtrDbl mean { vec_data[0] };
-    for (int i{1}; i<n; ++i) mean += vec_data[i];
+    for (int i{1}; i<n; ++i) {
+        mean += vec_data[i];
+    }
     mean /= n;
     // reset the mean
     for (auto i{0}; i<size; ++i) tgase->SetPointY(i,mean[i]);
@@ -2178,6 +2260,8 @@ ioSysErrors& ioSysErrors::calc_mean(vector<ioPtrDbl> data) {
 };
 
 ioSysErrors& ioSysErrors::calc_quadrature(vector<ioPtrDbl> _data) {
+    // calculate error in quadrature of all added data relative to the Y. 
+    // Note: might want to use "calc_mean" before to get the mean value, or not...
     for (auto dat : _data) vec_data.push_back(dat);
     if (vec_data.size()==0) {
         cout << " Warning in ioSysErrors::calc_quadrature() there are not added data "
@@ -2185,14 +2269,14 @@ ioSysErrors& ioSysErrors::calc_quadrature(vector<ioPtrDbl> _data) {
         return *this;
     }
 
-    ioPtrDbl sum {vec_data[0].size};
-    ioPtrDbl y { getY() };
+    ioPtrDbl sum {size};
+    int i{0};
     for (auto& dat : vec_data) {
-        sum += dat % y;
+        sum += getY().square_diff(dat);
     };
-    for (auto& val : sum) val = TMath::Sqrt(val);
+    sum.sqrt();
     for (auto i{0}; i<size; ++i) {
-        tgase->SetPointEYlow(i,sum[i]);
+        tgase->SetPointEYlow (i,sum[i]);
         tgase->SetPointEYhigh(i,sum[i]);
     }
     return *this;
@@ -2212,7 +2296,7 @@ ioPtrDbl ioSysErrors::getYlow() {
 };
 ioPtrDbl ioSysErrors::getYhigh() {
     ioPtrDbl y {size};
-    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i);
+    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYhigh(i);
     y.update();
     return y;
 };
@@ -2224,47 +2308,58 @@ ioSysErrors& ioSysErrors::calc_bounds(vector<ioPtrDbl> _data) {
         return *this;
     }
 
-    ioPtrDbl  y   { getY() };
-    ioPtrDbl _min { y };
-    ioPtrDbl _max { y };
+    ioPtrDbl  y_min   { vec_data[0] };
+    ioPtrDbl  y_max   { vec_data[0] };
 
-    for (auto& dat : vec_data) {
-        for (auto i{0}; i<size; ++i) {
-            if (dat[i] < _min[i]) _min[i] = dat[i];
-            if (dat[i] > _max[i]) _max[i] = dat[i];
-        }
-    };
+    for (unsigned int i{1}; i<vec_data.size(); ++i) {
+        y_min.make_min(vec_data[i]);
+        y_max.make_max(vec_data[i]);
+    }
+
+    auto _min = getY() - y_min;
+    auto _max = y_max - getY();
+
+    _min.zero_negatives();
+    _max.zero_negatives();
+
     for (auto i{0}; i<size; ++i) {
-        tgase->SetPointEYlow(i,_min[i]);
+        tgase->SetPointEYlow (i,_min[i]);
         tgase->SetPointEYhigh(i,_max[i]);
     }
     return *this;
 };
+
 ioSysErrors& ioSysErrors::calc_symmetric_bounds(vector<ioPtrDbl> _data) {
     for (auto dat : _data) vec_data.push_back(dat);
     if (vec_data.size()==0) {
-        cout << " Warning in ioSysErrors::calc_symmetric_bounds() there are not added data "
-             << " which will be used as the mean; calc_symmetric_bounds() not being used. " << endl;
+       cout << " Warning in ioSysErrors::calc_symmetric_bounds() there are no added data "
+            << " which will be used as the mean; calc_symmetric_bounds() not being used. " << endl;
         return *this;
     }
 
-    ioPtrDbl  y   { getY() };
-    ioPtrDbl _min { y };
-    ioPtrDbl _max { y };
+    ioPtrDbl  y_min   { vec_data[0] };
+    ioPtrDbl  y_max   { vec_data[0] };
 
-    for (auto& dat : vec_data) {
-        for (auto i{0}; i<size; ++i) {
-            if (dat[i] < _min[i]) _min[i] = dat[i];
-            if (dat[i] > _max[i]) _max[i] = dat[i];
-        }
-    };
-    for (auto i{0}; i<size; ++i) {
-        double val = TMath::Abs(_min[i]);
-        if (TMath::Abs(_max[i]) > val) val = TMath::Abs(_max[i]);
-        tgase->SetPointEYlow(i,val);
-        tgase->SetPointEYhigh(i,val);
+    for (unsigned int i{1}; i<vec_data.size(); ++i) {
+        y_min.make_min(vec_data[i]);
+        y_max.make_max(vec_data[i]);
     }
+    auto temp = getY();
+
+    auto _min = getY() - y_min;
+    auto _max = y_max - getY();
+
+    _min.zero_negatives();
+    _max.zero_negatives();
+    _max.make_max(_min);
+
+    for (auto i{0}; i<size; ++i) {
+        tgase->SetPointEYlow (i,_max[i]);
+        tgase->SetPointEYhigh(i,_max[i]);
+    }
+
     return *this;
+
 };
 
 ioSysErrors& ioSysErrors::set_rat_xbins(double rat_lo, double rat_hi) {

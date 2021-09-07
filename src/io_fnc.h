@@ -45,6 +45,9 @@ void ioWaitPrimitive(int i=0);
 
 vector<int> ioColorVec(int n_colors=2, int palette=kCMYK, bool print=false);
 
+TH1D* ioRebin(TH1D*, int, double* =nullptr);
+TH1D* ioNorm(TH1D*, const char which='o'); // 0 for no, 1 for yes, 2 for variable bin-width
+
 void ioDrawTLatex(const char* msg, double x, double y, 
         ioOptMap options={}, ioOptMap dict= {{
         "TextColor",kBlack, "TextColorAlpha",1., "TextSize",22, "TextFont",43,

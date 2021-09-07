@@ -15,6 +15,7 @@ const char* ioUniqueName(int i) {
     return Form("unique_name__%i",i);
 };
 
+
 void ioWaitPrimitive(int i)  {
     TCanvas* c = new TCanvas( ioUniqueName(i+100), ioUniqueName(i+100), 500,500);
     c->WaitPrimitive();
@@ -48,6 +49,37 @@ vector<int> ioColorVec(int n_colors, int palette, bool print) {
     return colors;
 };
 
+TH1D* ioRebin(TH1D* hg, int nbins, double* edges)  {
+    if (edges == nullptr)  return (TH1D*) hg->Rebin(nbins, ioUniqueName());
+    else return (TH1D*) hg->Rebin(nbins,ioUniqueName(),edges);
+};
+
+TH1D* ioNorm(TH1D* hg, const char which) {
+    switch (which) {
+        case 'n':
+            hg->Scale(1./hg->Integral());
+            return hg;
+        case 'c':
+            hg->Scale(1./hg->Integral()/hg->GetBinWidth(1));
+            return hg;
+        case 'v':
+            {
+                double sum=0.;
+                TAxis *axis = hg->GetXaxis();
+                for (int i{1};i<axis->GetNbins(); ++i) 
+                    sum += hg->GetBinContent(i) * axis->GetBinWidth(i);
+                hg->Scale(1./sum);
+                return hg;
+            }
+        default:
+            cout << "Error in ioNorm, selected option '"<<which<<"' is not valid."<<endl;
+            cout << "Only options:" << endl;
+            cout << " n : 'none' -- don't scale by any width"<<endl;
+            cout << " c : 'constant' -- scale by 1/hg->GetBinWidth(1) width"<<endl;
+            cout << " v : 'variable' -- scale by all bin widths individually"<<endl;
+            return hg;
+    }
+};
 
 void ioDrawTLatex(const char* msg, double x, double y, ioOptMap options, ioOptMap dict
 ) {
@@ -84,10 +116,16 @@ void ioDrawTLine(double x0, double y0, double x1, double y1,
         ioOptMap options, ioOptMap dict)
 {
     dict += options;
-    TLine* line = new TLine(x0,y0,x1,y1);
-    io_fmt(line, options);
-    /* cout << options << endl; */
-    line->Draw("same");
+    // ndc is needed when getting vertical lines in logaritymic plots
+    if (dict("ndc")) {
+        TLine* line = new TLine();
+        io_fmt(line, options);
+        line->DrawLineNDC(x0,y0,x1,y1);
+    } else {
+        TLine* line = new TLine(x0,y0,x1,y1);
+        io_fmt(line, options);
+        line->Draw();
+    }
 };
 
 void ioDrawTLineBox(double x0, double y0, double x1, double y1, 
@@ -113,7 +151,7 @@ void ioDrawBoxErrors(TGraphAsymmErrors* tgas,
     }
 };
 
-double ioPadxRat(double x_in){
+double iGetUyminoPadxRat(double x_in){
     gPad->Update();
     /* cout << " x_in " << x_in << endl; */
     double x0 = gPad->GetUxmin();
@@ -137,10 +175,14 @@ void ioDrawTLineHorizontal(double y, ioOptMap options) {
 };
 
 void ioDrawTLineVertical(double x, ioOptMap options) {
-    gPad->Update();
-    double y0 { ioPadyRat(0.) };
-    double y1 { ioPadyRat(1.) };
-    ioDrawTLine(x,y0,x,y1,options);
+   gPad->Update();
+   Double_t lm = gPad->GetLeftMargin();
+   Double_t rm = 1.-gPad->GetRightMargin();
+   Double_t tm = 1.-gPad->GetTopMargin();
+   Double_t bm = gPad->GetBottomMargin();
+   Double_t xndc = (rm-lm)*((x-gPad->GetUxmin())/(gPad->GetUxmax()-gPad->GetUxmin()))+lm;
+   options["ndc"] = "1";
+    ioDrawTLine(xndc,bm,xndc,tm,options);
 };
 
 double io_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
