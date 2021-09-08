@@ -566,7 +566,7 @@ bool io_isAbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){
     float dphi = TMath::Abs(io_dphi(phi0,phi1));
     return (dphi>=lo_bound && dphi<=hi_bound);
 };
-bool io_isAbsTrans358Phi(float phi0, float phi1, float lo_bound, float hi_bound){
+bool io_isAbsTrans358pi(float phi0, float phi1, float lo_bound, float hi_bound){
     float dphi = TMath::Abs(io_dphi(phi0,phi1));
     return (dphi>=lo_bound && dphi<=hi_bound);
 };
