@@ -121,7 +121,7 @@ int    io_geant05(int geantid);
 const char* io_geant05_ascii(int geantid);
 const char* io_geant05_greek(int geantid);
 
-array<int,6> io_geant05_colors { 1179, 1230, 1281, 1332, 1383, 1433 };
+/* array<int,6> io_geant05_colors { 1179, 1230, 1281, 1332, 1383, 1433 }; */
 
 // get dAu_200_Tsallis and pp_200_Tsallic Fn fits
 // Fit for 
