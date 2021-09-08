@@ -111,7 +111,6 @@ struct ioInBounds {
 };
 
 
-
 struct ioPadDim {
     // a structure to contain the four coordinates requisite for a TPad (in x or y):
     //    low   : left/bottom edge of TPad (outer edge of margin)
@@ -137,18 +136,35 @@ struct ioPadDim {
     double up_margin () const;
     bool operator==(ioPadDim& b) const; 
 };
-vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin=0.005,
-        double overall_left=0.01, double overall_right=0.01);
-vector<ioPadDim> ioPadDimSet(
-        int nPads, 
-        double left=0.15,  // first left margin
-        bool reverse=false, // swap the ordering (for y it's nice to go from top to bottom)
-        double right=0.01, // last right margin
-        double left_margin=0.05, // how far in on the canvas pad
-        double right_margin=0.05, // how far in on the canvas pad
-        double left_in=0.001, // inner left margins
-        double right_in=0.001 // inner right margins
-        );
+struct ioPadDimSet {
+    /* ioPadDimSet(int _nPads, // make negative is wish to flip directions */
+            /* vector<double> _lefts={}, */ 
+            /* vector<double> _rights={}); */
+    ioPadDimSet(
+            vector<double> _lefts={},  // number of pads is first entry in _lefts if >= 1.
+            vector<double> _rights={});
+    vector<double> lefts;
+    vector<double> rights;
+    int            nPads;
+    vector<ioPadDim> calc_pads();
+    static ioPadDim make_pad(double left, 
+            double left_margin, double pad_widht, 
+            double right_margin); // 
+    /* operator vector<ioPadDim> (); */
+};
+
+/* vector<ioPadDim> ioPadDimSet_(int nPads, double left_margin, double right_margin=0.005, */
+/*         double overall_left=0.01, double overall_right=0.01); */
+/* vector<ioPadDim> ioPadDimSet( */
+/*         int nPads, */ 
+/*         double left=0.15,  // first left margin */
+/*         bool reverse=false, // swap the ordering (for y it's nice to go from top to bottom) */
+/*         double right=0.01, // last right margin */
+/*         double left_margin=0.05, // how far in on the canvas pad */
+/*         double right_margin=0.05, // how far in on the canvas pad */
+/*         double left_in=0.001, // inner left margins */
+/*         double right_in=0.001 // inner right margins */
+/*         ); */
 // make a set of nPad diminsions, each with left_margin, right_margin, with
 // overall_left on the left, and overall_right on the right, with all remaining space
 // in the plots
@@ -182,18 +198,19 @@ struct ioPads {
     vector<TPad*> pads; // all the generated smaller pads
     TPad* canvas_pad;   // a single big pad the size of the canvas
 
-    // constructor: vector of coordinates to make each of the pads (8 coordinates each)
-    ioPads ( vector<pair<ioPadDim, ioPadDim>> pad_dimensions={{{},{}}}, int canvas_width=0, int canvas_height=0);
-
     //FIXME
+    /* ioPads ( vector<ioPadDim>, int canvas_width, int canv_heigth ); */
     // * Initialize with either a single vector of ioPadDim (which will go as x0, y0, x1, 
     //   y1, etc...) or two vectors of ioPadDim, which will go as {x0,x1,...} {y0,y1,...}
     // * Add operator()(int,int=0) for accessing y,x pad
-    ioPads ( vector<ioPadDim>, int canvas_width, int canv_heigth );
+    ioPads ( vector<pair<ioPadDim, ioPadDim>> pad_dimensions={{{},{}}}, 
+            int canvas_width=0, int canvas_height=0);
     ioPads ( vector<ioPadDim>y_dim, vector<ioPadDim>x_dim={}, int canvas_width=0, int canv_heigth=0 );
     /* ioPads ( int nPads=1, int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets */
-    ioPads ( int nYpads=1, int nXpads=1, double y_margin=0.15, double x_margin=0.17, 
-             int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets
+    /* ioPads ( int nYpads=1, int nXpads=1, double y_margin=0.15, double x_margin=0.17, */ 
+    /*          int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets */
+    ioPads ( int nYpads=1, int nXpads=1, int c_side=0, int c_height=0, 
+            ioPadDimSet Y={{0.15}}, ioPadDimSet X={{0.15}} );
     TPad*  operator()(int col=0, int row=0);
 
     int nRow{1};
@@ -567,5 +584,127 @@ struct ioXYbounder {
     ioXYbounder(); // default to always returning false for no bounds set
 };
 
+
+
+/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert, array<double,3> x_center, bool skip_zeros, bool normalize ) { */
+/*     vector<double> x, x_err, y, y_err; */
+/*     TAxis* axis = hg->GetXaxis(); */
+/*     if (normalize) hg->Scale(1./hg->Integral()); */
+/*     for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) { */
+/*         if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue; */
+/*         x.push_back(axis->GetBinCenter(i)); */
+/*         x_err.push_back(0.); */
+/*         y.push_back(hg->GetBinContent(i)); */
+/*         y_err.push_back(hg->GetBinError(i)); */
+        
+/*     } */
+/*     TGraphErrors* gr; */
+/*     double lo = hg->GetXaxis()->GetBinLowEdge(1); */
+/*     double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins()); */
+/*     if (invert) { */
+/*         gr = ioMakeTGraphErrors(y,x,x_err,y_err); */
+/*         gr->SetMinimum(lo); */
+/*         gr->SetMaximum(hi); */
+/*     } else { */
+/*         gr = ioMakeTGraphErrors(x,y,y_err,x_err); */
+/*         gr->GetXaxis()->SetLimits(lo,hi); */
+/*     } */
+/*     return gr; */
+/* }; */
+
+/* TGraphAsymmErrors* ioMakeTGASE(int n, ioBinVec x, ioBinVec y, ioBinVec exleft, ioBinVec exright, */
+/*          ioBinVec eyleft, ioBinVec eyright={}); */
+
+/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert_XY=false, */ 
+/*         array<double,3> x_center={0.,1.,-1.}, // left/right/center ratio of bin; */ 
+/*                                               // center=-1 or < left defaults to middle of left */ 
+/*                                               // and right */
+/*         bool skip_zeros=true); */
+/* /1* TGraph* ioMakeTGraph(vector<double> x, vector<double> y); *1/ */
+
+struct ioPtrDbl {
+    ioPtrDbl(TAxis* ax, double bin_loc=0.5, bool get_widths=false);  //<-
+    ioPtrDbl(vector<double>); // <-
+    ioPtrDbl(TH1*, bool get_errors=false); // also Errors // <-
+    ioPtrDbl(const ioPtrDbl&); // <-
+    ioPtrDbl(const char* file, const char* tag); // <-
+    ioPtrDbl(int i); // <-
+    ioPtrDbl(){};
+
+    // internal
+    vector<double> vec{};
+    double*        ptr{nullptr};
+    int            size{0};
+
+    /* void init(vector<double>, bool range_double=true); */
+    void build_ptr();
+    ioPtrDbl& update();
+    // read the vec from a file with ioReadValVec
+    ~ioPtrDbl();
+    /* void set_val(int i, double val); */
+
+    /* int nbins(); // return size_ptr-1 */
+    operator int ();
+    operator double* ();
+    operator vector<double> ();
+    double& operator[](int); 
+    friend ostream& operator<<(ostream& os, ioPtrDbl& val);
+    int throw_error(const char* msg="");
+
+    ioPtrDbl& operator +=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator -=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator *=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator /=(const ioPtrDbl& rhs);
+    ioPtrDbl& operator /=(const double rhs);
+    ioPtrDbl& operator *=(const double rhs);
+    ioPtrDbl& operator +=(const double rhs);
+    ioPtrDbl& operator -=(const double rhs);
+
+    ioPtrDbl& make_min(const ioPtrDbl& rhs); // adjust to have just the min values
+    ioPtrDbl& make_max(const ioPtrDbl& rhs); // adjust to have just the max values
+    ioPtrDbl& abs_diff(const ioPtrDbl& rhs); // adjust to have just the max values
+    ioPtrDbl& square_diff(const ioPtrDbl& rhs); // adjust to have just the max values
+    ioPtrDbl& abs();
+    ioPtrDbl& zero_negatives();
+    ioPtrDbl& sqrt();
+
+    vector<double>::iterator begin();
+    vector<double>::iterator end();
+
+};
+ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
+ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
+
+
+
+struct ioSysErrors {
+    ioSysErrors();
+    ioSysErrors(const ioSysErrors&);
+    ioSysErrors(TH1*, pair<double,double> x_rat={-1,-1});
+    ioSysErrors(TGraphAsymmErrors*, pair<double,double> x_rat={-1,-1});
+    ioSysErrors& swap_xy ();
+
+    /* ioSysErrors& set (TH1*); // sets x,y, and errors */
+    /* ioSysErrors& set (TGraphAsymmErrors*); // sets x,y, and errors */
+
+    int size{0};
+    TGraphAsymmErrors* tgase {nullptr};
+    ioPtrDbl getY();
+    ioPtrDbl getYlow();
+    ioPtrDbl getYhigh();
+
+    vector<ioPtrDbl> vec_data   {}; // to add in quadrature
+    /* ioSysErrors& add_data   (ioPtrDbl); */
+    ioSysErrors& add_data   (vector<ioPtrDbl>);
+
+    ioSysErrors& calc_mean(vector<ioPtrDbl> data={});
+    ioSysErrors& calc_quadrature(vector<ioPtrDbl> data ={}); // calculate quadratue relative to the mean
+    ioSysErrors& calc_bounds(vector<ioPtrDbl> data ={}); // calculate bounds relative to mean
+    ioSysErrors& calc_symmetric_bounds(vector<ioPtrDbl> data ={});
+
+    ioSysErrors& set_rat_xbins(double rat_lo, double rat_hi);
+    operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
+    TGraphAsymmErrors* operator-> ();
+};
 
 #endif

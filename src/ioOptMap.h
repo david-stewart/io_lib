@@ -77,6 +77,8 @@ struct ioOptMap {
     ioOptMap operator+=(ioOptMap _);
     friend ioOptMap operator+ (ioOptMap lhs, const ioOptMap& rhs);
 
+    ioOptMap& update(ioOptMap _);
+
 };
 
 #endif

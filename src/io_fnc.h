@@ -13,6 +13,7 @@
 #include "TF1.h"
 #include "TProfile2D.h"
 #include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
 #include "ioOptMap.h"
 
 
@@ -44,6 +45,9 @@ void ioWaitPrimitive(int i=0);
 
 vector<int> ioColorVec(int n_colors=2, int palette=kCMYK, bool print=false);
 
+TH1D* ioRebin(TH1D*, int, double* =nullptr);
+TH1D* ioNorm(TH1D*, const char which='o'); // 0 for no, 1 for yes, 2 for variable bin-width
+
 void ioDrawTLatex(const char* msg, double x, double y, 
         ioOptMap options={}, ioOptMap dict= {{
         "TextColor",kBlack, "TextColorAlpha",1., "TextSize",22, "TextFont",43,
@@ -57,6 +61,11 @@ void ioDrawTPaveText(double x0, double y0, double x1, double y1,
         }});
 
 void ioDrawTLine(double x0, double y0, double x1, double y1, 
+        ioOptMap options={}, ioOptMap dict = {{
+            "LineColor",kBlack, "LineColorAlpha",1., 
+            "LineStyle",1,
+            "LineWidth",1 }});
+void ioDrawBoxErrors(TGraphAsymmErrors* tgas,
         ioOptMap options={}, ioOptMap dict = {{
             "LineColor",kBlack, "LineColorAlpha",1., 
             "LineStyle",1,
@@ -111,6 +120,8 @@ vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow=false);
 int    io_geant05(int geantid);
 const char* io_geant05_ascii(int geantid);
 const char* io_geant05_greek(int geantid);
+
+array<int,6> io_geant05_colors { 1179, 1230, 1281, 1332, 1383, 1433 };
 
 // get dAu_200_Tsallis and pp_200_Tsallic Fn fits
 // Fit for 
