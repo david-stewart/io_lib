@@ -11,14 +11,23 @@
 </BBCES_4bin>
 
 <comment> These are deciles of transverse to corrected tower trigger </comment>
-<EAtrans_10bin> 
+<EAtrans_10bin>  // BAD DON'T USE!
  0.0      0.41328  0.62286  0.80471 0.9811
  1.16467  1.36455  1.59887  1.90578 2.3796  15.
 </EAtrans_10bin>
 
-<EAtrans_3bin> 
+<EAtrans_3bin> // BAD DON'T USE! (It appears the values are off by a factor of 2!
  0.  0.804711 1.59887 15.
 </EAtrans_3bin>
+
+<EAtpc_3bin>  // from MB events
+0 0.504763 0.959431 10
+</EAtpc_3bin>
+
+<EAtpc_10bin>
+0 0.291729 0.404587 0.504763 0.603913 0.708137
+  0.823597 0.959431 1.13484  1.40383  10
+</EAtpc_10bin>
 
 <BBCES_10bin>
     0. 2750.05 5369.02 8292.26 11557.1 15223.4 19377.9 24158.5 29893.7 37487.6 57432.7
