@@ -276,14 +276,12 @@ ioPadDimSet::ioPadDimSet(vector<double> _lefts, vector<double> _rights ) :
     /* for (auto v : _lefts) cout << " " << v; cout << endl; */
     if (_lefts.size() == 0) nPads = 1;
     else if (_lefts[0] >= 1.) {
-        cout << " a1 " << endl;
         nPads = (int) _lefts[0];
         for (int i{0}; i<(int)_lefts.size()-1; ++i) lefts.push_back(_lefts[i+1]);
     } else {
         nPads = 1;
         lefts = _lefts;
     }
-    cout << " a1 " << endl;
 };
 
 ioPadDim ioPadDimSet::make_pad(double left, 
@@ -302,7 +300,7 @@ vector<ioPadDim> ioPadDimSet::calc_pads() {
     /* cout << " left: ";  for (auto v : rights ) cout << " " << v; cout << endl; */
     int npads = nPads;
     bool flip_direction = false;
-    if (npads < 1) { 
+    if (npads < 0) { 
         npads = -npads; 
         flip_direction=true;
     };
@@ -312,8 +310,8 @@ vector<ioPadDim> ioPadDimSet::calc_pads() {
     double inner_left = (lefts.size() > 1) ? lefts[1] : 0.0001;
     double page_left  = (lefts.size() > 2) ? lefts[2] : 0.01;
 
-    double last_right  = (rights.size() > 0) ? rights[1] : 0.0001;
-    double inner_right = (rights.size() > 1) ? rights[0] : 0.0;
+    double last_right  = (rights.size() > 0) ? rights[0] : 0.0001;
+    double inner_right = (rights.size() > 1) ? rights[1] : 0.0;
     double page_right  = (rights.size() > 2) ? rights[2] : 0.01;
 
     if (npads == 0) throw std::runtime_error(
@@ -331,7 +329,7 @@ vector<ioPadDim> ioPadDimSet::calc_pads() {
     if (pad_width<=0) throw std::runtime_error(
             "fatal in ioPadDimSet margins have consumed more than 100\% of TCanvas");
 
-    int index = flip_direction ? 0 : npads-1;
+    int index = flip_direction ? npads-1 : 0;
     pads[index] = make_pad(page_left, first_left, pad_width, inner_right);
     double left = pads[index].up;
 
@@ -340,7 +338,8 @@ vector<ioPadDim> ioPadDimSet::calc_pads() {
         pads[index] = make_pad(left, inner_left, pad_width, inner_right);
         left = pads[index].up;
     }
-    pads[flip_direction ? npads-1 : 0] = make_pad(left, inner_left, pad_width, last_right);
+    pads[flip_direction ? 0 : npads-1] = make_pad(left, inner_left, pad_width, last_right);
+    /* for (auto& p : pads) p.print(); */
     return pads;
 };
 
