@@ -368,16 +368,6 @@ TH2* ioDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols) {
     return num;
 };
 
-void io_divideByBinWidth(TH1D* hg, double scale_factor=1.) {
-    for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
-        if (hg->GetBinContent(i)) {
-            double factor { scale_factor / hg->GetBinWidth(i) };
-            hg->SetBinContent(i, hg->GetBinContent(i) * factor);
-            hg->SetBinError(i, hg->GetBinError(i) * factor);
-        }
-    }
-};
-
 void io_scaleByBinWidth(TH1D* hg, double scale_factor) {
     for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
         if (hg->GetBinContent(i)) {
