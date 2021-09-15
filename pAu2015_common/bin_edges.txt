@@ -34,7 +34,7 @@
 
 <vz_mu_sigma_206>  // 500206 events 
   0.2772   5.7322  -5.4550  6.0094  // (0)mu (1)sig (2)mu-sig (3)mu+sig
-  0.2317   0.2105  -21.0000  21.0000// (4)rat_lo  (5)rat_hi (6)range_lo (7)range_hi
+  0.2317   0.2105  -21.0000  21.0000 // (4)rat_lo  (5)rat_hi (6)range_lo (7)range_hi
 </vz_mu_sigma_206>
 
 <EAbbc_10bin>
