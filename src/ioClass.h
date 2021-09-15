@@ -214,6 +214,7 @@ struct ioPads {
     TPad*  operator()(int col=0, int row=0);
 
     int nRow{1};
+    int nCol{1};
 
     // must initialize separate from constructor (so that the user has a chance to initialize all the 
     // required options for)

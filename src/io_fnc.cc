@@ -1412,6 +1412,15 @@ IOS_keepcut_stats io_cullsmallbins(
     }
     return stats;
 };
+bool io_cullsmallbins_(
+        TH1* h, 
+        double min_val)
+{
+    for (auto i : io_binvec(h, IO::in)) {
+        io_keepcutbin(h, i, min_val);
+    }
+    return true;
+};
 
 vector<int> io_binvec(TH1* h, IO loc) {
     vector<int> vec{};
