@@ -27,16 +27,15 @@
 69825
 </EAbbc_3bin>
 
-<zdcX_mu_sigma_206> // mean std_dev(sig) mu-sig mu+sig perc(<mu-sigma) perc(mu+sig)
- 15674.3602  5010.6290  10663.7312 20684.9892 // mu sig mu-sig mu+sig
-  0.2009   0.1765 // rat_lo  rat_hi
+<zdcX_mu_sigma_206> // 500206 events 
+ 15674.3602  5010.6290  10663.7312 20684.9892 // (0)mu (1)sig (2)mu-sig (3)mu+sig
+  0.2009   0.1765   0.0000  35000.0000 // (4)rat_lo  (5)rat_hi (6)range_lo (7)range_hi
 </zdcX_mu_sigma_206>
 
-
-<Vz_mu_sigma_206> // mean std_dev(sig) mu-sig mu+sig perc(<mu-sigma) perc(mu+sig)
-  0.2772   5.7322  -5.4550  6.0094 // mu sig mu-sig mu+sig
-  0.2317   0.2105 // rat_lo  rat_hi
-</Vz_mu_sigma_206>
+<vz_mu_sigma_206>  // 500206 events 
+  0.2772   5.7322  -5.4550  6.0094  // (0)mu (1)sig (2)mu-sig (3)mu+sig
+  0.2317   0.2105  -21.0000  21.0000// (4)rat_lo  (5)rat_hi (6)range_lo (7)range_hi
+</vz_mu_sigma_206>
 
 <EAbbc_10bin>
 0 2767.03 5397.9 8332.79 11610.1 15280.1 
