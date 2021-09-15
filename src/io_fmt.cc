@@ -212,6 +212,7 @@ TLegend* io_fmt (TLegend* leg, ioOptMap dict) {
     double alpha  =  dict("alpha")     ? dict["alpha"].val() : 0.;
     leg->SetLineColorAlpha(LineColor, alpha);
     leg->SetFillColorAlpha(FillColor, alpha);
+    if (dict("TextSize")) leg->SetTextSize(dict["TextSize"]);
     return leg;
 };
 TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {

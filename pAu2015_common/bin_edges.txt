@@ -27,6 +27,17 @@
 69825
 </EAbbc_3bin>
 
+<zdcX_mu_sigma_206> // mean std_dev(sig) mu-sig mu+sig perc(<mu-sigma) perc(mu+sig)
+ 15674.3602  5010.6290  10663.7312 20684.9892 // mu sig mu-sig mu+sig
+  0.2009   0.1765 // rat_lo  rat_hi
+</zdcX_mu_sigma_206>
+
+
+<Vz_mu_sigma_206> // mean std_dev(sig) mu-sig mu+sig perc(<mu-sigma) perc(mu+sig)
+  0.2772   5.7322  -5.4550  6.0094 // mu sig mu-sig mu+sig
+  0.2317   0.2105 // rat_lo  rat_hi
+</Vz_mu_sigma_206>
+
 <EAbbc_10bin>
 0 2767.03 5397.9 8332.79 11610.1 15280.1 
 19439.7 24222.7 29959.4 37535.7 69825
@@ -39,6 +50,11 @@
 0 0.291729 0.404587 0.504763 0.603913 0.708137
   0.823597 0.959431 1.13484  1.40383  10
 </EAtpc_10bin>
+
+<EAtpc_10bin_short>
+0 0.291729 0.404587 0.504763 0.603913 0.708137
+  0.823597 0.959431 1.13484  1.40383  1.99
+</EAtpc_10bin_short>
 
 <BBCES_10bin>
     0. 2750.05 5369.02 8292.26 11557.1 15223.4 19377.9 24158.5 29893.7 37487.6 57432.7
@@ -93,6 +109,12 @@
 </jetpt_bigbyones>
 </jetpt_70byones>
 
+<jetpt_bigbyfives>
+0 0 14 70
+</jetpt_bigbyfives>
+<jetpt_bigbytwos>
+0 0 35 70
+</jetpt_bigbytwos>
 
 
 <pt_by1Raghav_T>

@@ -422,6 +422,8 @@ ioPads::ioPads ( int nYpads, int nXpads, int c_wide, int c_height,
 
     /* vector<ioPadDim> y_dim{}; */
     /* vector<ioPadDim> x_dim{}; */
+    nCol = TMath::Abs(nXpads);
+    nRow = TMath::Abs(nYpads);
     
     for (auto x_pad : Xpads.calc_pads())
         for (auto y_pad : Ypads.calc_pads())
@@ -448,7 +450,9 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
         for (auto& y : y_dim)
             pad_dimensions.push_back({y,x});
 
-    nRow = x_dim.size();
+    /* cout << " Setting nRow: " << x_dim.size() << endl; */
+    nCol = x_dim.size();
+    nRow = y_dim.size();
     if (c_wide)   canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
     /* init(); */
@@ -476,11 +480,22 @@ void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) {
 /* }; */
 TPad* ioPads::operator()(int row, int col) {
     if (pads.size() == 0) init();
+    if (row < 0) {
+        row = -row;
+        col = row % nCol;
+        row = row / nCol;
+    }
+    /* if (TMath::Abs(row)+TMath::Abs(col)*nRow >= (int)pads.size()) { */
+
+    /* } */
     int i_pad = row+col*nRow;
     if (i_pad >= (int)pads.size()) {
-        cout << " warning! asking for pad " << i_pad << " in vector of " << pads.size() << "!" << endl;
-        cout << "   returning pad[0] instead" << endl;
-        i_pad = 0;
+        /* cout << " looping " << endl; */
+        i_pad = i_pad % (int) pads.size();
+        /* i_pad = row+col*nRow; */
+        /* cout << " warning! asking for pad " << i_pad << " in vector of " << pads.size() << "!" << endl; */
+        /* cout << "   returning pad[0] instead" << endl; */
+        /* i_pad = 0; */
     }
     pads[i_pad]->cd();
     return pads[i_pad];
