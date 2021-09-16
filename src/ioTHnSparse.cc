@@ -37,7 +37,7 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
 
     data_jet = new THnSparseD(Form("data_jet%s",tag),
             "jets;EAbbc;EAtpc;TrigEt;ZDCx;Vz;Jet #it{p}_{T}",
-            6, nbins, NULL, NULL);
+            7, nbins, NULL, NULL);
     data_jet->SetBinEdges(0,bin_EAbbc);
     data_jet->SetBinEdges(1,bin_EAtpc);
     data_jet->SetBinEdges(2,bin_TrigEt);
@@ -132,6 +132,11 @@ TH1D* ioJetSpectraSparse::hg_JetPt64 (int i0, int i1){
 TH1D* ioJetSpectraSparse::hg_JetPt8 (int i) {
     range8_absDphi(i); 
     TH1D* hg = (TH1D*) data_jet->Projection(5,"E");
+    hg->SetName(ioUniqueName());
+    return hg;
+};
+TH1D* ioJetSpectraSparse::hg_absDphi () {
+    TH1D* hg = (TH1D*) data_jet->Projection(6,"E");
     hg->SetName(ioUniqueName());
     return hg;
 };

@@ -41,5 +41,6 @@ class ioJetSpectraSparse {
     TH1D* hg_JetPt ();
     TH1D* hg_JetPt64 (int i0, int i1);
     TH1D* hg_JetPt8  (int i0);
+    TH1D* hg_absDphi ();
     double n_triggers();
 };
