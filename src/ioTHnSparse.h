@@ -7,7 +7,7 @@ class ioJetSpectraSparse {
     double hopper[7];
 
     public:
-    ioJetSpectraSparse(const char* bin_file, const char* tag);
+    ioJetSpectraSparse(const char* bin_file, const char* tag="");
     void write();
 
     THnSparseD* data_trig;
@@ -22,7 +22,7 @@ class ioJetSpectraSparse {
     // 6 : JetAbsDeltaPhi - 64 bins
     
     void fill_trig(double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz);
-    void fill_jetpt(double pt, double absdeltaphi); // note: will fill with last values in hopper from fill_trig;
+    void fill_jetpt_absDphi(double pt, double absdeltaphi); // note: will fill with last values in hopper from fill_trig;
 
     void range_EAbbc (int, int);
     void range_EAtpc (int, int);

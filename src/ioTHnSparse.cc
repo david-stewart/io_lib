@@ -47,7 +47,7 @@ void ioJetSpectraSparse::fill_trig(
     hopper[4] = Vz;
     data_trig->Fill(hopper);
 };
-void ioJetSpectraSparse::fill_jetpt(double jetpt, double absDphi) {
+void ioJetSpectraSparse::fill_jetpt_absDphi(double jetpt, double absDphi) {
     hopper[5] = jetpt;
     hopper[6] = absDphi;
     data_jet->Fill(hopper);
