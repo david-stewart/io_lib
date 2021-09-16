@@ -1,5 +1,7 @@
 root -l <<EOF
 gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");
+cout << ".L src/ioTHnSparse.cc+" << endl;
+.L src/ioTHnSparse.cc+
 cout << ".L src/io_fmt.cc+" << endl;
 .L src/io_fmt.cc+
 cout << ".L src/io_fnc.cc+" << endl;
