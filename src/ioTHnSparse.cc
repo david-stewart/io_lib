@@ -47,8 +47,9 @@ void ioJetSpectraSparse::fill_trig(
     hopper[4] = Vz;
     data_trig->Fill(hopper);
 };
-void ioJetSpectraSparse::fill_jetpt(double jetpt) {
+void ioJetSpectraSparse::fill_jetpt(double jetpt, double absDphi) {
     hopper[5] = jetpt;
+    hopper[6] = absDphi;
     data_jet->Fill(hopper);
 };
 void ioJetSpectraSparse::range_EAbbc (int i0, int i1) {
@@ -68,6 +69,14 @@ void ioJetSpectraSparse::range_Vz (int i0, int i1) {
 };
 void ioJetSpectraSparse::range_JetPt (int i0, int i1) {
     data_jet->GetAxis(5)->SetRange(i0, i1);
+};
+void ioJetSpectraSparse::range_absDphi (int i0, int i1) {
+    data_jet->GetAxis(6)->SetRange(i0, i1);
+};
+void ioJetSpectraSparse::range8_absDphi (int i) {
+    int i0 = 8*i;
+    int i1 = i0+7;
+    data_jet->GetAxis(6)->SetRange(i0, i1);
 };
 
 TH1D* ioJetSpectraSparse::hg_EAbbc (){
@@ -100,7 +109,15 @@ TH1D* ioJetSpectraSparse::hg_JetPt (){
     hg->SetName(ioUniqueName());
     return hg;
 };
-
-
-
-
+TH1D* ioJetSpectraSparse::hg_JetPt64 (int i0, int i1){
+    range_absDphi(i0,i1); 
+    TH1D* hg = (TH1D*) data_jet->Projection(5,"E");
+    hg->SetName(ioUniqueName());
+    return hg;
+};
+TH1D* ioJetSpectraSparse::hg_JetPt8 (int i) {
+    range8_absDphi(i); 
+    TH1D* hg = (TH1D*) data_jet->Projection(5,"E");
+    hg->SetName(ioUniqueName());
+    return hg;
+};
