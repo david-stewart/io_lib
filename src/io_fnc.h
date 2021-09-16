@@ -24,8 +24,8 @@
 #include "RooUnfoldResponse.h"
 /* #include "ioClass.h" */
 
-#define IO_pi      3.14159265
-#define IO_twopi   6.28318531
+#define IO_pi      3.14159266
+#define IO_twopi   6.28318532
 #define IO_piless1 2.14159265
 #define IO_3to8pi  1.17809725
 #define IO_5to8pi  1.96349541

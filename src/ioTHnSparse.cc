@@ -14,6 +14,7 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
     ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
     ioBinVec bin_JetPt {{ 0., 0., 70, 70.}};
+    ioBinVec bin_absDphi {{ 0., 0., 64., IO_pi }};
 
     // get the ZDCx bins:
 
@@ -23,14 +24,27 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
     nbins[3] = bin_ZDCx;
     nbins[4] = bin_vz;
     nbins[5] = bin_JetPt;
+    nbins[6] = bin_absDphi;
 
     data_trig = new THnSparseD(Form("data_trigs%s",tag),
-            "EAbbc;EAtpc;TrigEt;ZDCx;Vz",
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz",
             5, nbins, NULL, NULL);
+    data_trig->SetBinEdges(0,bin_EAbbc);
+    data_trig->SetBinEdges(1,bin_EAtpc);
+    data_trig->SetBinEdges(2,bin_TrigEt);
+    data_trig->SetBinEdges(3,bin_ZDCx);
+    data_trig->SetBinEdges(4,bin_vz);
 
     data_jet = new THnSparseD(Form("data_jet%s",tag),
-            "EAbbc;EAtpc;TrigEt;ZDCx;Vz;Jet #it{p}_{T}",
+            "jets;EAbbc;EAtpc;TrigEt;ZDCx;Vz;Jet #it{p}_{T}",
             6, nbins, NULL, NULL);
+    data_jet->SetBinEdges(0,bin_EAbbc);
+    data_jet->SetBinEdges(1,bin_EAtpc);
+    data_jet->SetBinEdges(2,bin_TrigEt);
+    data_jet->SetBinEdges(3,bin_ZDCx);
+    data_jet->SetBinEdges(4,bin_vz);
+    data_jet->SetBinEdges(5,bin_JetPt);
+    data_jet->SetBinEdges(6,bin_absDphi);
 
     data_jet->Sumw2();
 };
