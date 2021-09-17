@@ -2196,13 +2196,13 @@ ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
     return r_val.update();
 };
 
-ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, pair<double,double> x_rat) : tgase{_tgase}
+ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase}
 {
     size = tgase->GetN(); 
-    if (x_rat.first>=0) set_rat_xbins(x_rat.first, x_rat.second);
+    if (x_rat[0]>=0) set_rat_xbins(x_rat);
 };
 
-ioSysErrors::ioSysErrors(TH1* hg, pair<double,double> x_rat) {
+ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat) {
     ioPtrDbl x     {hg->GetXaxis()};
     ioPtrDbl err_x {hg->GetXaxis(), 0.5, true};
     /* cout << " x: " << x << endl; */
@@ -2218,7 +2218,7 @@ ioSysErrors::ioSysErrors(TH1* hg, pair<double,double> x_rat) {
     /* cout << " x-new: " << x << endl; */
     /* cout << " y-new: " << y << endl; */
 
-    if (x_rat.first>=0) set_rat_xbins(x_rat.first, x_rat.second);
+    if (x_rat[0]>=0) set_rat_xbins(x_rat);
 };
 
 /* ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;}; */
@@ -2376,19 +2376,37 @@ ioSysErrors& ioSysErrors::calc_symmetric_bounds(vector<ioPtrDbl> _data) {
 
 };
 
-ioSysErrors& ioSysErrors::set_rat_xbins(double rat_lo, double rat_hi) {
+ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
+    double r_left   { rat_rel[0] };
+    double r_right  { rat_rel[1] };
+    double r_center { rat_rel[2] }; // relative position between left and right
+    double offset_c { rat_rel[3] };
+    
     double* x = tgase->GetX();
     for (int i{0}; i<size; ++i) {
-        double length = tgase->GetErrorXlow(i) + tgase->GetErrorXhigh(i);
-        double new_err = length*(rat_hi-rat_lo)/2.;
-
-        double left  = x[i] - tgase->GetErrorXlow(i);
-        double new_center = x[i]-tgase->GetErrorXlow(i)+length/2*(rat_lo+rat_hi);
-        tgase->SetPointEXlow(i, new_err);
-        tgase->SetPointEXhigh(i, new_err);
-        tgase->SetPointX(i,new_center);
+        double deltaX = tgase->GetErrorXlow(i) + tgase->GetErrorXhigh(i);
+        double anchor  = x[i]-tgase->GetErrorXlow(i);
+        double p_left  = anchor + r_left  * deltaX;
+        double p_right = anchor + r_right * deltaX;
+        double p_center = anchor + r_center * deltaX + offset_c;
+        tgase->SetPointEXlow (i,  p_center-p_left);
+        tgase->SetPointEXhigh(i,  p_right-p_center);
+        tgase->SetPointX(i,p_center);
     }
     return *this;
 };
+
 TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; };
 ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };
+
+/* ioSysErrors ioSysErrors::divide(const ioSysErrors& rhs) { */
+/*     ioSysErrors lhs { *this }; */
+
+/*     for (int i= */
+/*         double n_err = num->GetBinError(j) / norm_num; */
+/*         double d_err = den->GetBinError(j) / norm_den; */
+/*         double val = n / d; */
+/*         double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5); */
+      
+/*     return lhs; */
+/* }; */

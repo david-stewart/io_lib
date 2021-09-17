@@ -587,7 +587,7 @@ struct ioXYbounder {
 
 
 
-/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert, array<double,3> x_center, bool skip_zeros, bool normalize ) { */
+/* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert, array<double,4> x_center, bool skip_zeros, bool normalize ) { */
 /*     vector<double> x, x_err, y, y_err; */
 /*     TAxis* axis = hg->GetXaxis(); */
 /*     if (normalize) hg->Scale(1./hg->Integral()); */
@@ -617,7 +617,7 @@ struct ioXYbounder {
 /*          ioBinVec eyleft, ioBinVec eyright={}); */
 
 /* TGraphAsymmErrors* ioMakeTGASE(TH1D* hg, bool invert_XY=false, */ 
-/*         array<double,3> x_center={0.,1.,-1.}, // left/right/center ratio of bin; */ 
+/*         array<double,4> x_center={0.,1.,-1.}, // left/right/center ratio of bin; */ 
 /*                                               // center=-1 or < left defaults to middle of left */ 
 /*                                               // and right */
 /*         bool skip_zeros=true); */
@@ -681,9 +681,11 @@ ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
 struct ioSysErrors {
     ioSysErrors();
     ioSysErrors(const ioSysErrors&);
-    ioSysErrors(TH1*, pair<double,double> x_rat={-1,-1});
-    ioSysErrors(TGraphAsymmErrors*, pair<double,double> x_rat={-1,-1});
+    ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5});
+    ioSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
     ioSysErrors& swap_xy ();
+
+    /* ioSysErrors divide(const ioSysErrors& other); */
 
     /* ioSysErrors& set (TH1*); // sets x,y, and errors */
     /* ioSysErrors& set (TGraphAsymmErrors*); // sets x,y, and errors */
@@ -703,7 +705,8 @@ struct ioSysErrors {
     ioSysErrors& calc_bounds(vector<ioPtrDbl> data ={}); // calculate bounds relative to mean
     ioSysErrors& calc_symmetric_bounds(vector<ioPtrDbl> data ={});
 
-    ioSysErrors& set_rat_xbins(double rat_lo, double rat_hi);
+    ioSysErrors& set_rat_xbins(array<double,4> rat_rel);
+    /* ioSysErrors& set_center_xbins(double rat_center); */
     operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
     TGraphAsymmErrors* operator-> ();
 };
