@@ -6,7 +6,8 @@ ioJetSpectraSparse::ioJetSpectraSparse(THnSparseD* _data_jet, THnSparseD* _data_
     data_trig { _data_trig }, data_jet { _data_jet } {};
 ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
 
-    int i_bins = (strcmp(tag,"_10")==0) ? 10 : 3;
+    TString s_tag = tag;
+    int i_bins = (s_tag.Contains("_10")) ? 10 : 3;
     ioBinVec bin_EAbbc { bin_file, Form("EAbbc_%ibin",i_bins) };
     ioBinVec bin_EAtpc { bin_file, Form("EAtpc_%ibin",i_bins) }; //"EAtpc_3bin" };
     ioBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
