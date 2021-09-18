@@ -1,4 +1,3 @@
-THnSparse
 _fmt
 _fnc
 OptMap
@@ -11,3 +10,4 @@ TowerLoc
 JetMatcher
 JetMatcherGoodBins
 _test
+THnSparse

@@ -149,7 +149,7 @@ ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match)
     nbins[6] = bin_matchPt;
     nbins[7] = bin_AJ;
     data = new THnSparseD(Form("data_%s",tag),
-            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz",
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;leadPt;matchPt;AJ",
             8, nbins, NULL, NULL);
     data->SetBinEdges(0,bin_EAbbc);
     data->SetBinEdges(1,bin_EAtpc);
