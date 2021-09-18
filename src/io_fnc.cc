@@ -618,6 +618,7 @@ float io_dphi(float phi0, float phi1) {
     while (rval >  IO_pi) rval -= IO_twopi;
     return rval;
 };
+float io_absDphi(float phi0, float phi1) { return TMath::Abs(io_dphi(phi0,phi1)); };
 
 bool io_isAbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){
     float dphi = TMath::Abs(io_dphi(phi0,phi1));

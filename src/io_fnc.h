@@ -139,6 +139,7 @@ TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold=3);
 TLegend* ioNewTLegend();
 
 float io_dphi(float phi0, float phi1); // phi1 - phi0, returns in range (-pi,pi)
+float io_absDphi(float phi0, float phi1); // phi1 - phi0, returns in range (-pi,pi)
 bool  io_isAbsTransPhi(float phi0, float phi1, float lo_bound=1., float hi_bound=IO_piless1); // checks if is transverse to pi
 bool  io_isAbsTrans358pi(float phi0, float phi1, float lo_bound=IO_3to8pi, float hi_bound=IO_5to8pi); // checks if is transverse to pi
 float io_02pi(float &phi); // puts phi in range [0,2pi]

@@ -188,8 +188,9 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     ioBinVec pthatbins { Xsec.pthatbins };
 }
 
-bool ioJetMatcher::do_matching(int pthatbin) {
+bool ioJetMatcher::do_matching(int pthatbin, double weight) {
     double W { Xsec.Xsec(pthatbin) };
+    if (weight) W *= weight;
     /* vector<double> fakes; */ // Using fakes is incorrect here.
                                 // leftover reconstructed jets are actual jets from 
                                 // the embedded event

@@ -110,7 +110,7 @@ struct ioJetMatcher {
 
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);
-    bool do_matching(int pthatbin); // return true if successful matching
+    bool do_matching(int pthatbin, double weight=0); // return true if successful matching
 
     double ratio_AtoB;
 
