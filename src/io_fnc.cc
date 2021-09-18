@@ -1508,3 +1508,34 @@ TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverf
     return hg_to;
 };
 
+TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, bool width_weight) {
+    // warning: this only does 
+    TH1D* hg_cdf = (TH1D*) _in->Clone(ioUniqueName()); 
+    hg_cdf->Reset();
+    TAxis* ax = hg_cdf->GetXaxis();
+    if (last_bin==0) last_bin = ax->GetNbins();
+
+    double sum_all {0};
+    double err_sq_all {0};
+    for (int i{first_bin}; i<=last_bin; ++i) {
+        double width { ax->GetBinWidth(i) };
+        sum_all += _in->GetBinContent(i) * width;
+        err_sq_all += TMath::Sq(_in->GetBinError(i)*width);
+    }
+    double rel_err_all_sq = err_sq_all / TMath::Sq(sum_all);
+
+    double sum_cdf {0};
+    double err_cdf_sq {0};
+    for (int i{first_bin}; i<=last_bin; ++i) {
+        double width { ax->GetBinWidth(i) };
+        sum_cdf += _in->GetBinContent(i) * width;
+        err_cdf_sq += TMath::Sq(_in->GetBinError(i)*width);
+        double bin_err = sum_cdf/sum_all * TMath::Sqrt( 
+                err_cdf_sq / TMath::Sq(sum_cdf) 
+              + rel_err_all_sq 
+              - 2*err_cdf_sq/sum_cdf/sum_all);
+        hg_cdf->SetBinContent(i,sum_cdf/sum_all);
+        hg_cdf->SetBinError(i, bin_err);
+    }
+    return hg_cdf;
+};
