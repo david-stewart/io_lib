@@ -105,7 +105,7 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
     pt_misses = binsM[0];
 
     ioBinVec binsT { bin_file, tag_T };
-    pt_fakes = binsT[0];
+    /* pt_fakes = binsT[0]; */
 
     int nbins = Xsec.nbins_pthat;
     ioBinVec bins_M { bin_file, tag_M };
@@ -190,7 +190,9 @@ ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec,
 
 bool ioJetMatcher::do_matching(int pthatbin) {
     double W { Xsec.Xsec(pthatbin) };
-    vector<double> fakes;
+    /* vector<double> fakes; */ // Using fakes is incorrect here.
+                                // leftover reconstructed jets are actual jets from 
+                                // the embedded event
     vector<double> misses;
     vector<pair<double,double>> matches;
     vector<double> v_delta_R2;
@@ -222,15 +224,15 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         }
         if (!found_match) { misses.push_back(MC.pT); }
     }
-    for (auto& reco : data_reco) {
-        if (!reco.is_matched) {
-            if (reco.pT > fake_limit) {
-                out_bounds_cut = true;
-            } else {
-                fakes.push_back(reco.pT);
-            }
-        }
-    }
+    /* for (auto& reco : data_reco) { */
+    /*     if (!reco.is_matched) { */
+    /*         if (reco.pT > fake_limit) { */
+    /*             out_bounds_cut = true; */
+    /*         } else { */
+    /*             fakes.push_back(reco.pT); */
+    /*         } */
+    /*     } */
+    /* } */
     if (out_bounds_cut) {
         data_MC.clear();
         data_reco.clear();
@@ -276,20 +278,20 @@ bool ioJetMatcher::do_matching(int pthatbin) {
         }
         if (b_Xsec_vs_T)    v_T[pthatbin].Fill(miss);
     }
-    for (auto& fake : fakes) {
-        response.Fake(fake,W);
-        response_noweight.Fake(fake);
+    /* for (auto& fake : fakes) { */
+    /*     response.Fake(fake,W); */
+    /*     response_noweight.Fake(fake); */
 
-        if (b_Xsec_vs_fake) {
-            v_fake[pthatbin].Fill(fake);
-            if (fillA) A_fake[pthatbin].Fill(fake);
-            else       B_fake[pthatbin].Fill(fake);
-        }
-        if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake);
+    /*     if (b_Xsec_vs_fake) { */
+    /*         v_fake[pthatbin].Fill(fake); */
+    /*         if (fillA) A_fake[pthatbin].Fill(fake); */
+    /*         else       B_fake[pthatbin].Fill(fake); */
+    /*     } */
+    /*     if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake); */
 
-        if (fillA) response_A->Fake(fake, W);
-        else       response_B->Fake(fake, W);
-    };
+    /*     if (fillA) response_A->Fake(fake, W); */
+    /*     else       response_B->Fake(fake, W); */
+    /* }; */
     data_MC.clear();
     data_reco.clear();
     return false;
