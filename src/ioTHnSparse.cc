@@ -225,8 +225,8 @@ ioTrackSparse::ioTrackSparse(THnSparseD* _data_track, THnSparseD* _data_trig) :
 ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     TString s_tag = tag;
     int i_bins = (s_tag.Contains("_10")) ? 10 : 3;
-    ioBinVec bin_EAbbc { bin_file, Form("EAbbc_%ibin",i_bins) };
-    ioBinVec bin_EAtpc { bin_file, Form("EAtpc_%ibin",i_bins) }; //"EAtpc_3bin" };
+    ioBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
+    ioBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
     ioBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
 
     ioBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
