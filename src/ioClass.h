@@ -54,8 +54,16 @@ struct ioRanger {
     double hi_range;
     double lo_out;
     double hi_out;
+    bool has_min_out = false;
+    bool has_max_out = false;
+    double min_out{0.};
+    double max_out{0.};
+    void set_min_out(double);
+    void set_max_out(double);
     double operator()(double x); // returns ratio between lo_out and hi_out of X in range
-    ioRanger(double in_range_lo, double in_range_hi, double out_range_lo=0., double out_range_hi=1.);
+    ioRanger(double in_range_lo, double in_range_hi, 
+            double out_range_lo=0., 
+            double out_range_hi=1.);
     //lo and hi out default to the range
 };
 

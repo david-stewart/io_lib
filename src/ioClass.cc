@@ -53,7 +53,18 @@ ioRanger::ioRanger(double _lo_range, double _hi_range, double _lo_out, double _h
     hi_out   {_hi_out}
 {};
 double ioRanger::operator()(double x) {
-    return lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range);
+    double val = lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range);
+    if (has_min_out && val < min_out) return min_out;
+    if (has_max_out && val > max_out) return max_out;
+    return val;
+};
+void ioRanger::set_min_out(double _val) {
+    has_min_out = true;
+    min_out = _val;
+};
+void ioRanger::set_max_out(double _val) {
+    has_max_out = true;
+    max_out = _val;
 };
 
 vector<double> ioBinVec::bin_centers() {
