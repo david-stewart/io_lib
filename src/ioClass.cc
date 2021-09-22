@@ -2206,6 +2206,56 @@ ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs) {
     r_val-=rhs;
     return r_val.update();
 };
+ioPtrDbl io_calc_quadrature(vector<ioPtrDbl> data) {
+        if (data.size() == 0) return ioPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        data[0] *= data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0] += (data[i] *= data[i]);
+        }
+        return data[0].sqrt();
+};
+ioPtrDbl io_calc_quadrature(vector<ioPtrDbl> data, ioPtrDbl mean) {
+        if (data.size() == 0) return mean;
+        for (auto& dat : data) dat -= mean;
+        return io_calc_quadrature(data);
+};
+ioPtrDbl io_calc_mean(vector<ioPtrDbl> data) {
+        if (data.size() == 0) return ioPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0] += data[i];
+        }
+        data[0] /= data.size();
+        return data[0];
+};
+ioPtrDbl io_calc_max_bound(vector<ioPtrDbl> data) {
+        if (data.size() == 0) return ioPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0].make_max(data[i]);
+        }
+        return data[0];
+};
+ioPtrDbl io_calc_max_berr(vector<ioPtrDbl> data, ioPtrDbl mean) {
+        auto max_bound = io_calc_max_bound(data);
+        return max_bound.abs_diff(mean);
+};
+ioPtrDbl io_calc_min_bound(vector<ioPtrDbl> data) {
+        if (data.size() == 0) return ioPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0].make_min(data[i]);
+        }
+        return data[0];
+};
+ioPtrDbl io_calc_min_berr(vector<ioPtrDbl> data, ioPtrDbl mean) {
+        return mean.abs_diff(io_calc_min_bound(data));
+};
+pair<ioPtrDbl,ioPtrDbl> io_calc_bounds(vector<ioPtrDbl> data) {
+    return { io_calc_min_bound(data), io_calc_max_bound(data) };
+};
+
 
 ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase}
 {
@@ -2216,27 +2266,21 @@ ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tga
 ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat) {
     ioPtrDbl x     {hg->GetXaxis()};
     ioPtrDbl err_x {hg->GetXaxis(), 0.5, true};
-    /* cout << " x: " << x << endl; */
-    /* cout << " err_x: " << err_x << endl; */
 
     ioPtrDbl y     {hg};
     ioPtrDbl err_y {hg,true};
-    /* cout << " y: " << y << endl; */
-    /* cout << " err_y: " << err_y << endl; */
     
     tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y,err_y);
     size = x.size;
-    /* cout << " x-new: " << x << endl; */
-    /* cout << " y-new: " << y << endl; */
 
     if (x_rat[0]>=0) set_rat_xbins(x_rat);
 };
 
 /* ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;}; */
-ioSysErrors& ioSysErrors::add_data(vector<ioPtrDbl> data) { 
-    for (auto& dat : data) vec_data.push_back(dat);
-    return *this;
-};
+/* ioSysErrors& ioSysErrors::add_data(vector<ioPtrDbl> data) { */ 
+    /* for (auto& dat : data) vec_data.push_back(dat); */
+    /* return *this; */
+/* }; */
 
 ioSysErrors& ioSysErrors::swap_xy () {
     double* x = new double[size];
@@ -2258,54 +2302,31 @@ ioSysErrors& ioSysErrors::swap_xy () {
     tgase = tgase_new;
     return *this;
 };
+ioSysErrors& ioSysErrors::setYhigh(ioPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYhigh(i,data[i]);
+    }
+    return *this;
+};
+ioSysErrors& ioSysErrors::setYlow(ioPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYlow(i,data[i]);
+    }
+    return *this;
+};
+ioSysErrors& ioSysErrors::setYhilo(ioPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYlow(i,data[i]);
+        tgase->SetPointEYhigh(i,data[i]);
+    }
+    return *this;
+};
 
 ioSysErrors::ioSysErrors(const ioSysErrors& rhs) {
     tgase = (TGraphAsymmErrors*) rhs.tgase->Clone();
     size = tgase->GetN();
-    vec_data = rhs.vec_data;
 };
 
-ioSysErrors& ioSysErrors::calc_mean(vector<ioPtrDbl> data) {
-    // set the mean values to those of all added data
-    for (auto dat : data) vec_data.push_back(dat);
-    int n = vec_data.size();
-    if (n==0) {
-        cout << " Warning in ioSysErrors::calc_mean() there are not added data "
-             << " which will be used as the mean; calc_mean() not being used. " << endl;
-        return *this;
-    }
-    ioPtrDbl mean { vec_data[0] };
-    for (int i{1}; i<n; ++i) {
-        mean += vec_data[i];
-    }
-    mean /= n;
-    // reset the mean
-    for (auto i{0}; i<size; ++i) tgase->SetPointY(i,mean[i]);
-    return *this;
-};
-
-ioSysErrors& ioSysErrors::calc_quadrature(vector<ioPtrDbl> _data) {
-    // calculate error in quadrature of all added data relative to the Y. 
-    // Note: might want to use "calc_mean" before to get the mean value, or not...
-    for (auto dat : _data) vec_data.push_back(dat);
-    if (vec_data.size()==0) {
-        cout << " Warning in ioSysErrors::calc_quadrature() there are not added data "
-             << " which will be used as the mean; calc_quadrature() not being used. " << endl;
-        return *this;
-    }
-
-    ioPtrDbl sum {size};
-    int i{0};
-    for (auto& dat : vec_data) {
-        sum += getY().square_diff(dat);
-    };
-    sum.sqrt();
-    for (auto i{0}; i<size; ++i) {
-        tgase->SetPointEYlow (i,sum[i]);
-        tgase->SetPointEYhigh(i,sum[i]);
-    }
-    return *this;
-};
 ioPtrDbl ioSysErrors::getY() {
     ioPtrDbl y {size};
     double* y_dat = tgase->GetY();
@@ -2324,67 +2345,6 @@ ioPtrDbl ioSysErrors::getYhigh() {
     for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYhigh(i);
     y.update();
     return y;
-};
-ioSysErrors& ioSysErrors::calc_bounds(vector<ioPtrDbl> _data) {
-    for (auto dat : _data) vec_data.push_back(dat);
-    if (vec_data.size()==0) {
-        cout << " Warning in ioSysErrors::calc_bounds() there are not added data "
-             << " which will be used as the mean; calc_bounds() not being used. " << endl;
-        return *this;
-    }
-
-    ioPtrDbl  y_min   { vec_data[0] };
-    ioPtrDbl  y_max   { vec_data[0] };
-
-    for (unsigned int i{1}; i<vec_data.size(); ++i) {
-        y_min.make_min(vec_data[i]);
-        y_max.make_max(vec_data[i]);
-    }
-
-    auto _min = getY() - y_min;
-    auto _max = y_max - getY();
-
-    _min.zero_negatives();
-    _max.zero_negatives();
-
-    for (auto i{0}; i<size; ++i) {
-        tgase->SetPointEYlow (i,_min[i]);
-        tgase->SetPointEYhigh(i,_max[i]);
-    }
-    return *this;
-};
-
-ioSysErrors& ioSysErrors::calc_symmetric_bounds(vector<ioPtrDbl> _data) {
-    for (auto dat : _data) vec_data.push_back(dat);
-    if (vec_data.size()==0) {
-       cout << " Warning in ioSysErrors::calc_symmetric_bounds() there are no added data "
-            << " which will be used as the mean; calc_symmetric_bounds() not being used. " << endl;
-        return *this;
-    }
-
-    ioPtrDbl  y_min   { vec_data[0] };
-    ioPtrDbl  y_max   { vec_data[0] };
-
-    for (unsigned int i{1}; i<vec_data.size(); ++i) {
-        y_min.make_min(vec_data[i]);
-        y_max.make_max(vec_data[i]);
-    }
-    auto temp = getY();
-
-    auto _min = getY() - y_min;
-    auto _max = y_max - getY();
-
-    _min.zero_negatives();
-    _max.zero_negatives();
-    _max.make_max(_min);
-
-    for (auto i{0}; i<size; ++i) {
-        tgase->SetPointEYlow (i,_max[i]);
-        tgase->SetPointEYhigh(i,_max[i]);
-    }
-
-    return *this;
-
 };
 
 ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
@@ -2409,15 +2369,3 @@ ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
 
 TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; };
 ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };
-
-/* ioSysErrors ioSysErrors::divide(const ioSysErrors& rhs) { */
-/*     ioSysErrors lhs { *this }; */
-
-/*     for (int i= */
-/*         double n_err = num->GetBinError(j) / norm_num; */
-/*         double d_err = den->GetBinError(j) / norm_den; */
-/*         double val = n / d; */
-/*         double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5); */
-      
-/*     return lhs; */
-/* }; */

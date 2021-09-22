@@ -236,7 +236,7 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
     ioBinVec bin_trackPt { bin_file, "trackpt_resolution" };
-    ioBinVec bin_absDphi {{ 0., 0., 64., IO_pi }};
+    ioBinVec bin_absDphi {{ 0., 0., 8., IO_pi }};
 
     // get the ZDCx bins:
 
@@ -258,7 +258,7 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     data_trig->SetBinEdges(4,bin_vz);
 
     data_track = new THnSparseD(Form("data_track%s",tag),
-            "tracks;EAbbc;EAtpc;TrigEt;ZDCx;Vz;track #it{p}_{T}",
+            "tracks;EAbbc;EAtpc;TrigEt;ZDCx;Vz;track #it{p}_{T};|#phi_{track}-#phi{trigger}|",
             7, nbins, NULL, NULL);
     data_track->SetBinEdges(0,bin_EAbbc);
     data_track->SetBinEdges(1,bin_EAtpc);

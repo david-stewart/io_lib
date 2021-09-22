@@ -683,8 +683,14 @@ struct ioPtrDbl {
 };
 ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
 ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs);
-
-
+ioPtrDbl  io_calc_quadrature(vector<ioPtrDbl>);
+ioPtrDbl  io_calc_quadrature(vector<ioPtrDbl>, ioPtrDbl);
+ioPtrDbl  io_calc_mean      (vector<ioPtrDbl>);
+ioPtrDbl  io_calc_max_bound (vector<ioPtrDbl>);
+ioPtrDbl  io_calc_min_bound (vector<ioPtrDbl>);
+ioPtrDbl  io_calc_max_berr  (vector<ioPtrDbl>, ioPtrDbl);
+ioPtrDbl  io_calc_min_berr  (vector<ioPtrDbl>, ioPtrDbl);
+pair<ioPtrDbl,ioPtrDbl>  io_calc_bounds    (vector<ioPtrDbl>);
 
 struct ioSysErrors {
     ioSysErrors();
@@ -692,6 +698,10 @@ struct ioSysErrors {
     ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5});
     ioSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
     ioSysErrors& swap_xy ();
+
+    ioSysErrors& setYlow(ioPtrDbl&);
+    ioSysErrors& setYhigh(ioPtrDbl&);
+    ioSysErrors& setYhilo(ioPtrDbl&); // set Y symmetric
 
     /* ioSysErrors divide(const ioSysErrors& other); */
 
@@ -704,14 +714,14 @@ struct ioSysErrors {
     ioPtrDbl getYlow();
     ioPtrDbl getYhigh();
 
-    vector<ioPtrDbl> vec_data   {}; // to add in quadrature
+    /* vector<ioPtrDbl> vec_data   {}; // to add in quadrature */
     /* ioSysErrors& add_data   (ioPtrDbl); */
-    ioSysErrors& add_data   (vector<ioPtrDbl>);
+    /* ioSysErrors& add_data   (vector<ioPtrDbl>); */
 
-    ioSysErrors& calc_mean(vector<ioPtrDbl> data={});
-    ioSysErrors& calc_quadrature(vector<ioPtrDbl> data ={}); // calculate quadratue relative to the mean
-    ioSysErrors& calc_bounds(vector<ioPtrDbl> data ={}); // calculate bounds relative to mean
-    ioSysErrors& calc_symmetric_bounds(vector<ioPtrDbl> data ={});
+    /* ioSysErrors& calc_mean(vector<ioPtrDbl> data={}); */
+    /* ioSysErrors& calc_quadrature(vector<ioPtrDbl> data ={}); // calculate quadratue relative to the mean */
+    /* ioSysErrors& calc_bounds(vector<ioPtrDbl> data ={});     // calculate bounds relative to mean */
+    /* ioSysErrors& calc_symmetric_bounds(vector<ioPtrDbl> data ={}); */
 
     ioSysErrors& set_rat_xbins(array<double,4> rat_rel);
     /* ioSysErrors& set_center_xbins(double rat_center); */
