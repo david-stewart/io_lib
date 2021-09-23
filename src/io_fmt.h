@@ -48,4 +48,6 @@ TGraphAsymmErrors* io_fmt (TGraphAsymmErrors* hg, ioOptMap _override={}, ioOptMa
 TMultiGraph* io_fmt (TMultiGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 TGraph* io_fmt (TGraph* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
 
+TBox* io_fmt(TBox*, ioOptMap _opts);
+
 # endif

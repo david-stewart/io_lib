@@ -2168,7 +2168,7 @@ ioPtrDbl& ioPtrDbl::make_max(const ioPtrDbl& rhs) {
     return update();
 };
 ioPtrDbl& ioPtrDbl::operator/=(const ioPtrDbl& rhs) {
-    cout << " z3 " << size << " " << rhs.size << endl;
+    /* cout << " z3 " << size << " " << rhs.size << endl; */
     if (size != rhs.size) throw_error("operator/=");
     for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i];
     return update();
@@ -2263,14 +2263,17 @@ ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tga
     if (x_rat[0]>=0) set_rat_xbins(x_rat);
 };
 
-ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat) {
+ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat, array<ioPtrDbl,2> _err) {
     ioPtrDbl x     {hg->GetXaxis()};
     ioPtrDbl err_x {hg->GetXaxis(), 0.5, true};
 
     ioPtrDbl y     {hg};
     ioPtrDbl err_y {hg,true};
+
+    ioPtrDbl err_y_lo = _err[0].size==0 ? err_y : _err[0];
+    ioPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1];
     
-    tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y,err_y);
+    tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y_lo,err_y_hi);
     size = x.size;
 
     if (x_rat[0]>=0) set_rat_xbins(x_rat);
@@ -2369,3 +2372,25 @@ ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
 
 TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; };
 ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };
+
+/* void ioSysErrors::draw_boxes(ioOptMap dict) { */
+/*     double* x = tgase->GetX(); */
+/*     double* y = tgase->GetY(); */
+/*     TBox* box = new TBox(); */
+/*     io_fmt(box,dict); */
+/*     for (int i{0}; i<size; ++i) { */
+        
+/*         box->PaintBox(x[i] - tgase->GetErrorXlow(i), */
+/*                     y[i] - tgase->GetErrorYlow(i), */
+/*                     x[i] + tgase->GetErrorXhigh(i), */
+/*                     y[i] + tgase->GetErrorYhigh(i) */
+/*         ); */
+/*         /1* cout << " box "<< i << "  " << endl *1/ */ 
+/*             /1* << x[i]-tgase->GetErrorXlow(i) << endl *1/ */
+/*                        /1* << x[i]+tgase->GetErrorXhigh(i) << endl *1/ */
+/*                        /1* << y[i]-tgase->GetErrorYlow(i) << endl *1/ */
+/*                        /1* << y[i]+tgase->GetErrorYhigh(i) << endl; *1/ */
+/*         /1* box.SetLineColor(kRed); *1/ */
+/*         /1* box.SetFillColor(kBlue); *1/ */
+/*     } */
+/* }; */

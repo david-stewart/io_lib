@@ -184,6 +184,7 @@ void io_fmt_ranges(vector<TH1D*> hgs, vector<TH1D*> hgs_2, ioOptMap dict) {
     io_fmt_ranges(tmp, dict);
 }
 
+
 TCanvas* io_fmt (TCanvas* canv, ioOptMap dict) {
     int FillStyle = dict("TCanvasFillStyle") ?
         dict["TCanvasFillStyle"].get_int() : 4000;
@@ -215,6 +216,30 @@ TLegend* io_fmt (TLegend* leg, ioOptMap dict) {
     if (dict("TextSize")) leg->SetTextSize(dict["TextSize"]);
     return leg;
 };
+
+TBox* io_fmt(TBox* box, ioOptMap dict) {
+    int line_color = dict("Color",kBlack);
+    int fill_color = dict("Color",kWhite);
+    if (dict("LineColor") && dict("FillColor")) {
+        line_color = dict["LineColor"];
+        fill_color = dict["FillColor"];
+    } else if (dict("LineColor")) {
+        line_color = dict["LineColor"];
+        fill_color = dict["LineColor"];
+    } else if (dict("FillColor")) {
+        line_color = dict["FillColor"];
+        fill_color = dict["FillColor"];
+    }
+    double fill_alpha = dict("FillAlpha") ? dict["FillAlpha"].val() :  0.5;
+    double line_alpha = dict("LineAlpha") ? dict["FillAlpha"].val() :  1.0;
+    cout << "Fill : " << fill_color << " " << fill_alpha << endl;
+    cout << "Fill : " << line_color << " " << line_alpha << endl;
+    box->SetLineColorAlpha(line_color, line_alpha);
+    box->SetFillColorAlpha(fill_color, fill_alpha);
+    return box;
+};
+
+
 TProfile* io_fmt (TProfile* hg, ioOptMap _override, ioOptMap dict) {
     dict += _override;
 

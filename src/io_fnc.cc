@@ -166,6 +166,12 @@ double ioPadyRat(double y_in){
     double y1 = gPad->GetUymax();
     return y0+y_in*(y1-y0);
 };
+double ioPadxRat(double y_in){
+    gPad->Update();
+    double y0 = gPad->GetUxmin();
+    double y1 = gPad->GetUxmax();
+    return y0+y_in*(y1-y0);
+};
 
 void ioDrawTLineHorizontal(double y, ioOptMap options) {
     gPad->Update();
@@ -175,15 +181,21 @@ void ioDrawTLineHorizontal(double y, ioOptMap options) {
 };
 
 void ioDrawTLineVertical(double x, ioOptMap options) {
-   gPad->Update();
-   Double_t lm = gPad->GetLeftMargin();
-   Double_t rm = 1.-gPad->GetRightMargin();
-   Double_t tm = 1.-gPad->GetTopMargin();
-   Double_t bm = gPad->GetBottomMargin();
-   Double_t xndc = (rm-lm)*((x-gPad->GetUxmin())/(gPad->GetUxmax()-gPad->GetUxmin()))+lm;
-   options["ndc"] = "1";
-    ioDrawTLine(xndc,bm,xndc,tm,options);
-};
+    gPad->Update();
+    double y0 { ioPadyRat(0.) };
+    double y1 { ioPadyRat(1.) };
+    ioDrawTLine(x,y0,x,y1,options);
+}
+
+   /* gPad->Update(); */
+   /* Double_t lm = gPad->GetLeftMargin(); */
+   /* Double_t rm = 1.-gPad->GetRightMargin(); */
+   /* Double_t tm = 1.-gPad->GetTopMargin(); */
+   /* Double_t bm = gPad->GetBottomMargin(); */
+   /* Double_t xndc = (rm-lm)*((x-gPad->GetUxmin())/(gPad->GetUxmax()-gPad->GetUxmin()))+lm; */
+   /* options["ndc"] = "1"; */
+   /*  ioDrawTLine(xndc,bm,xndc,tm,options); */
+/* }; */
 
 double io_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
     int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};

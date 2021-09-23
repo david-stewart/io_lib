@@ -695,13 +695,15 @@ pair<ioPtrDbl,ioPtrDbl>  io_calc_bounds    (vector<ioPtrDbl>);
 struct ioSysErrors {
     ioSysErrors();
     ioSysErrors(const ioSysErrors&);
-    ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5});
+    ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5}, array<ioPtrDbl,2>_err={});
     ioSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
     ioSysErrors& swap_xy ();
 
     ioSysErrors& setYlow(ioPtrDbl&);
     ioSysErrors& setYhigh(ioPtrDbl&);
     ioSysErrors& setYhilo(ioPtrDbl&); // set Y symmetric
+
+    /* void draw_boxes(ioOptMap dict={}); */
 
     /* ioSysErrors divide(const ioSysErrors& other); */
 

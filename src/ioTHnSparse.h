@@ -138,7 +138,7 @@ class ioTrackSparse {
     void range_TrigEt  (int i0, int i1) { range_axes(2,i0,i1); };
     void range_ZDCx    (int i0, int i1) { range_axes(3,i0,i1); };
     void range_Vz      (int i0, int i1) { range_axes(4,i0,i1); };
-    void range_track   (int i0, int i1) { range_axes(5,i0,i1); };
+    void range_trackPt (int i0, int i1) { range_axes(5,i0,i1); };
     void range_absDphi (int i0, int i1) { range_axes(6,i0,i1); };
 
     TH1D* hg_axis  (int i_axis, double norm=0., bool use_track_data=true);
