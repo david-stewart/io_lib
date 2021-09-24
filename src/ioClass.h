@@ -692,6 +692,10 @@ ioPtrDbl  io_calc_max_berr  (vector<ioPtrDbl>, ioPtrDbl);
 ioPtrDbl  io_calc_min_berr  (vector<ioPtrDbl>, ioPtrDbl);
 pair<ioPtrDbl,ioPtrDbl>  io_calc_bounds    (vector<ioPtrDbl>);
 
+// some drawing options
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl, ioOptMap opts, array<double,4> = {-1,-1});
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2>, ioOptMap opts, array<double,4> = {-1,-1});
+
 struct ioSysErrors {
     ioSysErrors();
     ioSysErrors(const ioSysErrors&);

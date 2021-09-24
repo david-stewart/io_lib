@@ -2256,6 +2256,22 @@ pair<ioPtrDbl,ioPtrDbl> io_calc_bounds(vector<ioPtrDbl> data) {
     return { io_calc_min_bound(data), io_calc_max_bound(data) };
 };
 
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl err, ioOptMap opts, array<double,4>x_set) {
+    return io_draw_error_boxes(mean, {err,err}, opts, x_set);
+};
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2> err, 
+        ioOptMap dict, array<double,4>x_set) {
+    ioSysErrors pts { mean, x_set, err };
+    auto tgase = pts.tgase;
+    io_fmt(tgase,dict);
+    /* tgase->SetFillColor(kBlue); */
+    if ( dict("FillColor") ) {
+        tgase->Draw("E2");
+    };
+    if ( dict("LineColor") ) ioDrawBoxErrors(tgase, dict);
+    return tgase;
+};
+
 
 ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase}
 {

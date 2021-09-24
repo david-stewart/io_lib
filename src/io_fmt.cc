@@ -955,6 +955,8 @@ TGraphAsymmErrors* io_fmt (TGraphAsymmErrors* hg, ioOptMap _override, ioOptMap d
     if (dict("FillColor"))
         hg->SetFillColorAlpha(dict["FillColor"], dict["FillAlpha"].val());
 
+    hg->SetFillStyle(dict["FillStyle"]);
+
     if (dict("LineWidth"))
         hg->SetLineWidth(dict["LineWidth"]);
     if (dict("LineStyle"))

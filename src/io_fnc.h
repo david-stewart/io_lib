@@ -32,6 +32,7 @@
 
 using std::pair;
 
+
 TH1D* ioDivideTH1(TH1* num, TH1* den, ioOptMap opt={}, 
       ioOptMap dict={{"norm",0,"style-den",0}});
 
@@ -304,4 +305,5 @@ TH1D* io_build_CDF(TH1D* hg, int first_bin=1, int last_bin=0, bool weight_width=
 /* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */
 /* void ioTrimSmallBins(TH1D* hg, int Nmin, bool cut_underover_flow=true); */
 
+TH1D* ioBlankTH1D();
 #endif
