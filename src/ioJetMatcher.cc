@@ -477,6 +477,10 @@ void ioJetMatcherArray::write() {
     for (auto& rep : v_response_A) cull_add_array(rep);
     for (auto& rep : v_response_B) cull_add_array(rep);
 
+    for (auto& rep : v_truth)   cull_add_array(rep);
+    for (auto& rep : v_truth_A) cull_add_array(rep);
+    for (auto& rep : v_truth_B) cull_add_array(rep);
+
     for (unsigned int i=0; i<v_response.size(); ++i) {
         write_response(v_response[i][0], v_truth[i][0],     v_names[i].c_str(), "");
         write_response(v_response_A[i][0], v_truth_A[i][0], v_names[i].c_str(), "_A");
