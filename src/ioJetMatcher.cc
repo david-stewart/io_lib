@@ -463,7 +463,7 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
     for (int i{1};i<9;++i) data[0]->Add(data[1]);
 };
 
-void write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
+void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
     truth->Add(truth_add);
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
