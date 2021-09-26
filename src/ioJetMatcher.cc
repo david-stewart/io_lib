@@ -361,7 +361,7 @@ ioJetMatcherArray::ioJetMatcherArray (
     for (int i=0;i<(int)bin_names.size();++i) {
         ioBinVec bins { bin_file, bin_tags[i].c_str() };
         TH2D form_2D {ioUniqueName(), ";Measured;Truth", bins, bins, bins, bins}; 
-        TH2D form_1D {ioUniqueName(), ";Measured;Truth", bins, bins, bins, bins}; 
+        TH1D form_1D {ioUniqueName(), ";Measured;Truth", bins, bins };
 
         v_response.push_back({});
         v_response_A.push_back({});
