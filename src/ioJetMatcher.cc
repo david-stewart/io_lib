@@ -326,15 +326,11 @@ void ioJetMatcher::write() {
 };
 
 void ioJetMatcher::addjet_MC(float eta, float phi, float pT) {
-    /* if (bounds_T(pT)) data_MC.push_back({eta,phi,pT}); */
     if (in_meas_bounds(pT)) data_MC.push_back({eta,phi,pT});
-    /* else cout << " out of bounds! " << pT << "  " << in_meas_bounds << endl; */
 };
 
 void ioJetMatcher::addjet_reco(float eta, float phi, float pT) {
-    /* if (bounds_M(pT)) data_reco.push_back({eta,phi,pT}); */
     if (in_reco_bounds(pT)) data_reco.push_back({eta,phi,pT});
-    /* else cout << " out of bounds! " << pT << "  " << in_reco_bounds << endl; */
 };
 
 // ioJetMatcherArray ::
@@ -350,9 +346,6 @@ ioJetMatcherArray::ioJetMatcherArray (
     ) :
     Xsec{_Xsec}, 
     v_names{bin_names},
-    /* response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)}, */
-    /* in_reco_bounds {bin_file,tag_M}, */
-    /* in_meas_bounds {bin_file,tag_T}, */
     hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         Xsec.nbins_pthat, -0.5, Xsec.nbins_pthat-0.5 },
     ratio_AtoB {_ratioAtoB},
@@ -453,20 +446,26 @@ void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data) {
         io_cullsmallbins(data[i],10.);
         data[i]->Scale(Xsec.Xsec(i));
     }
-    for (int i{1};i<9;++i) data[0]->Add(data[1]);
+    for (int i{1};i<9;++i) {
+        data[0]->Add(data[i]);
+    }
 };
 void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
     for (int i{0};i<9;++i) {
         io_cullsmallbins(data[i],10.);
         data[i]->Scale(Xsec.Xsec(i));
     }
-    for (int i{1};i<9;++i) data[0]->Add(data[1]);
+    for (int i{1};i<9;++i) {
+        data[0]->Add(data[i]);
+    }
 };
 
 void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
     truth->Add(truth_add);
+    truth->SetName(Form("Truth_%s%s",name,posttag);
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
+    meas->SetName(Form("Measured_%s%s",name,posttag);
     RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s%s", name, posttag));
     ruu->Write();
 };
