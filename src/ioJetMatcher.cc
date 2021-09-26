@@ -463,9 +463,9 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
 void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
     truth->Add(truth_add);
-    truth->SetName(Form("Truth_%s%s",name,posttag);
+    truth->SetName(Form("Truth_%s%s",name,posttag));
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
-    meas->SetName(Form("Measured_%s%s",name,posttag);
+    meas->SetName(Form("Measured_%s%s",name,posttag));
     RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s%s", name, posttag));
     ruu->Write();
 };
