@@ -337,3 +337,114 @@ void ioJetMatcher::addjet_reco(float eta, float phi, float pT) {
     /* else cout << " out of bounds! " << pT << "  " << in_reco_bounds << endl; */
 };
 
+// ioJetMatcherArray ::
+ioJetMatcherArray::ioJetMatcherArray (
+       const char* _name,
+       ioXsec& _Xsec, 
+       const char* bin_file, 
+        vector<string> bin_names,
+        vector<string> bin_tags,
+        const char* pthb_Mlimit_file,
+        double _ratioAtoB,
+        bool _debug
+    ) :
+    Xsec{_Xsec}, 
+    /* response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)}, */
+    /* in_reco_bounds {bin_file,tag_M}, */
+    /* in_meas_bounds {bin_file,tag_T}, */
+    hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+        Xsec.nbins_pthat, -0.5, Xsec.nbins_pthat-0.5 },
+    ratio_AtoB {_ratioAtoB},
+    debug{_debug}
+{
+    for (int i=0;i<(int)bin_names.size();++i) {
+        v_response.push_back( ioMakeRooUnfoldResponse(bin_names[i].c_str(),bin_file,
+                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
+        v_response_A.push_back( ioMakeRooUnfoldResponse(Form("%s_A",bin_names[i].c_str()),bin_file,
+                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
+        v_response_B.push_back( ioMakeRooUnfoldResponse(Form("%s_B",bin_names[i].c_str()),bin_file,
+                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
+    }
+
+    jet_R2 = 0.16;
+    ioBinVec pthatbins { Xsec.pthatbins };
+    auto pt_true = ioReadValVec("pthb_Mlimit_file","pt_jet_bin_upbound");
+    for (int ibin{0}; ibin<Xsec.nbins_pthat; ++ibin) {
+        vector<double> pt_meas_limit;
+        auto JES = ioReadValVec(pthb_Mlimit_file,Form("JES__%i",ibin));
+        auto JER = ioReadValVec(pthb_Mlimit_file,Form("JER__%i",ibin));
+        for (unsigned int i{0}; i<JES.size(); ++i) {
+            pt_meas_limit.push_back(pt_true[i]+JES[i]+5.*JER[i]+8.);
+        }
+        pthb_Mlimit[ibin] = {pt_true,pt_meas_limit};
+    }
+}
+
+bool ioJetMatcherArray::do_matching(int pthatbin, double weight) {
+    double W { Xsec.Xsec(pthatbin) };
+    if (weight) W *= weight;
+    /* vector<double> fakes; */ // Using fakes is incorrect here.
+                                // leftover reconstructed jets are actual jets from 
+                                // the embedded event
+    vector<double> misses;
+    vector<pair<double,double>> matches;
+    vector<double> v_delta_R2;
+    ioXYbounder& Mlimits { pthb_Mlimit[pthatbin] };
+    for (auto& MC : data_MC) {
+        bool found_match {false};
+        for (auto& reco : data_reco) {
+            if (reco.is_matched) continue;
+            double delta_R2 { MC(reco,jet_R2) };
+            if (delta_R2 != 0) {
+                if (Mlimits(MC.pT,reco.pT)) continue;
+                found_match = true;
+                reco.is_matched = true;
+                matches.push_back({reco.pT, MC.pT});
+                break;
+            }
+        }
+        if (!found_match) { misses.push_back(MC.pT); }
+    }
+
+    // now that is it not an outlier event, fill the data
+    hg_pthb_cnt.Fill((double)pthatbin);
+    double pthat_val { (0.5)*(Xsec.pthatbins[pthatbin]+
+                       Xsec.pthatbins[pthatbin+1]) };
+    bool fillA = _rand.Uniform() < ratio_AtoB;
+
+    for (auto& match : matches) {
+        for (auto& rep : v_response) rep.Fill(match.first,match.second,W); 
+        if (fillA)
+            for (auto& rep : v_response_A) rep.Fill(match.first,match.second,W); 
+        else
+            for (auto& rep : v_response_B) rep.Fill(match.first,match.second,W); 
+    }
+    for (auto& miss : misses) {
+        for (auto& rep : v_response) rep.Miss(miss,W); 
+        if (fillA)
+            for (auto& rep : v_response_A) rep.Miss(miss,W); 
+        else
+            for (auto& rep : v_response_B) rep.Miss(miss,W); 
+    }
+    data_MC.clear();
+    data_reco.clear();
+    return false;
+};
+
+void ioJetMatcherArray::write() {
+    /* R2_distr_matches->Write(); */
+    for (auto& rep : v_response) rep.Write();
+    for (auto& rep : v_response_A) rep.Write();
+    for (auto& rep : v_response_B) rep.Write();
+
+    hg_pthb_cnt.Write();
+};
+
+void ioJetMatcherArray::addjet_MC(float eta, float phi, float pT) {
+    data_MC.push_back({eta,phi,pT});
+};
+
+void ioJetMatcherArray::addjet_reco(float eta, float phi, float pT) {
+    data_reco.push_back({eta,phi,pT});
+};
+

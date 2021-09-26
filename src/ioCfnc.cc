@@ -97,3 +97,32 @@ RooUnfoldResponse ioMakeRooUnfoldResponse(
             bin_M, bin_M};
     return {&measured, &truth, Form("%s_RUR",name), "RooUnfoldResponse"};
 };
+
+TH1D* ioBlankTH1D(ioBinVec bins, ioOptMap dict, bool draw_vert_lines) {
+    TH1D* hg = new TH1D(ioUniqueName(), ";;", bins, bins);
+    hg->SetMarkerStyle(kDot);
+    hg->SetMarkerColorAlpha(kWhite,0.);
+    hg->SetLineColorAlpha(kWhite,0.);
+    hg->SetTitle("");
+    if (dict.dict.size()>0) {
+        io_fmt(hg,dict);
+        hg->Draw();
+    }
+    if (draw_vert_lines) {
+        double y_lo = (dict("yAxisRangeLo")) ? dict["yAxisRangeLo"]() : 0.;
+        double y_hi = (dict("yAxisRangeHi")) ? dict["yAxisRangeHi"]() : 1.;
+        cout << "ylo " << y_lo << " y_hi " << y_hi << endl;
+        for (int i=1; i<bins.size-1; ++i) {
+            int line_width = dict("LineWidth",1);
+            int line_style = dict("LineStyle",2);
+            float alpha = (dict("LineColorAlpha")) ? dict["LineColorAlpha"].val() : 0.85;
+            int line_color = dict("LineColor",kGray);
+            ioDrawTLine( bins[i], y_lo, bins[i], y_hi, 
+                    {{"LineWidth", line_width,
+                      "LineStyle", line_style,
+                      "LineColorAlpha", alpha,
+                      "LineColor", line_color}} );
+        };
+    };
+    return hg;
+};

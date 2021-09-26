@@ -136,6 +136,7 @@ void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false);
 
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
 TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold=3);
+RooUnfoldResponse* rebinRooUnfoldResponse(TH1D* hg_bins, RooUnfoldResponse* response);
 
 TLegend* ioNewTLegend();
 
@@ -305,5 +306,4 @@ TH1D* io_build_CDF(TH1D* hg, int first_bin=1, int last_bin=0, bool weight_width=
 /* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */
 /* void ioTrimSmallBins(TH1D* hg, int Nmin, bool cut_underover_flow=true); */
 
-TH1D* ioBlankTH1D();
 #endif

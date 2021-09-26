@@ -8,12 +8,6 @@
 #include <iostream>
 #include <fstream>
 
-TH1D* ioBlankTH1D() {
-    TH1D* hg { new TH1D(ioUniqueName(),";;",1,0.,1.) };
-    hg->SetLineColorAlpha(kWhite,0.);
-    hg->SetMarkerColorAlpha(kWhite,0.);
-    return hg;
-};
 
 const char* ioUniqueName(int i) {
     while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;

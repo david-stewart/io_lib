@@ -2,6 +2,7 @@
 #define ioCfnc__h
 
 // This file is for io_fnc that require ioClasses, too
+#include "ioOptMap.h"
 #include "ioClass.h"
 #include "io_fnc.h"
 std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
@@ -27,5 +28,8 @@ std::tuple<ioPads, TH2D*, TH1D*, TH1D*, TH1D*> ioMakeClosure(
 
 RooUnfoldResponse ioMakeRooUnfoldResponse(
         const char* name, const char* file, const char* tag_M, const char* tag_T );
+
+TH1D* ioBlankTH1D(ioBinVec bins={{0.,1.}}, ioOptMap options={}, bool draw_vert_lines=false);
+
 
 #endif
