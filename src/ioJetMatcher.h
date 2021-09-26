@@ -126,10 +126,23 @@ struct ioJetMatcherArray {
     // like above, but uses it's own ioXsec
     public:
     string name;
+    vector<string> v_names;
     ioXsec& Xsec;
-    vector<RooUnfoldResponse> v_response; // 
-    vector<RooUnfoldResponse> v_response_A; // 
-    vector<RooUnfoldResponse> v_response_B; // 
+    void cull_add_array(array<TH2D*,9>&);
+    void cull_add_array(array<TH1D*,9>&);
+    void write_response(TH2D* match, TH1D* miss, const char* name, const char* tag);
+    vector<array<TH2D*,9>> v_response;
+    vector<array<TH1D*,9>> v_truth;
+
+    vector<array<TH2D*,9>> v_response_A;
+    vector<array<TH1D*,9>> v_truth_A;
+
+    vector<array<TH2D*,9>> v_response_B;
+    vector<array<TH1D*,9>> v_truth_B;
+
+    /* vector<RooUnfoldResponse> v_response; // */ 
+    /* vector<RooUnfoldResponse> v_response_A; // */ 
+    /* vector<RooUnfoldResponse> v_response_B; // */ 
     TRandom3 _rand;
 
     TH1D       hg_pthb_cnt;

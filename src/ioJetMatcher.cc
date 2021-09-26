@@ -349,6 +349,7 @@ ioJetMatcherArray::ioJetMatcherArray (
         bool _debug
     ) :
     Xsec{_Xsec}, 
+    v_names{bin_names},
     /* response{ioMakeRooUnfoldResponse(_name,bin_file,tag_M,tag_T)}, */
     /* in_reco_bounds {bin_file,tag_M}, */
     /* in_meas_bounds {bin_file,tag_T}, */
@@ -358,12 +359,27 @@ ioJetMatcherArray::ioJetMatcherArray (
     debug{_debug}
 {
     for (int i=0;i<(int)bin_names.size();++i) {
-        v_response.push_back( ioMakeRooUnfoldResponse(bin_names[i].c_str(),bin_file,
-                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
-        v_response_A.push_back( ioMakeRooUnfoldResponse(Form("%s_A",bin_names[i].c_str()),bin_file,
-                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
-        v_response_B.push_back( ioMakeRooUnfoldResponse(Form("%s_B",bin_names[i].c_str()),bin_file,
-                    bin_tags[i].c_str(), bin_tags[i].c_str()) );
+        ioBinVec bins { bin_file, bin_tags[i].c_str() };
+        TH2D form_2D {ioUniqueName(), ";Measured;Truth", bins, bins, bins, bins}; 
+        TH2D form_1D {ioUniqueName(), ";Measured;Truth", bins, bins, bins, bins}; 
+
+        v_response.push_back({});
+        v_response_A.push_back({});
+        v_response_B.push_back({});
+
+        v_truth.push_back({});
+        v_truth_A.push_back({});
+        v_truth_B.push_back({});
+
+        for (int k{0}; k<9; ++k) {
+            v_response[i][k] = (TH2D*) form_2D.Clone(ioUniqueName());
+            v_response_A[i][k] = (TH2D*) form_2D.Clone(ioUniqueName());
+            v_response_B[i][k] = (TH2D*) form_2D.Clone(ioUniqueName());
+
+            v_truth[i][k] = (TH1D*) form_1D.Clone(ioUniqueName());
+            v_truth_A[i][k] = (TH1D*) form_1D.Clone(ioUniqueName());
+            v_truth_B[i][k] = (TH1D*) form_1D.Clone(ioUniqueName());
+        }
     }
 
     jet_R2 = 0.16;
@@ -411,32 +427,61 @@ bool ioJetMatcherArray::do_matching(int pthatbin, double weight) {
     double pthat_val { (0.5)*(Xsec.pthatbins[pthatbin]+
                        Xsec.pthatbins[pthatbin+1]) };
     bool fillA = _rand.Uniform() < ratio_AtoB;
+    int k = pthatbin;
 
     for (auto& match : matches) {
-        for (auto& rep : v_response) rep.Fill(match.first,match.second,W); 
+        for (auto& rep : v_response) rep[k]->Fill(match.first,match.second); 
         if (fillA)
-            for (auto& rep : v_response_A) rep.Fill(match.first,match.second,W); 
+            for (auto& rep : v_response_A) rep[k]->Fill(match.first,match.second); 
         else
-            for (auto& rep : v_response_B) rep.Fill(match.first,match.second,W); 
+            for (auto& rep : v_response_B) rep[k]->Fill(match.first,match.second); 
     }
     for (auto& miss : misses) {
-        for (auto& rep : v_response) rep.Miss(miss,W); 
+        for (auto& rep : v_truth) rep[k]->Fill(miss); 
         if (fillA)
-            for (auto& rep : v_response_A) rep.Miss(miss,W); 
+            for (auto& rep : v_truth_A) rep[k]->Fill(miss); 
         else
-            for (auto& rep : v_response_B) rep.Miss(miss,W); 
+            for (auto& rep : v_truth_B) rep[k]->Fill(miss); 
     }
     data_MC.clear();
     data_reco.clear();
     return false;
 };
 
-void ioJetMatcherArray::write() {
-    /* R2_distr_matches->Write(); */
-    for (auto& rep : v_response) rep.Write();
-    for (auto& rep : v_response_A) rep.Write();
-    for (auto& rep : v_response_B) rep.Write();
+void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data) {
+    for (int i{0};i<9;++i) {
+        io_cullsmallbins(data[i],10.);
+        data[i]->Scale(Xsec.Xsec(i));
+    }
+    for (int i{1};i<9;++i) data[0]->Add(data[1]);
+};
+void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
+    for (int i{0};i<9;++i) {
+        io_cullsmallbins(data[i],10.);
+        data[i]->Scale(Xsec.Xsec(i));
+    }
+    for (int i{1};i<9;++i) data[0]->Add(data[1]);
+};
 
+void write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
+    TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
+    truth->Add(truth_add);
+    TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
+    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s%s", name, posttag));
+    ruu->Write();
+};
+
+void ioJetMatcherArray::write() {
+    // cull data with bins < 10 entries
+    for (auto& rep : v_response)   cull_add_array(rep);
+    for (auto& rep : v_response_A) cull_add_array(rep);
+    for (auto& rep : v_response_B) cull_add_array(rep);
+
+    for (unsigned int i=0; i<v_response.size(); ++i) {
+        write_response(v_response[i][0], v_truth[i][0],     v_names[i].c_str(), "");
+        write_response(v_response_A[i][0], v_truth_A[i][0], v_names[i].c_str(), "_A");
+        write_response(v_response_B[i][0], v_truth_B[i][0], v_names[i].c_str(), "_B");
+    }
     hg_pthb_cnt.Write();
 };
 

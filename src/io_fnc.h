@@ -287,7 +287,7 @@ IOS_keepcut_stats io_keepcutbin(TH1*, int ibin, double minval,
         double zero_val=0., double zero_err=0.);
 
 IOS_keepcut_stats io_cullsmallbins(TH1*, double min_val, IO area=IO::in, 
-                                   bool remove_underoverflow=true, double sigma_hi_cut=0.);
+                                   bool remove_underoverflow=true);
 vector<int> io_binvec(TH1* _h, IO=IO::in);
 
 // set the bin to the new value, return the sum of change of values
