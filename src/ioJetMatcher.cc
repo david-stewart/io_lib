@@ -384,7 +384,7 @@ ioJetMatcherArray::ioJetMatcherArray (
 
     jet_R2 = 0.16;
     ioBinVec pthatbins { Xsec.pthatbins };
-    auto pt_true = ioReadValVec("pthb_Mlimit_file","pt_jet_bin_upbound");
+    auto pt_true = ioReadValVec(pthb_Mlimit_file,"pt_jet_bin_upbound");
     for (int ibin{0}; ibin<Xsec.nbins_pthat; ++ibin) {
         vector<double> pt_meas_limit;
         auto JES = ioReadValVec(pthb_Mlimit_file,Form("JES__%i",ibin));
