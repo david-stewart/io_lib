@@ -468,7 +468,7 @@ void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, 
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
     meas->SetName(Form("%s_Measured_%s%s",name,which,posttag));
     h2->SetName(Form("%s_Matched_%s%s",name,which,posttag));
-    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s%s", name, posttag));
+    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s_%s%s", name, which, posttag));
     ruu->Write();
 };
 
