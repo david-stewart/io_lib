@@ -344,6 +344,7 @@ ioJetMatcherArray::ioJetMatcherArray (
         double _ratioAtoB,
         bool _debug
     ) :
+    name{_name},
     Xsec{_Xsec}, 
     v_names{bin_names},
     hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
@@ -460,13 +461,13 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
     }
 };
 
-void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* posttag) {
+void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* which, const char* posttag) {
     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
     truth->Add(truth_add);
-    truth->SetName(Form("Truth_%s%s",name,posttag));
+    truth->SetName(Form("%s_Truth_%s%s",name,which,posttag));
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
-    meas->SetName(Form("Measured_%s%s",name,posttag));
-    h2->SetName(Form("Matched_%s%s",name,posttag));
+    meas->SetName(Form("%s_Measured_%s%s",name,which,posttag));
+    h2->SetName(Form("%s_Matched_%s%s",name,which,posttag));
     RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s%s", name, posttag));
     ruu->Write();
 };
@@ -482,9 +483,9 @@ void ioJetMatcherArray::write() {
     for (auto& rep : v_truth_B) cull_add_array(rep);
 
     for (unsigned int i=0; i<v_response.size(); ++i) {
-        write_response(v_response[i][0], v_truth[i][0],     v_names[i].c_str(), "");
-        write_response(v_response_A[i][0], v_truth_A[i][0], v_names[i].c_str(), "_A");
-        write_response(v_response_B[i][0], v_truth_B[i][0], v_names[i].c_str(), "_B");
+        write_response(v_response[i][0], v_truth[i][0],     name.c_str(),v_names[i].c_str(), "");
+        write_response(v_response_A[i][0], v_truth_A[i][0], name.c_str(),v_names[i].c_str(), "_A");
+        write_response(v_response_B[i][0], v_truth_B[i][0], name.c_str(),v_names[i].c_str(), "_B");
     }
     hg_pthb_cnt.Write();
 };

@@ -12,6 +12,7 @@ class ioJetSpectraSparse {
     double n_triggers{-1};
 
     public:
+    bool scaleByBinWidth=true;
     double weight;
     double hopper[7];
     ioBinVec* bins {nullptr};
@@ -65,6 +66,7 @@ class ioAjSparse {
     double dphi_min{0};
 
     public:
+    bool scaleByBinWidth=true;
     ioBinVec* bins {nullptr};
     ioAjSparse(const char* bin_file, const char* tag="", double _recoil_match=0.4);
     ioAjSparse(THnSparseD* _data);
@@ -114,6 +116,7 @@ class ioTrackSparse {
     double n_triggers{-1};
 
     public:
+    bool scaleByBinWidth=true;
     double weight{1.};
     double hopper[7];
     ioBinVec* bins {nullptr};

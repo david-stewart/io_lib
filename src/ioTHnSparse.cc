@@ -87,7 +87,7 @@ TH1D* ioJetSpectraSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
     if (bins != nullptr) {
         hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
         delete _hg;
-        io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) io_scaleByBinWidth(hg);
     } else {
         hg = _hg;
         hg->SetName(ioUniqueName());
@@ -206,7 +206,7 @@ TH1D* ioAjSparse::hg_axis (int i_axis, double norm){
     if (bins != nullptr) {
         hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
         delete _hg;
-        io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) io_scaleByBinWidth(hg);
     } else {
         hg = _hg;
         hg->SetName(ioUniqueName());
@@ -305,7 +305,7 @@ TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_track_data){
     if (bins != nullptr) {
         hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
         delete _hg;
-        io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) io_scaleByBinWidth(hg);
     } else {
         hg = _hg;
         hg->SetName(ioUniqueName());
