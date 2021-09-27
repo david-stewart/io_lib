@@ -12,6 +12,7 @@ class ioJetSpectraSparse {
     double n_triggers{-1};
 
     public:
+    double weight;
     double hopper[7];
     ioBinVec* bins {nullptr};
     ioJetSpectraSparse(const char* bin_file, const char* tag="");
@@ -59,6 +60,7 @@ class ioJetSpectraSparse {
 class ioAjSparse {
     private:
     int nbins[8];
+    double weight;
     double hopper[8];
     double dphi_min{0};
 
@@ -112,6 +114,7 @@ class ioTrackSparse {
     double n_triggers{-1};
 
     public:
+    double weight{1.};
     double hopper[7];
     ioBinVec* bins {nullptr};
     ioTrackSparse(const char* bin_file, const char* tag="");

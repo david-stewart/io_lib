@@ -1520,12 +1520,30 @@ TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverf
     return hg_to;
 };
 
-TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, bool width_weight) {
+TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
+    // build the bins 
+    //
+    TAxis* ax_in = _in->GetXaxis();
+    vector<double> bins_edge;
+    if (last_bin==0) last_bin = ax_in->GetNbins();
+    for (int i=first_bin; i<=last_bin; ++i) bins_edge.push_back(ax_in->GetBinLowEdge(i));
+    bins_edge.push_back(ax_in->GetBinUpEdge(last_bin));
+    ioBinVec bins { bins_edge} ;
+    /* cout << " bins: " << bins << endl; */
+    TH1D* hg_cdf = new TH1D(ioUniqueName(), Form("%s;%s;%s",
+                _in->GetTitle(), _in->GetXaxis()->GetTitle(), _in->GetYaxis()->GetTitle()),
+            bins, bins );
+    
+    hg_cdf->SetMarkerStyle(_in->GetMarkerStyle());
+    hg_cdf->SetMarkerColorAlpha(_in->GetMarkerColor(),alpha);
+    hg_cdf->SetMarkerSize(_in->GetMarkerSize());
+    hg_cdf->SetLineColorAlpha(_in->GetLineColor(),alpha);
+
     // warning: this only does 
-    TH1D* hg_cdf = (TH1D*) _in->Clone(ioUniqueName()); 
-    hg_cdf->Reset();
+    /* TH1D* hg_cdf = (TH1D*) _in->Clone(ioUniqueName()); */ 
+    /* hg_cdf->Reset(); */
     TAxis* ax = hg_cdf->GetXaxis();
-    if (last_bin==0) last_bin = ax->GetNbins();
+    /* if (last_bin==0) last_bin = ax->GetNbins(); */
 
     double sum_all {0};
     double err_sq_all {0};
@@ -1538,16 +1556,38 @@ TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, bool width_weight) {
 
     double sum_cdf {0};
     double err_cdf_sq {0};
+    int i_to = 1;
     for (int i{first_bin}; i<=last_bin; ++i) {
         double width { ax->GetBinWidth(i) };
         sum_cdf += _in->GetBinContent(i) * width;
         err_cdf_sq += TMath::Sq(_in->GetBinError(i)*width);
-        double bin_err = sum_cdf/sum_all * TMath::Sqrt( 
-                err_cdf_sq / TMath::Sq(sum_cdf) 
-              + rel_err_all_sq 
-              - 2*err_cdf_sq/sum_cdf/sum_all);
-        hg_cdf->SetBinContent(i,sum_cdf/sum_all);
-        hg_cdf->SetBinError(i, bin_err);
+
+        double in_val = err_cdf_sq / TMath::Sq(sum_cdf) + rel_err_all_sq - 2*err_cdf_sq/sum_cdf/sum_all;
+        /* if (in_val<0) */ 
+
+        double bin_err = (in_val<0) ? 0. : sum_cdf/sum_all * TMath::Sqrt(in_val);
+                /* err_cdf_sq / TMath::Sq(sum_cdf) */ 
+              /* + rel_err_all_sq */ 
+              /* - 2*err_cdf_sq/sum_cdf/sum_all); */
+        /* if (in_val < 0) cout << " FOUND IT: " << in_val << "  " << bin_err << endl; */
+        hg_cdf->SetBinContent(i_to,sum_cdf/sum_all);
+        hg_cdf->SetBinError(i_to, bin_err);
+        ++i_to;
     }
     return hg_cdf;
 };
+
+void io_print(TH1D* hg, const char* tag) {
+    cout << "  " << tag << endl;
+    cout << " Printing histogram: " << hg->GetName() 
+         << "  xTitle " << hg->GetXaxis()->GetTitle()
+         << "  yTitle " << hg->GetYaxis()->GetTitle() << endl;
+    int nbins = hg->GetXaxis()->GetNbins();
+    for (int i=1; i<=nbins; ++i) {
+        /* cout << i << endl; */
+        cout << Form(" bin (%2i)  content(%10.5g)  error(%10.5g)",
+                i, hg->GetBinContent(i), hg->GetBinError(i)) << endl;
+    }
+    cout << " end printing histogram" << endl;
+};
+                                            

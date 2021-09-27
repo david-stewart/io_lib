@@ -63,12 +63,12 @@ void ioJetSpectraSparse::fill_trig(
     hopper[2] = TrigEt;
     hopper[3] = ZDCx;
     hopper[4] = Vz;
-    data_trig->Fill(hopper);
+    data_trig->Fill(hopper,weight);
 };
 void ioJetSpectraSparse::fill_jetpt_absDphi(double jetpt, double absDphi) {
     hopper[5] = jetpt;
     hopper[6] = absDphi;
-    data_jet->Fill(hopper);
+    data_jet->Fill(hopper,weight);
 };
 void ioJetSpectraSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 6) throw std::runtime_error(
@@ -173,7 +173,7 @@ void ioAjSparse::fill(
     hopper[5] = leadPt;
     hopper[6] = matchPt;
     hopper[7] = (leadPt - matchPt)/(leadPt+matchPt);
-    data->Fill(hopper);
+    data->Fill(hopper,weight);
 };
 void ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
     if (jets.size() < 2) return;
@@ -186,7 +186,7 @@ void ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
             hopper[5] = jets[0].perp();
             hopper[6] = jet.perp();
             hopper[7] = (hopper[5]-hopper[6])/(hopper[5]+hopper[6]);
-            data->Fill(hopper);
+            data->Fill(hopper,weight);
             break;
         }
     }
@@ -281,12 +281,12 @@ void ioTrackSparse::fill_trig(
     hopper[2] = TrigEt;
     hopper[3] = ZDCx;
     hopper[4] = Vz;
-    data_trig->Fill(hopper);
+    data_trig->Fill(hopper,weight);
 };
 void ioTrackSparse::fill_trackpt_absDphi(double trackpt, double absDphi) {
     hopper[5] = trackpt;
     hopper[6] = absDphi;
-    data_track->Fill(hopper);
+    data_track->Fill(hopper,weight);
 };
 void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 6) throw std::runtime_error(

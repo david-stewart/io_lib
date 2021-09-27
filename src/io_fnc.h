@@ -298,7 +298,9 @@ TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_from,
         bool set_bin_errors=false,
         bool rm_under_overflow=true); // returs the hg_to
 
-TH1D* io_build_CDF(TH1D* hg, int first_bin=1, int last_bin=0, bool weight_width=true);
+TH1D* io_build_CDF(TH1D* hg, int first_bin=1, int last_bin=0, double alpha=1.);
+
+void io_print(TH1D*, const char* tag="");
 // Add content of hg_from to bins in hg_to
 //
 

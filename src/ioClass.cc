@@ -276,15 +276,9 @@ bool ioPadDim::operator==(ioPadDim& B) const {
         && up    == B.up;
 };
 
-/* ioPadDimSet::ioPadDimSet( int _nPads, // negative to flip direction */
-    /* vector<double> _lefts, vector<double> _rights ) : */
-        /* nPads{_nPads}, lefts{_lefts}, rights{_rights} */ 
-/* {}; */
 ioPadDimSet::ioPadDimSet(vector<double> _lefts, vector<double> _rights ) :
           rights{_rights} 
 {
-    /* cout << " a0 " << endl; */
-    /* for (auto v : _lefts) cout << " " << v; cout << endl; */
     if (_lefts.size() == 0) nPads = 1;
     else if (_lefts[0] >= 1.) {
         nPads = (int) _lefts[0];
@@ -306,9 +300,6 @@ ioPadDim ioPadDimSet::make_pad(double left,
 };
 
 vector<ioPadDim> ioPadDimSet::calc_pads() {
-    /* cout << "nPads: " << nPads << endl; */
-    /* cout << " left: ";  for (auto v : lefts )  cout << " " << v; cout << endl; */
-    /* cout << " left: ";  for (auto v : rights ) cout << " " << v; cout << endl; */
     int npads = nPads;
     bool flip_direction = false;
     if (npads < 0) { 
@@ -350,53 +341,8 @@ vector<ioPadDim> ioPadDimSet::calc_pads() {
         left = pads[index].up;
     }
     pads[flip_direction ? 0 : npads-1] = make_pad(left, inner_left, pad_width, last_right);
-    /* for (auto& p : pads) p.print(); */
     return pads;
 };
-
-/* ioPadDimSet::operator vector<ioPadDim> () { return calc_pads(); }; */
-
-/* vector<ioPadDim> ioPadDimSet( */
-/*         int nPads, */ 
-/*         double leftM,  // first left margin */
-/*         bool b_reverse, // swap the ordering (for y it's nice to go from top to bottom) */
-/*         double rightM, // last right margin */
-/*         double left_margin, // how far in on the canvas pad */
-/*         double right_margin, // how far in on the canvas pad */
-/*         double left_in, // inner left margins */
-/*         double right_in // inner right margins */
-/*         ){ */
-/*     vector<ioPadDim> vec; */
-/*     double space = {(1.-(left_in+right_in)*(nPads-1) */
-/*             -left_margin-right_margin-leftM-rightM)/nPads}; */
-/*     /1* double space = {(1.-(left_in+right_in)*(nPads-1) *1/ */
-/*     /1* -left_margin-right_margin-left_in-right_in)/nPads}; *1/ */
-/*     if (space<=0) throw std::runtime_error( */
-/*             "fatal in ioPadDimSet: margins have consumed more than 100% of TCanvas"); */
-
-/*     if (nPads == 1) { */
-/*         vec.push_back( { */
-/*                 left_margin, */ 
-/*                 left_margin+leftM, */ 
-/*                 left_margin+leftM+space, */ 
-/*                 left_margin+leftM+space+right_margin}); */
-/*         return vec; */
-/*     } */
-/*     vec.push_back( { */
-/*             left_margin, */ 
-/*             left_margin+leftM, */ 
-/*             left_margin+leftM+space, */ 
-/*             left_margin+leftM+space+right_in}); */
-/*     double left = left_margin+leftM+space+right_in; */
-/*     for (int i{1}; i<nPads-1; ++i) { */
-/*         vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_in} ); */
-/*         left=left+left_in+space+right_in; */
-/*     } */
-/*     vec.push_back( {left,left+left_in,left+left_in+space,left+left_in+space+right_margin} ); */
-
-/*     if (b_reverse) reverse(vec.begin(), vec.end()); */
-/*     return vec; */
-/* }; */
 
 ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
         _canvas_width, int _canvas_height) :
@@ -404,24 +350,7 @@ ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int
 {
     if (_canvas_width)  canvas_width  = _canvas_width;
     if (_canvas_height) canvas_height = _canvas_height;
-    /* init(); */
 };
-/* ioPads::ioPads( vector<ioPadDim> _pad_dim, int c_wide, int c_height) { */
-/*     if (_pad_dim.size() % 2 != 0) { */
-/*         cout << "Error in constructor ioPads(vector<ioPadDim>...) :" << endl; */
-/*         cout << "   vector<ioPadDim> does *not* have even number of elements" << endl; */
-/*         throw std::runtime_error(" fatal: Odd number of constructor elements."); */
-/*     } */
-/*     int i{0}; */
-/*     while (i< (int)_pad_dim.size()-2) { */
-/*         pad_dimensions.push_back({_pad_dim[i],_pad_dim[i+1]}); */
-/*         i -= 2; */
-/*     }; */
-/*     if (c_wide) canvas_width = c_wide; */
-/*     if (c_height) canvas_height = c_height; */
-/*     /1* init(); *1/ */
-/* }; */
-/* ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) { */
 ioPads::ioPads ( int nYpads, int nXpads, int c_wide, int c_height, 
             ioPadDimSet Ypads, ioPadDimSet Xpads) {
 
@@ -431,8 +360,6 @@ ioPads::ioPads ( int nYpads, int nXpads, int c_wide, int c_height,
     Ypads.nPads = nYpads;
     Xpads.nPads = nXpads;
 
-    /* vector<ioPadDim> y_dim{}; */
-    /* vector<ioPadDim> x_dim{}; */
     nCol = TMath::Abs(nXpads);
     nRow = TMath::Abs(nYpads);
     
@@ -461,12 +388,10 @@ ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int 
         for (auto& y : y_dim)
             pad_dimensions.push_back({y,x});
 
-    /* cout << " Setting nRow: " << x_dim.size() << endl; */
     nCol = x_dim.size();
     nRow = y_dim.size();
     if (c_wide)   canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
-    /* init(); */
 };
 void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) {
     dict += options;
@@ -474,21 +399,7 @@ void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) {
     /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
     ioDrawTLatex(msg,dict["x-loc"](), dict["y-loc"](), dict);
 };
-/* ioPads::ioPads(int nPads, int c_wide, int c_high){ */
-/*     if (nPads==2) { */
-/*         pad_dimensions.push_back( {{0.55,0.55,0.95,0.99},{0.,0.15,0.9,0.99}} ); */
-/*         pad_dimensions.push_back( {{0.00,0.15,0.55     },{0.,0.15,0.9,0.99}} ); */
-/*         canvas_width  = 800; */
-/*         canvas_height = 800; */
-/*     } else if (nPads ==1) { */
-/*         pad_dimensions.push_back( {{0.00,0.15,0.95,0.99},{0.,0.17,0.9,0.99}} ); */
-/*         canvas_width  = 800; */
-/*         canvas_height = 800; */
-/*     } else { */
-/*         throw std::runtime_error(" fatal: Called ioPads(int nPads...) with nPads > 2"); */
-/*     } */
-/*     /1* init(); *1/ */
-/* }; */
+
 TPad* ioPads::operator()(int row, int col) {
     if (pads.size() == 0) init();
     if (row < 0) {
@@ -496,51 +407,17 @@ TPad* ioPads::operator()(int row, int col) {
         col = row % nCol;
         row = row / nCol;
     }
-    /* if (TMath::Abs(row)+TMath::Abs(col)*nRow >= (int)pads.size()) { */
-
-    /* } */
     int i_pad = row+col*nRow;
     if (i_pad >= (int)pads.size()) {
-        /* cout << " looping " << endl; */
         i_pad = i_pad % (int) pads.size();
-        /* i_pad = row+col*nRow; */
-        /* cout << " warning! asking for pad " << i_pad << " in vector of " << pads.size() << "!" << endl; */
-        /* cout << "   returning pad[0] instead" << endl; */
-        /* i_pad = 0; */
     }
     pads[i_pad]->cd();
     return pads[i_pad];
 };
-/* vector<pair<ioPadDim,ioPadDim>> ioPadDimGrid( vector<ioPadDim> x_coord, */
-/*         vector<ioPadDim> y_coord, bool by_rows) { */
-/*     // make a grid of inputs (pairs of  ioPadDim) from x_coord[x0, x1, ... xn] and y_coord[y0, y1, ... yn] to */
-/*     // <x0,y0>, <x1,y0> ... <xn,y0> */
-/*     // <x0,y1>, <x1,y1> ... <xn,y1> */
-/*     //       ... */
-/*     // <x0,yn>, <x1,yn> ... <xn,yn> */
-/*     vector<pair<ioPadDim, ioPadDim>> vec_fourPoint{}; */
-/*     if (by_rows) { */ 
-/*         // go across by rows and then down by columns */
-/*         for (const auto& y : y_coord) { */
-/*             for (const auto& x : x_coord) { */
-/*                 vec_fourPoint.push_back({x,y}); */
-/*             } */
-/*         } */
-/*     } else { */
-/*         // go down first column, then next, etc... */
-/*         for (const auto& x : x_coord) { */
-/*             for (const auto& y : y_coord) { */
-/*                 vec_fourPoint.push_back({x,y}); */
-/*             } */
-/*         } */
-/*     } */
-/*     return vec_fourPoint; */
-/* }; */
 
 void ioPads::init() {
     // make and stylize the TCanvas and pads currently in the list
-
-    const char* t_name = Form("canv_%s",ioUniqueName(101));
+    const char* t_name = Form("canv_%s",ioUniqueName());
     canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
     io_fmt(canvas);
     canvas->Draw();
@@ -560,7 +437,7 @@ void ioPads::add_pad(pair<ioPadDim,ioPadDim>& coord){
     canvas->cd();
 
     if (pads.size()==0) {
-        canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.);
+        canvas_pad = new TPad(ioUniqueName(),"",0.,0.,1.,1.);
         io_fmt(canvas_pad);
         canvas_pad->Draw();
         canvas->cd();
@@ -569,8 +446,8 @@ void ioPads::add_pad(pair<ioPadDim,ioPadDim>& coord){
     const ioPadDim x { coord.second };
     const ioPadDim y { coord.first  };
     int i{0};
-    while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; }
-    TPad* p = new TPad(Form("loc_pad_%i",i),"",x.low,y.low,x.up,y.up);
+    /* while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; } */
+    TPad* p = new TPad(ioUniqueName(),"",x.low,y.low,x.up,y.up);
 
     // set the boundaries left(l), right(r), top(t), bottom(b)
     p->SetLeftMargin(x.low_margin());
@@ -2290,6 +2167,11 @@ ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat, array<ioPtrDbl,2> _err)
     ioPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1];
     
     tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y_lo,err_y_hi);
+    tgase->SetMarkerColor(hg->GetMarkerColor());
+    tgase->SetMarkerSize(hg->GetMarkerSize());
+    tgase->SetMarkerStyle(hg->GetMarkerStyle());
+    tgase->SetLineColor(hg->GetLineColor());
+    tgase->SetLineStyle(hg->GetLineStyle());
     size = x.size;
 
     if (x_rat[0]>=0) set_rat_xbins(x_rat);
