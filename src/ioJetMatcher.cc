@@ -445,7 +445,7 @@ bool ioJetMatcherArray::do_matching(int pthatbin, double weight) {
 void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
         if (write_9) {
-            data[i]->SetName(Form("truth_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
+            data[i]->SetName(Form("res_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
             data[i]->Write();
         }
         io_cullsmallbins(data[i],10.);
@@ -458,7 +458,7 @@ void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const
 void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
         if (write_9) {
-            data[i]->SetName(Form("res_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
+            data[i]->SetName(Form("truth_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
             data[i]->Write();
         }
         io_cullsmallbins(data[i],10.);
