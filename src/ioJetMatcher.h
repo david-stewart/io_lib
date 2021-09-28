@@ -126,11 +126,12 @@ struct ioJetMatcherArray {
     // like above, but uses it's own ioXsec
     public:
     string name;
+    bool write_9 { false };
     vector<string> v_names;
     ioXsec& Xsec;
-    void cull_add_array(array<TH2D*,9>&);
-    void cull_add_array(array<TH1D*,9>&);
-    void write_response(TH2D* match, TH1D* miss, const char* name, const char* which, const char* tag);
+    void cull_add_array(array<TH2D*,9>&, string which, const char* tag="");
+    void cull_add_array(array<TH1D*,9>&, string which, const char* tag="");
+    void write_response(TH2D* match, TH1D* miss, string which, const char* tag);
     vector<array<TH2D*,9>> v_response;
     vector<array<TH1D*,9>> v_truth;
 

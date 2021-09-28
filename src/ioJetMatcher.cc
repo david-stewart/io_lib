@@ -442,8 +442,12 @@ bool ioJetMatcherArray::do_matching(int pthatbin, double weight) {
     return false;
 };
 
-void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data) {
+void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
+        if (write_9) {
+            data[i]->SetName(Form("hgtruth_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
+            data[i]->Write();
+        }
         io_cullsmallbins(data[i],10.);
         data[i]->Scale(Xsec.Xsec(i));
     }
@@ -451,8 +455,12 @@ void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data) {
         data[0]->Add(data[i]);
     }
 };
-void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
+void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
+        if (write_9) {
+            data[i]->SetName(Form("hgresp_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
+            data[i]->Write();
+        }
         io_cullsmallbins(data[i],10.);
         data[i]->Scale(Xsec.Xsec(i));
     }
@@ -461,31 +469,32 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data) {
     }
 };
 
-void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, const char* name, const char* which, const char* posttag) {
+void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, string which, const char* posttag) {
     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
     truth->Add(truth_add);
-    truth->SetName(Form("%s_Truth_%s%s",name,which,posttag));
+    truth->SetName(Form("%s_Truth_%s%s",name.c_str(),which.c_str(),posttag));
     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
-    meas->SetName(Form("%s_Measured_%s%s",name,which,posttag));
-    h2->SetName(Form("%s_Matched_%s%s",name,which,posttag));
-    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, h2, Form("%s_%s%s", name, which, posttag));
+    meas->SetName(Form("%s_Measured_%s%s",name.c_str(),which.c_str(),posttag));
+    h2->SetName(Form("%s_Matched_%s%s",name.c_str(),which.c_str(),posttag));
+    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, 
+            h2, Form("%s_%s%s", name.c_str(), which.c_str(), posttag));
     ruu->Write();
 };
 
 void ioJetMatcherArray::write() {
     // cull data with bins < 10 entries
-    for (auto& rep : v_response)   cull_add_array(rep);
-    for (auto& rep : v_response_A) cull_add_array(rep);
-    for (auto& rep : v_response_B) cull_add_array(rep);
-
-    for (auto& rep : v_truth)   cull_add_array(rep);
-    for (auto& rep : v_truth_A) cull_add_array(rep);
-    for (auto& rep : v_truth_B) cull_add_array(rep);
-
     for (unsigned int i=0; i<v_response.size(); ++i) {
-        write_response(v_response[i][0], v_truth[i][0],     name.c_str(),v_names[i].c_str(), "");
-        write_response(v_response_A[i][0], v_truth_A[i][0], name.c_str(),v_names[i].c_str(), "_A");
-        write_response(v_response_B[i][0], v_truth_B[i][0], name.c_str(),v_names[i].c_str(), "_B");
+        cull_add_array(v_response[i],    v_names[i],"");
+        cull_add_array(v_response_A[i],  v_names[i],"_A");
+        cull_add_array(v_response_B[i],  v_names[i],"_B");
+
+        cull_add_array(v_truth[i],    v_names[i],"");
+        cull_add_array(v_truth_A[i],  v_names[i],"_A");
+        cull_add_array(v_truth_B[i],  v_names[i],"_B");
+
+        write_response(v_response[i][0], v_truth[i][0],     v_names[i], "");
+        write_response(v_response_A[i][0], v_truth_A[i][0], v_names[i], "_A");
+        write_response(v_response_B[i][0], v_truth_B[i][0], v_names[i], "_B");
     }
     hg_pthb_cnt.Write();
 };
