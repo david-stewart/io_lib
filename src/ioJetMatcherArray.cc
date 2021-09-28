@@ -109,6 +109,7 @@ bool ioJetMatcherArray::do_matching(int pthatbin) {
 void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
         io_cullsmallbins(data[i],cull_n);
+        if (cut_high_sigma != 0.) io_cut_high_sigmaX(data[i],cut_high_sigma_offset);
         data[i]->Scale(Xsec.Xsec(i,(int)hg_pthb_cnt.GetBinContent(i+1)));
         if (write_9) {
             data[i]->SetName(Form("res_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
