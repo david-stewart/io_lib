@@ -18,6 +18,8 @@ struct ioJetMatcherArray {
     string name;
     bool write_9 { false };
     int  cull_n  { 10 };
+    double cut_high_sigma {0};
+    double cut_high_sigma_offset{8.};
     bool apply_Mlimit { true };
     vector<string> v_names;
     ioXsec& Xsec;

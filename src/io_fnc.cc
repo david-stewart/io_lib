@@ -1474,6 +1474,31 @@ vector<int> io_binvec(TH1* h, IO loc) {
     return vec;
 };
 
+TH2D* cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
+    // cut all bin content above n_sigma from mean
+
+    if (n_sigma==0) return hg;
+    TAxis* y_axis = hg->GetYaxis();
+    TAxis* x_axis = hg->GetXaxis();
+    double pre_sum = hg->Integral();
+    for (int y=1;y<y_axis->GetNbins();++y) {
+        TH1D* proj = hg->ProjectionX(ioUniqueName(),y,y);
+        double mu = proj->GetMean();
+        double sigma = proj->GetStdDev();
+        int i_bin = x_axis->FindBin(mu+n_sigma*sigma+offset);
+        for (int i=i_bin+1;i<=x_axis->GetNbins();++i) {
+            if (hg->GetBinContent(i,y)!=0) {
+                hg->SetBinContent(i,y,0.);
+                hg->SetBinError(i,y,0.);
+            }
+        }
+
+    }
+    double post_sum = hg->Integral();
+    if (print) cout << " percent cut: " << 100.*(pre_sum-post_sum)/pre_sum << endl;
+    return hg;
+};
+
 double io_setbinzero(TH1* hg, int bin, double val, double err)
 { 
     double p_val = hg->GetBinContent(bin);

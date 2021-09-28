@@ -290,6 +290,8 @@ IOS_keepcut_stats io_cullsmallbins(TH1*, double min_val, IO area=IO::in,
                                    bool remove_underoverflow=true);
 vector<int> io_binvec(TH1* _h, IO=IO::in);
 
+TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma=5., double offset=0., bool print=true);
+
 // set the bin to the new value, return the sum of change of values
 double io_setbinzero(TH1* hg, int bin, double val=0, double err=0.);
 
