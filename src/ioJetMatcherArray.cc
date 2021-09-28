@@ -108,12 +108,12 @@ bool ioJetMatcherArray::do_matching(int pthatbin) {
 
 void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
+        io_cullsmallbins(data[i],cull_n);
+        data[i]->Scale(Xsec.Xsec(i,(int)hg_pthb_cnt.GetBinContent(i+1)));
         if (write_9) {
             data[i]->SetName(Form("res_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
             data[i]->Write();
         }
-        io_cullsmallbins(data[i],cull_n);
-        data[i]->Scale(Xsec.Xsec(i,(int)hg_pthb_cnt.GetBinContent(i+1)));
     }
     for (int i{1};i<9;++i) {
         data[0]->Add(data[i]);
@@ -121,12 +121,12 @@ void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const
 };
 void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data, string which, const char* tag) {
     for (int i{0};i<9;++i) {
-        if (write_9) {
-            data[i]->SetName(Form("truth_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
-            data[i]->Write();
-        }
         io_cullsmallbins(data[i],cull_n);
         data[i]->Scale(Xsec.Xsec(i,(int)hg_pthb_cnt.GetBinContent(i+1)));
+        if (write_9) {
+            data[i]->SetName(Form("miss_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
+            data[i]->Write();
+        }
     }
     for (int i{1};i<9;++i) {
         data[0]->Add(data[i]);
