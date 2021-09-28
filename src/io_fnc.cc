@@ -1474,7 +1474,7 @@ vector<int> io_binvec(TH1* h, IO loc) {
     return vec;
 };
 
-TH2D* cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
+TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
     // cut all bin content above n_sigma from mean
 
     if (n_sigma==0) return hg;
