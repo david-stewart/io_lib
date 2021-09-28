@@ -8,6 +8,7 @@ Cfnc
 Xsec_pAu2015
 TowerLoc
 JetMatcher
+JetMatcherArray
 JetMatcherGoodBins
 _test
 THnSparse

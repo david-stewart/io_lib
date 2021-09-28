@@ -735,4 +735,22 @@ struct ioSysErrors {
     TGraphAsymmErrors* operator-> ();
 };
 
+struct ioJetMatcher_float {
+    // For filling vectors for Raghav matching algorithm 
+    // will have comparison methods in order to std::sort
+    float eta;
+    float phi;
+    float pT;
+    bool  is_matched;
+	double operator()(const ioJetMatcher_float&, const float jetR2=0.16);
+    ioJetMatcher_float(float,float,float);
+    ioJetMatcher_float();
+};
+bool operator==(const ioJetMatcher_float& L, const ioJetMatcher_float R);
+
+bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R) ;
+
+bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) ;
+
+
 #endif

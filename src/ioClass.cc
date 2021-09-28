@@ -13,6 +13,28 @@
 
 using namespace std;
 
+double ioJetMatcher_float::operator()(const ioJetMatcher_float& B, const float jetR2) {
+    const float deta {eta-B.eta};
+    const float dphi {io_dphi(phi, B.phi)};
+    const float dist2 = deta*deta + dphi*dphi;
+    if (dist2 == 0.) return 0.0001;
+    else if (dist2 > jetR2) return 0.;
+    else return dist2;
+};
+
+ioJetMatcher_float::ioJetMatcher_float(float _eta, float _phi, float _pT) :
+    eta{_eta}, phi{_phi}, pT{_pT}, is_matched{false} {};
+ioJetMatcher_float::ioJetMatcher_float() :
+    eta{0.}, phi{0.}, pT{0.}, is_matched{false} {};
+bool operator==(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
+    { return L.pT == R.pT; };
+
+bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
+    { return L.pT < R.pT; };
+
+bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) 
+    { return L.pT > R.pT; };
+
 // ioGetter Class
 ioGetter::ioGetter(string _) : path{_}, n_objects{0} {};
 
@@ -1699,88 +1721,6 @@ void ioXsec::check_pthatbin(int bin) {
     }
 };
 
-/* io_pThatOutliers::io_pThatOutliers( */
-/*         map<int,double> _pt_limits, */ 
-/*         double _pt_fakes, double _pt_misses */
-/* ) : */
-/*     pt_limits {_pt_limits}, */ 
-/*     pt_fakes {_pt_fakes}, */ 
-/*     pt_misses {_pt_misses} */ 
-/* { */
-/*     for (auto p : pt_limits) { */
-/*         M_matches[p.first] = {}; */
-/*         T_matches[p.first] = {}; */
-/*         misses[p.first] = {}; */
-/*         fakes[p.first] = {}; */
-/*     } */
-/* }; */
-
-/* bool io_pThatOutliers::check_if_outlier(int _pthatbin, double pt) { */
-/*     if (pt_limits.count(_pthatbin) == 0) { */
-/*         throw std::runtime_error( */
-/*             Form("fatal error in io_pThatOutliers: " */
-/*             " limit for required pthatbin (%i) not set", */
-/*             _pthatbin) */
-/*         ); */
-/*     } */
-/*     is_outlier = (pt >= pt_limits[_pthatbin]); */
-/*     pthatbin = _pthatbin; */
-/*     return is_outlier; */
-/* }; */
-
-/* void io_pThatOutliers::match(double M, double T) { */
-/*     if (is_outlier) { */
-/*         M_matches[pthatbin].push_back(M); */
-/*         T_matches[pthatbin].push_back(T); */
-/*     } */
-/* }; */
-/* void io_pThatOutliers::miss(double T) { */
-/*     if (is_outlier) misses[pthatbin].push_back(T); */
-/* }; */
-/* void io_pThatOutliers::fake(double M) { */
-/*     if (is_outlier) fakes[pthatbin].push_back(M); */
-/* }; */
-
-
-/* void io_pThatOutliers::write_TGraph(int _pthatbin, */
-/*         ioOptMap options, ioOptMap dict) { */
-/*     dict += options; */
-/*     if (pt_limits.count(_pthatbin)==0) { */
-/*         throw std::runtime_error( */
-/*         Form( */
-/*             "fatal error in io_pThatOutliers: " */
-/*             " limit for required pthatbin (%i) not set", */
-/*             _pthatbin) */
-/*         ); */
-/*     } */
-
-/*     // draw the matches TGraph */
-/*     if (M_matches[pthatbin].size()>0) { */
-/*         ioBinVec x { M_matches[pthatbin], false }; */
-/*         ioBinVec y { T_matches[pthatbin], false }; */
-/*         TGraph gr { x.size, x, y }; */
-/*         io_fmt( &gr, options ); */
-/*         gr.Write( Form("%s_matches",dict["prefix"].c_str()) ); */
-/*     } */
-/*     dict["MarkerStyle"] = dict["MarkerFakeMiss"]; */
-/*     if (fakes[pthatbin].size() > 0) { */
-/*         ioBinVec x { fakes[pthatbin], false }; */
-/*         ioBinVec y { vector<double>(fakes[pthatbin].size(), */ 
-/*                 pt_fakes) }; */
-/*         TGraph gr { x.size, x, y }; */
-/*         io_fmt( &gr, options ); */
-/*         gr.Write( Form("%s_fakes",dict["prefix"].c_str()) ); */
-/*     } */
-/*     if (misses[pthatbin].size() > 0) { */
-/*         ioBinVec x { vector<double>(misses[pthatbin].size(), */ 
-/*                 pt_misses) }; */
-/*         ioBinVec y { misses[pthatbin], false }; */
-/*         TGraph gr { x.size, x, y }; */
-/*         io_fmt( &gr, options ); */
-/*         gr.Write( Form("%s_misses",dict["prefix"].c_str()) ); */
-/*     } */
-/* }; */
-    
 ioIntStrFunctor::ioIntStrFunctor ( const char* file, ioOptMap options, ioOptMap dict)
 {
     dict += options;

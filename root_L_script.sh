@@ -20,6 +20,8 @@ cout << ".L src/ioTowerLoc.cc+" << endl;
 .L src/ioTowerLoc.cc+
 cout << ".L src/ioJetMatcher.cc+" << endl;
 .L src/ioJetMatcher.cc+
+cout << ".L src/ioJetMatcherArray.cc+" << endl;
+.L src/ioJetMatcherArray.cc+
 cout << ".L src/ioJetMatcherGoodBins.cc+" << endl;
 .L src/ioJetMatcherGoodBins.cc+
 cout << ".L src/io_test.cc+" << endl;
