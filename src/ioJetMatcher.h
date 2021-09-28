@@ -127,6 +127,7 @@ struct ioJetMatcherArray {
     public:
     string name;
     bool write_9 { false };
+    int  cull_n  { 10 };
     vector<string> v_names;
     ioXsec& Xsec;
     void cull_add_array(array<TH2D*,9>&, string which, const char* tag="");

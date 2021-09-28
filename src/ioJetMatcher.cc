@@ -279,20 +279,7 @@ bool ioJetMatcher::do_matching(int pthatbin, double weight) {
         }
         if (b_Xsec_vs_T)    v_T[pthatbin].Fill(miss);
     }
-    /* for (auto& fake : fakes) { */
-    /*     response.Fake(fake,W); */
-    /*     response_noweight.Fake(fake); */
 
-    /*     if (b_Xsec_vs_fake) { */
-    /*         v_fake[pthatbin].Fill(fake); */
-    /*         if (fillA) A_fake[pthatbin].Fill(fake); */
-    /*         else       B_fake[pthatbin].Fill(fake); */
-    /*     } */
-    /*     if (b_Xsec_vs_M)    v_M[pthatbin].Fill(fake); */
-
-    /*     if (fillA) response_A->Fake(fake, W); */
-    /*     else       response_B->Fake(fake, W); */
-    /* }; */
     data_MC.clear();
     data_reco.clear();
     return false;
@@ -448,7 +435,7 @@ void ioJetMatcherArray::cull_add_array(array<TH2D*,9>& data, string which, const
             data[i]->SetName(Form("res_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
             data[i]->Write();
         }
-        io_cullsmallbins(data[i],10.);
+        io_cullsmallbins(data[i],cull_n);
         data[i]->Scale(Xsec.Xsec(i));
     }
     for (int i{1};i<9;++i) {
@@ -461,7 +448,7 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data, string which, const
             data[i]->SetName(Form("truth_%s_%s%s__n%i",name.c_str(),which.c_str(),tag,i));
             data[i]->Write();
         }
-        io_cullsmallbins(data[i],10.);
+        io_cullsmallbins(data[i],cull_n);
         data[i]->Scale(Xsec.Xsec(i));
     }
     for (int i{1};i<9;++i) {
