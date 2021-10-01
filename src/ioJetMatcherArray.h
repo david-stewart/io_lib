@@ -50,7 +50,7 @@ struct ioJetMatcherArray {
             vector<string> bin_names,
             vector<string> bin_tags,
             const char* pthb_Mlimit_file,
-            double ratio_AtoB=0.5,
+            double ratio_AtoB=0.3,
             bool debug = true
     );
     ~ioJetMatcherArray(){};

@@ -2232,3 +2232,85 @@ ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };
 /*         /1* box.SetFillColor(kBlue); *1/ */
 /*     } */
 /* }; */
+
+
+io_TF1fitter::io_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) :
+    name { strcmp(_name,"")==0 ? ioUniqueName() : _name } ,
+    fn_str { fnc_str }
+{
+    cout << " this name: " << name << endl;
+    if (_lo || _hi) {
+        lo = _lo;
+        hi = _hi;
+    }
+    
+    if (lo || hi) fn = new TF1(name.c_str(), fnc_str,lo,hi);
+    else          fn = new TF1(name.c_str(), fnc_str);
+    n_par = fn->GetNpar();
+    if (hg)  fit(hg);
+};
+void io_TF1fitter::set_presets(vector<double> pre_set) {
+    for (unsigned int i{0}; i<pre_set.size(); ++i) fn->SetParameter(i,pre_set[i]);
+};
+vector<double>& io_TF1fitter::fit(TH1D* hg, double _lo, double _hi) {
+    if (_lo || _hi) {
+        lo = _lo;
+        hi = _hi;
+    }
+
+    if (lo || hi) { cout << " LO-HI " << endl; hg->Fit(fn,"","",lo,hi); }//hg->GetXaxis()->SetRangeUser(lo,hi);
+    else          hg->Fit(fn);
+
+    /* gccint n_par = fn->GetNpar(); */
+    for (unsigned int i{0}; i<n_par; ++i) {
+        if (i >= fval.size()) fval.push_back( fn->GetParameter(i) );
+        else                  fval[i] =       fn->GetParameter(i)  ;
+
+        if (i >= ferr.size()) ferr.push_back( fn->GetParError(i) );
+        else                  ferr[i] =       fn->GetParError(i)  ;
+    };
+    return fval;
+};
+vector<double>& io_TF1fitter::operator()(TH1D* hg, double lo, double hi) {
+    return fit                          (hg, lo, hi);
+};
+vector<double>& io_TF1fitter::operator()() { return fval; } ;
+pair<double,double> io_TF1fitter::operator()(int i){
+    if (i>=(int)n_par) {
+        throw std::runtime_error(
+                Form("Error: requesting paremeter %i of io_TF1fitter (%s) which has only %i pars",
+                    i, name.c_str(), n_par) );
+    }
+    return {fval[i], ferr[i]};
+};
+double io_TF1fitter::operator[](int i){
+    if (i>=(int)n_par) {
+        throw std::runtime_error(
+                Form("Error: requesting paremeter %i of io_TF1fitter (%s) which has only %i pars",
+                    i, name.c_str(), n_par) );
+    }
+    return fval[i];
+};
+void io_TF1fitter::fix_match_params(io_TF1fitter& to_match, std::set<int> which) {
+    for (int i=0; i<(int) n_par; ++i) {
+        if (which.count(i) != 0) {
+            fn->FixParameter(i, to_match[i]);
+        } else {
+            fn->SetParLimits(i,0,0);
+        }
+    };
+};
+
+ostream& operator<<(ostream& os, io_TF1fitter& fit) {
+    os << " Fit for TF1 \"" << fit.name << "\" fn: " << fit.fn_str << endl;    
+    double lo, hi;
+    for (unsigned int i{0}; i<fit.n_par; ++i) {
+        fit.fn->GetParLimits(i,lo,hi);
+        /* if (!lo && !hi) os << " [" << i << "] " << fit.fval[i] << "  err:  " << fit.ferr[i] << endl; */
+        /* else            os << "*[" << i << "] " << fit.fval[i] << "  err:  " << fit.ferr[i] << endl; */
+        const char* is_fix = (!lo && !hi) ? " " : "*" ;
+        os << Form( "%s [%2i]  %10.5g  err: %10.5g  (err/val: %10.5g)", is_fix, i, fit.fval[i], fit.ferr[i], fit.ferr[i]/fit.fval[i]) << endl;
+        /* else            os << "*[" << i << "] " << fit.fval[i] << "  err:  " << fit.ferr[i] << endl; */
+    }
+    return os;
+};

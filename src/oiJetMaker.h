@@ -30,7 +30,7 @@ class oiJetMaker {
     fastjet::JetDefinition jet_def; // {antikt,kt,cambridge}_algorithm
     fastjet::Selector      jet_selection; // default to not_pure_ghost && jetrap
     double min_jet_pt;
-    bool  calc_areas;
+    bool   calc_areas;
     double ghost_max_rap;
     double ghost_R;
 
