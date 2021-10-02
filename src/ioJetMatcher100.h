@@ -30,13 +30,15 @@ struct ioJetMatcher100 {
     TRandom3 _rand;
     ioJetMatcher100 (
             ioXsec* _Xsec, 
+            const char* tag="",
             double ratio_AtoB=0.3,
             int _ncull=20,
             double high_sig_cut=5.,
             double high_sig_off=8,
             bool debug = false
     );
-    ioJetMatcher100 ( const char* file );
+    string tag;
+    ioJetMatcher100 ( const char* file, const char* endtag );
     ~ioJetMatcher100(){};
 
     RooUnfoldResponse* make_ruu(ioBinVec bins_M, ioBinVec bins_T, const char* name, bool write=true);
@@ -46,7 +48,6 @@ struct ioJetMatcher100 {
     bool do_matching(int pthatbin);
     ioXYbounder out_of_match_bounds {};
     double ratio_AtoB;
-    void write();
     bool debug;
     int    cull_n                { 20 };
     double cut_high_sigma        { 4. };
@@ -54,7 +55,8 @@ struct ioJetMatcher100 {
 
     TH2D* rebin(TH2D*, ioBinVec bins_M, ioBinVec bins_T);
     TH1D* rebin(TH1D*, ioBinVec bins_T);
-    void process_arrays(array<TH2D*,9>&, TH2D*&, array<TH1D*,9>&, TH1D*&, const char* tag="");
+    void process_arrays(array<TH2D*,9>&, TH2D*&, array<TH1D*,9>&, TH1D*&, const char* endtag="");
+    void write();
 
     private: //internal data to do the matching
     float jet_R2; // jet_R * jet_R   

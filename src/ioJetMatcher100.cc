@@ -6,11 +6,11 @@
 #include "TH2D.h"
 
 // ioJetMatcher100 ::
-ioJetMatcher100::ioJetMatcher100 ( const char* file ) {
+ioJetMatcher100::ioJetMatcher100 ( const char* file, const char* endtag ) {
     ioGetter got{};
-    hg2_response   = (TH2D*) got(file, "response");
-    hg1_truth      = (TH1D*) got(file, "truth");
-    hg1_measured   = (TH1D*) got(file, "measured");
+    hg2_response   = (TH2D*) got(file, Form("%sresponse",endtag));
+    hg1_truth      = (TH1D*) got(file, Form("%struth",endtag));
+    hg1_measured   = (TH1D*) got(file, Form("%smeasured",endtag));
 };
 RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, const char* name, bool write) {
     TH2D* response = rebin(hg2_response, bins_M, bins_T);
@@ -22,6 +22,7 @@ RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, c
 };
 ioJetMatcher100::ioJetMatcher100 (
        ioXsec* _Xsec, 
+       const char* _tag,
         double _ratioAtoB,
         int cull_n,
         double high_sig_cut,
@@ -29,6 +30,7 @@ ioJetMatcher100::ioJetMatcher100 (
         bool _debug
     ) :
     Xsec{_Xsec}, 
+    tag{_tag},
     hg_pthb_cnt { "pthg_cnt","Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         Xsec->nbins_pthat, -0.5, Xsec->nbins_pthat-0.5 },
     ratio_AtoB {_ratioAtoB},
@@ -41,13 +43,13 @@ ioJetMatcher100::ioJetMatcher100 (
     for (int i=0;i<9;++i) sigma->SetBinContent(i+1, Xsec->Xsec(i,1));
     ioBinVec bins { {0.,0.,100,100. }};
     for (int k{0}; k<9; ++k) {
-        v_response[k]   = new TH2D( Form("R_bins100_%i",k),   ";Measured;Truth", bins,bins,bins, bins );
-        v_response_A[k] = new TH2D( Form("R_bins100_%i_A",k), ";Measured;Truth", bins,bins,bins, bins);
-        v_response_B[k] = new TH2D( Form("R_bins100_%i_B",k), ";Measured;Truth", bins,bins,bins, bins);
+        v_response[k]   = new TH2D( Form("%s_R_bins100_%i",tag.c_str(),k),   ";Measured;Truth", bins,bins,bins, bins );
+        v_response_A[k] = new TH2D( Form("%s_R_bins100_%i_A",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
+        v_response_B[k] = new TH2D( Form("%s_R_bins100_%i_B",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
 
-        v_truth[k]     = new TH1D( Form("T_bins100_%i",k), ";Truth;", bins, bins );
-        v_truth_A[k]   = new TH1D( Form("T_bins100_%i_A",k), ";Truth;", bins, bins );
-        v_truth_B[k]   = new TH1D( Form("T_bins100_%i_B",k), ";Truth;", bins, bins );
+        v_truth[k]      = new TH1D( Form("%s_T_bins100_%i",tag.c_str(),k), ";Truth;", bins, bins );
+        v_truth_A[k]    = new TH1D( Form("%s_T_bins100_%i_A",tag.c_str(),k), ";Truth;", bins, bins );
+        v_truth_B[k]    = new TH1D( Form("%s_T_bins100_%i_B",tag.c_str(),k), ";Truth;", bins, bins );
 
         v_response[k]->Sumw2();
         v_response_A[k]->Sumw2();
@@ -134,7 +136,7 @@ bool ioJetMatcher100::do_matching(int pthatbin) {
 
 void ioJetMatcher100::process_arrays(
         array<TH2D*,9>& arr_resp,  TH2D*& response, 
-        array<TH1D*,9>& arr_truth, TH1D*& truth, const char* tag) 
+        array<TH1D*,9>& arr_truth, TH1D*& truth, const char* endtag) 
 {
     for (int i{0};i<9;++i) {
         io_cullsmallbins(arr_resp[i], cull_n);
@@ -151,8 +153,8 @@ void ioJetMatcher100::process_arrays(
         arr_resp [i]->Scale(sigma->GetBinContent(i+1)/hg_pthb_cnt.GetBinContent(i+1));
         arr_truth[i]->Scale(sigma->GetBinContent(i+1)/hg_pthb_cnt.GetBinContent(i+1));
     }
-    response = (TH2D*) arr_resp[0] ->Clone(Form("response%s",tag));
-    truth    = (TH1D*) arr_truth[0]->Clone(Form("truth%s",tag));
+    response = (TH2D*) arr_resp[0] ->Clone(Form("%sresponse%s",tag.c_str(),endtag));
+    truth    = (TH1D*) arr_truth[0]->Clone(Form("%struth%s",tag.c_str(),endtag));
 
     /* response ->Sumw2(); */
     /* truth    ->Sumw2(); */
@@ -168,8 +170,8 @@ void ioJetMatcher100::process_arrays(
         arr_truth[i]->Write();
     }
     // write the roounfold 
-    TH1D* measured = (TH1D*) response->ProjectionX(Form("measured%s",tag));
-    RooUnfoldResponse* ruu = new RooUnfoldResponse( measured, truth, response, Form("ruu%s",tag) );
+    TH1D* measured = (TH1D*) response->ProjectionX(Form("%smeasured%s",tag.c_str(),endtag));
+    RooUnfoldResponse* ruu = new RooUnfoldResponse( measured, truth, response, Form("%sruu%s",tag.c_str(),endtag) );
     ruu->Write();
 };
 /* void ioJetMatcher100::write_response(TH2D* h2, TH1D* truth, string which, const char* posttag) { */
@@ -217,7 +219,7 @@ TH1D* ioJetMatcher100::rebin(TH1D* hg1, ioBinVec bins_T) {
 
 void ioJetMatcher100::write() {
     process_arrays(v_response, hg2_response, v_truth, hg1_truth, "");
-    hg1_measured = (TH1D*) hg2_response->ProjectionX("measured");
+    hg1_measured = (TH1D*) hg2_response->ProjectionX(Form("%smeasured",tag.c_str()));
     hg1_measured->Write();
     process_arrays(v_response_A, hg2_response_A, v_truth_A, hg1_truth_A, "_A");
     process_arrays(v_response_B, hg2_response_B, v_truth_B, hg1_truth_B, "_B");
