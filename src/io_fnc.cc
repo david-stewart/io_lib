@@ -1498,6 +1498,24 @@ TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
     if (print) cout << " percent cut: " << 100.*(pre_sum-post_sum)/pre_sum << endl;
     return hg;
 };
+TH1D* io_cut_high_sigmaX(TH1D* hg, double n_sigma, double offset, bool print) {
+    // cut all bin content above n_sigma from mean
+    if (n_sigma==0) return hg;
+    TAxis* x_axis = hg->GetXaxis();
+    double pre_sum = hg->Integral();
+    double mu = hg->GetMean();
+    double sigma = hg->GetStdDev();
+    int i_bin = x_axis->FindBin(mu+n_sigma*sigma+offset);
+    for (int i=i_bin+1;i<=x_axis->GetNbins();++i) {
+      if (hg->GetBinContent(i)!=0) {
+          hg->SetBinContent(i,0.);
+          hg->SetBinError(i,0.);
+      }
+    }
+    double post_sum = hg->Integral();
+    if (print) cout << " percent cut: " << 100.*(pre_sum-post_sum)/pre_sum << endl;
+    return hg;
+};
 
 double io_setbinzero(TH1* hg, int bin, double val, double err)
 { 

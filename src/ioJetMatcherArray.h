@@ -21,11 +21,14 @@ struct ioJetMatcherArray {
     double cut_high_sigma {0};
     double cut_high_sigma_offset{8.};
     bool apply_Mlimit { true };
+
     vector<string> v_names;
     ioXsec& Xsec;
+
     void cull_add_array(array<TH2D*,9>&, string which, const char* tag="");
     void cull_add_array(array<TH1D*,9>&, string which, const char* tag="");
     void write_response(TH2D* match, TH1D* miss, string which, const char* tag);
+
     vector<array<TH2D*,9>> v_response;
     vector<array<TH1D*,9>> v_truth;
 
