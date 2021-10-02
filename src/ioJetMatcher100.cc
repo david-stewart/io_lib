@@ -39,7 +39,7 @@ ioJetMatcher100::ioJetMatcher100 (
     debug{_debug}
 {
     ioBinVec _bins { Xsec->pthatbins };
-    sigma = new TH1D("sigma","bins_weights", _bins, _bins);
+    sigma = new TH1D(Form("%ssigma",tag.c_str()),"bins_weights", _bins, _bins);
     for (int i=0;i<9;++i) sigma->SetBinContent(i+1, Xsec->Xsec(i,1));
     ioBinVec bins { {0.,0.,100,100. }};
     for (int k{0}; k<9; ++k) {
