@@ -154,8 +154,8 @@ void ioJetMatcher100::process_arrays(
     response = (TH2D*) arr_resp[0] ->Clone(Form("response%s",tag));
     truth    = (TH1D*) arr_truth[0]->Clone(Form("truth%s",tag));
 
-    response ->Sumw2();
-    truth    ->Sumw2();
+    /* response ->Sumw2(); */
+    /* truth    ->Sumw2(); */
     
     for (int i{1};i<9;++i) {
         response->Add(arr_resp[i], 1.);
