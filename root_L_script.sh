@@ -28,4 +28,6 @@ cout << ".L src/io_test.cc+" << endl;
 .L src/io_test.cc+
 cout << ".L src/ioTHnSparse.cc+" << endl;
 .L src/ioTHnSparse.cc+
+cout << ".L src/io_pAu2015.cc+" << endl;
+.L src/io_pAu2015.cc+
 EOF

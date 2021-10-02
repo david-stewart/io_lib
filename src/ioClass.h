@@ -638,6 +638,7 @@ struct ioPtrDbl {
     ioPtrDbl(vector<double>); // <-
     ioPtrDbl(TH1*, bool get_errors=false); // also Errors // <-
     ioPtrDbl(const ioPtrDbl&); // <-
+    /* ioPtrDbl(ioPtrDbl); // <- */
     ioPtrDbl(const char* file, const char* tag); // <-
     ioPtrDbl(int i); // <-
     ioPtrDbl(){};
@@ -681,6 +682,7 @@ struct ioPtrDbl {
 
     vector<double>::iterator begin();
     vector<double>::iterator end();
+    ioPtrDbl& operator=(const ioPtrDbl&);
 
 };
 ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs);

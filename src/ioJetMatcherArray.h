@@ -48,7 +48,8 @@ struct ioJetMatcherArray {
             ioXsec& _Xsec, 
             const char* bin_file, 
             vector<string> bin_names,
-            vector<string> bin_tags,
+            vector<string> bin_tags_M,
+            vector<string> bin_tags_T,
             const char* pthb_Mlimit_file,
             double ratio_AtoB=0.3,
             bool debug = true

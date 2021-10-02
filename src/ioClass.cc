@@ -1888,6 +1888,19 @@ ioPtrDbl::ioPtrDbl(const ioPtrDbl& ihs) {
     build_ptr();
 };
 
+ioPtrDbl& ioPtrDbl::operator=(const ioPtrDbl& rhs) {
+    vec.clear();
+    if (ptr) delete ptr;
+    for (auto v : rhs.vec) vec.push_back(v);
+    build_ptr();
+    return *this;
+};
+
+/* ioPtrDbl::ioPtrDbl(ioPtrDbl ihs) { */
+/*     for (auto v : ihs.vec) vec.push_back(v); */
+/*     build_ptr(); */
+/* }; */
+
 void ioPtrDbl::build_ptr() {
     size = vec.size();
     ptr = new double[size];
