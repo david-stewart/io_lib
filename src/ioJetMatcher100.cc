@@ -31,7 +31,7 @@ ioJetMatcher100::ioJetMatcher100 (
     ) :
     Xsec{_Xsec}, 
     tag{_tag},
-    hg_pthb_cnt { "pthg_cnt","Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+    hg_pthb_cnt { Form("%spthg_cnt",_tag),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         Xsec->nbins_pthat, -0.5, Xsec->nbins_pthat-0.5 },
     ratio_AtoB {_ratioAtoB},
     cut_high_sigma { high_sig_cut },
