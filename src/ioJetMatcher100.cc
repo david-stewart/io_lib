@@ -140,6 +140,7 @@ void ioJetMatcher100::process_arrays(
         io_cullsmallbins(arr_resp[i], cull_n);
         io_cullsmallbins(arr_truth[i],cull_n);
 
+        cout << " tag: " << tag << " set: " << i << endl;
         if (cut_high_sigma != 0) io_cut_high_sigmaX(arr_resp[i],cut_high_sigma, cut_high_sigma_offset);
         if (cut_high_sigma != 0) io_cut_high_sigmaX(arr_truth[i],cut_high_sigma, cut_high_sigma_offset);
 
