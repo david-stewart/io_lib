@@ -21,16 +21,19 @@ RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, c
     return ruu;
 };
 ioJetMatcher100::ioJetMatcher100 (
-       const char* _name,
        ioXsec* _Xsec, 
         double _ratioAtoB,
+        int cull_n,
+        double high_sig_cut,
+        double high_sig_offset,
         bool _debug
     ) :
-    name{_name},
     Xsec{_Xsec}, 
-    hg_pthb_cnt { Form("pthg_cnt_%s",_name),"Counter;#hat{#it{p}}_{T}-bin;N_{events}",
+    hg_pthb_cnt { "pthg_cnt","Counter;#hat{#it{p}}_{T}-bin;N_{events}",
         Xsec->nbins_pthat, -0.5, Xsec->nbins_pthat-0.5 },
     ratio_AtoB {_ratioAtoB},
+    cut_high_sigma { high_sig_cut },
+    cut_high_sigma_offset { high_sig_offset },
     debug{_debug}
 {
     ioBinVec _bins { Xsec->pthatbins };

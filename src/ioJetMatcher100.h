@@ -15,10 +15,6 @@
 struct ioJetMatcher100 {
     // like above, but uses it's own ioXsec
     public:
-    string name;
-    int    cull_n                { 20 };
-    double cut_high_sigma        { 4. };
-    double cut_high_sigma_offset { 8. };
 
     /* vector<string> v_names; */
     ioXsec* Xsec{nullptr};
@@ -33,10 +29,12 @@ struct ioJetMatcher100 {
 
     TRandom3 _rand;
     ioJetMatcher100 (
-            const char* _name,
             ioXsec* _Xsec, 
             double ratio_AtoB=0.3,
-            bool debug = true
+            int _ncull=20,
+            double high_sig_cut=5.,
+            double high_sig_off=8,
+            bool debug = false
     );
     ioJetMatcher100 ( const char* file );
     ~ioJetMatcher100(){};
@@ -50,6 +48,9 @@ struct ioJetMatcher100 {
     double ratio_AtoB;
     void write();
     bool debug;
+    int    cull_n                { 20 };
+    double cut_high_sigma        { 4. };
+    double cut_high_sigma_offset { 8. };
 
     TH2D* rebin(TH2D*, ioBinVec bins_M, ioBinVec bins_T);
     TH1D* rebin(TH1D*, ioBinVec bins_T);
