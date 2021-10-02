@@ -43,13 +43,13 @@ ioJetMatcher100::ioJetMatcher100 (
     for (int i=0;i<9;++i) sigma->SetBinContent(i+1, Xsec->Xsec(i,1));
     ioBinVec bins { {0.,0.,100,100. }};
     for (int k{0}; k<9; ++k) {
-        v_response[k]   = new TH2D( Form("%s_R_bins100_%i",tag.c_str(),k),   ";Measured;Truth", bins,bins,bins, bins );
-        v_response_A[k] = new TH2D( Form("%s_R_bins100_%i_A",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
-        v_response_B[k] = new TH2D( Form("%s_R_bins100_%i_B",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
+        v_response[k]   = new TH2D( Form("%sR_%i",tag.c_str(),k),   ";Measured;Truth", bins,bins,bins, bins );
+        v_response_A[k] = new TH2D( Form("%sR_%i_A",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
+        v_response_B[k] = new TH2D( Form("%sR_%i_B",tag.c_str(),k), ";Measured;Truth", bins,bins,bins, bins);
 
-        v_truth[k]      = new TH1D( Form("%s_T_bins100_%i",tag.c_str(),k), ";Truth;", bins, bins );
-        v_truth_A[k]    = new TH1D( Form("%s_T_bins100_%i_A",tag.c_str(),k), ";Truth;", bins, bins );
-        v_truth_B[k]    = new TH1D( Form("%s_T_bins100_%i_B",tag.c_str(),k), ";Truth;", bins, bins );
+        v_truth[k]      = new TH1D( Form("%sT_%i",tag.c_str(),k), ";Truth;", bins, bins );
+        v_truth_A[k]    = new TH1D( Form("%sT_%i_A",tag.c_str(),k), ";Truth;", bins, bins );
+        v_truth_B[k]    = new TH1D( Form("%sT_%i_B",tag.c_str(),k), ";Truth;", bins, bins );
 
         v_response[k]->Sumw2();
         v_response_A[k]->Sumw2();
