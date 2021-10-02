@@ -12,6 +12,11 @@ ioJetMatcher100::ioJetMatcher100 ( const char* file, const char* endtag ) {
     hg1_truth      = (TH1D*) got(file, Form("%struth",endtag));
     hg1_measured   = (TH1D*) got(file, Form("%smeasured",endtag));
 };
+RooUnfoldResponse* ioJetMatcher100::make_ruu(const char* fname, const char* M_tag, 
+        const char* T_tag, const char* name, bool write) 
+{
+    return make_ruu( ioBinVec{fname, M_tag}, ioBinVec{fname, T_tag}, name, write);
+};
 RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, const char* name, bool write) {
     TH2D* response = rebin(hg2_response, bins_M, bins_T);
     TH1D* truth    = rebin(hg1_truth,    bins_T);
@@ -62,16 +67,6 @@ ioJetMatcher100::ioJetMatcher100 (
 
     jet_R2 = 0.16;
     ioBinVec pthatbins { Xsec->pthatbins };
-    /* auto pt_true = ioReadValVec(pthb_Mlimit_file,"pt_jet_bin_upbound"); */
-    /* for (int ibin{0}; ibin<Xsec->nbins_pthat; ++ibin) { */
-    /*     vector<double> pt_meas_limit; */
-    /*     auto JES = ioReadValVec(pthb_Mlimit_file,Form("JES__%i",ibin)); */
-    /*     auto JER = ioReadValVec(pthb_Mlimit_file,Form("JER__%i",ibin)); */
-    /*     for (unsigned int i{0}; i<JES.size(); ++i) { */
-    /*         pt_meas_limit.push_back(pt_true[i]+JES[i]+5.*JER[i]*8.); */
-    /*     } */
-    /*     pthb_Mlimit[ibin] = {pt_true,pt_meas_limit}; */
-    /* } */
 }
 
 bool ioJetMatcher100::do_matching(int pthatbin) {
@@ -142,7 +137,8 @@ void ioJetMatcher100::process_arrays(
         io_cullsmallbins(arr_resp[i], cull_n);
         io_cullsmallbins(arr_truth[i],cull_n);
 
-        cout << " tag: " << tag << " set: " << i << endl;
+        cout << " tag: " << tag << "  which " << endtag << " set: " << i << endl;
+        cout << " cut_high_sigma " << cut_high_sigma << " " << cut_high_sigma_offset <<  endl;
         if (cut_high_sigma != 0) io_cut_high_sigmaX(arr_resp[i],cut_high_sigma, cut_high_sigma_offset);
         if (cut_high_sigma != 0) io_cut_high_sigmaX(arr_truth[i],cut_high_sigma, cut_high_sigma_offset);
 

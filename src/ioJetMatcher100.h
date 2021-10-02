@@ -38,10 +38,13 @@ struct ioJetMatcher100 {
             bool debug = false
     );
     string tag;
-    ioJetMatcher100 ( const char* file, const char* endtag );
+    ioJetMatcher100 ( const char* file, const char* _tag );
     ~ioJetMatcher100(){};
 
-    RooUnfoldResponse* make_ruu(ioBinVec bins_M, ioBinVec bins_T, const char* name, bool write=true);
+    RooUnfoldResponse* make_ruu(ioBinVec bins_M, ioBinVec bins_T, 
+            const char* name, bool write=true);
+    RooUnfoldResponse* make_ruu(const char* fname, const char* M_tag, 
+            const char* T_tag, const char* name, bool write=true);
 
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);
