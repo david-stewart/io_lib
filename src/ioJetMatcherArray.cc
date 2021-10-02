@@ -10,8 +10,8 @@ ioJetMatcherArray::ioJetMatcherArray (
        ioXsec& _Xsec, 
        const char* bin_file, 
         vector<string> bin_names,
-        vector<string> bin_tags_T,
         vector<string> bin_tags_M,
+        vector<string> bin_tags_T,
         const char* pthb_Mlimit_file,
         double _ratioAtoB,
         bool _debug
@@ -25,8 +25,8 @@ ioJetMatcherArray::ioJetMatcherArray (
     debug{_debug}
 {
     for (int i=0;i<(int)bin_names.size();++i) {
-        ioBinVec bins_T { bin_file, bin_tags_T[i].c_str() };
         ioBinVec bins_M { bin_file, bin_tags_M[i].c_str() };
+        ioBinVec bins_T { bin_file, bin_tags_T[i].c_str() };
         TH2D form_2D {ioUniqueName(), ";Measured;Truth", bins_M, bins_M, bins_T, bins_T}; 
         TH1D form_1D {ioUniqueName(), ";Measured;Truth", bins_T, bins_T };
 
