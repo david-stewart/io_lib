@@ -219,8 +219,8 @@ void ioJetMatcher100::write() {
     process_arrays(v_response, hg2_response, v_truth, hg1_truth, "");
     hg1_measured = (TH1D*) hg2_response->ProjectionX("measured");
     hg1_measured->Write();
-    process_arrays(v_response_A, hg2_response_A, v_truth_A, hg1_truth_A, "");
-    process_arrays(v_response_B, hg2_response_B, v_truth_B, hg1_truth_B, "");
+    process_arrays(v_response_A, hg2_response_A, v_truth_A, hg1_truth_A, "_A");
+    process_arrays(v_response_B, hg2_response_B, v_truth_B, hg1_truth_B, "_B");
     hg_pthb_cnt.Write();
     sigma->Write();
 };
