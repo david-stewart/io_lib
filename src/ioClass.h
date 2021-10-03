@@ -697,14 +697,17 @@ ioPtrDbl  io_calc_min_berr  (vector<ioPtrDbl>, ioPtrDbl);
 pair<ioPtrDbl,ioPtrDbl>  io_calc_bounds    (vector<ioPtrDbl>);
 
 // some drawing options
-TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl, ioOptMap opts, array<double,4> = {-1,-1});
-TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2>, ioOptMap opts, array<double,4> = {-1,-1});
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl, ioOptMap opts, 
+        array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2>, 
+        ioOptMap opts, array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
 
 struct ioSysErrors {
     ioSysErrors();
     ioSysErrors(const ioSysErrors&);
     ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5}, array<ioPtrDbl,2>_err={});
     ioSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
+    ioSysErrors& set_x_range(double, double);
     ioSysErrors& swap_xy ();
 
     ioSysErrors& setYlow(ioPtrDbl&);

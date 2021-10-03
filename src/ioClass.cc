@@ -2086,12 +2086,17 @@ pair<ioPtrDbl,ioPtrDbl> io_calc_bounds(vector<ioPtrDbl> data) {
     return { io_calc_min_bound(data), io_calc_max_bound(data) };
 };
 
-TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl err, ioOptMap opts, array<double,4>x_set) {
-    return io_draw_error_boxes(mean, {err,err}, opts, x_set);
+TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl err, ioOptMap opts, array<double,4>x_set,
+        double range_lo, double range_hi) {
+    return io_draw_error_boxes(mean, {err,err}, opts, x_set, range_lo, range_hi);
 };
 TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2> err, 
-        ioOptMap dict, array<double,4>x_set) {
+        ioOptMap dict, array<double,4>x_set,
+        double range_lo, double range_hi) 
+{
     ioSysErrors pts { mean, x_set, err };
+    /* cout << " range_lo: " << range_lo << " " << range_hi << endl; */
+    if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); };
     auto tgase = pts.tgase;
     io_fmt(tgase,dict);
     /* tgase->SetFillColor(kBlue); */
@@ -2101,7 +2106,6 @@ TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2> err,
     if ( dict("LineColor") ) ioDrawBoxErrors(tgase, dict);
     return tgase;
 };
-
 
 ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase}
 {
@@ -2135,6 +2139,37 @@ ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat, array<ioPtrDbl,2> _err)
     /* for (auto& dat : data) vec_data.push_back(dat); */
     /* return *this; */
 /* }; */
+ioSysErrors& ioSysErrors::set_x_range (double x_lo, double x_hi) {
+    int i_left  = 0;
+    int i_right = size-1;
+    double* x_old = tgase->GetX();
+    double* y_old = tgase->GetY();
+    for (int i{0}; i<size; ++i) {
+        if (x_old[i] < x_lo) i_left = x_old[i];
+        else break;
+    }
+    for (int i{size-1}; i>=0; --i) {
+        if (x_old[i_right] > x_hi) i_right = i;
+        else break;
+    }
+    if (i_left != 0 || i_right != (size-1)) {
+        int new_size = i_right-i_left+1;
+        double *x = new double[new_size];
+        double *y = new double[new_size];
+        std::copy(&(x_old[i_left]), &(x_old[i_right+1]), x);
+        std::copy(&(y_old[i_left]), &(y_old[i_right+1]), y);
+        auto tgase_new = new TGraphAsymmErrors(new_size,x,y);
+        size = new_size;
+        for (int i{0}; i<new_size; ++i) {
+            tgase_new->SetPointError( i,
+                 tgase->GetErrorXlow(i_left+i), tgase->GetErrorXhigh(i_left+i),
+                 tgase->GetErrorYlow(i_left+i), tgase->GetErrorYhigh(i_left+i));
+        }
+        delete tgase;
+        tgase = tgase_new;
+    }
+    return *this;
+};
 
 ioSysErrors& ioSysErrors::swap_xy () {
     double* x = new double[size];
@@ -2148,7 +2183,7 @@ ioSysErrors& ioSysErrors::swap_xy () {
     auto tgase_new = new TGraphAsymmErrors(size,x,y);
 
     for (int i{0}; i<size; ++i) {
-        tgase_new->SetPointError( 
+        tgase_new->SetPointError( i,
                 tgase->GetErrorYlow(i), tgase->GetErrorYhigh(i),
                 tgase->GetErrorXlow(i), tgase->GetErrorXhigh(i));
     }
@@ -2223,29 +2258,6 @@ ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
 
 TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; };
 ioSysErrors::operator TGraphAsymmErrors* () { return tgase; };
-
-/* void ioSysErrors::draw_boxes(ioOptMap dict) { */
-/*     double* x = tgase->GetX(); */
-/*     double* y = tgase->GetY(); */
-/*     TBox* box = new TBox(); */
-/*     io_fmt(box,dict); */
-/*     for (int i{0}; i<size; ++i) { */
-        
-/*         box->PaintBox(x[i] - tgase->GetErrorXlow(i), */
-/*                     y[i] - tgase->GetErrorYlow(i), */
-/*                     x[i] + tgase->GetErrorXhigh(i), */
-/*                     y[i] + tgase->GetErrorYhigh(i) */
-/*         ); */
-/*         /1* cout << " box "<< i << "  " << endl *1/ */ 
-/*             /1* << x[i]-tgase->GetErrorXlow(i) << endl *1/ */
-/*                        /1* << x[i]+tgase->GetErrorXhigh(i) << endl *1/ */
-/*                        /1* << y[i]-tgase->GetErrorYlow(i) << endl *1/ */
-/*                        /1* << y[i]+tgase->GetErrorYhigh(i) << endl; *1/ */
-/*         /1* box.SetLineColor(kRed); *1/ */
-/*         /1* box.SetFillColor(kBlue); *1/ */
-/*     } */
-/* }; */
-
 
 io_TF1fitter::io_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) :
     name { strcmp(_name,"")==0 ? ioUniqueName() : _name } ,

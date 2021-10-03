@@ -41,10 +41,10 @@ struct ioJetMatcher100 {
     ioJetMatcher100 ( const char* file, const char* _tag );
     ~ioJetMatcher100(){};
 
-    RooUnfoldResponse* make_ruu(ioBinVec bins_M, ioBinVec bins_T, 
-            const char* name, bool write=true);
+    /* RooUnfoldResponse* make_ruu(ioBinVec bins_M, ioBinVec bins_T, */ 
+            /* string name, bool write=true, bool _write_AB=true); */
     RooUnfoldResponse* make_ruu(const char* fname, const char* M_tag, 
-            const char* T_tag, const char* name, bool write=true);
+            const char* T_tag, string name, bool write=true, bool _write=true);
 
     void addjet_MC(float eta, float phi, float pT);
     void addjet_reco(float eta, float phi, float pT);

@@ -10,19 +10,51 @@ ioJetMatcher100::ioJetMatcher100 ( const char* file, const char* endtag ) {
     ioGetter got{};
     hg2_response   = (TH2D*) got(file, Form("%sresponse",endtag));
     hg1_truth      = (TH1D*) got(file, Form("%struth",endtag));
-    hg1_measured   = (TH1D*) got(file, Form("%smeasured",endtag));
+
+    hg2_response_A   = (TH2D*) got(file, Form("%sresponse_A",endtag));
+    hg1_truth_A      = (TH1D*) got(file, Form("%struth_A",   endtag));
+
+    hg2_response_B   = (TH2D*) got(file, Form("%sresponse_B",endtag));
+    hg1_truth_B      = (TH1D*) got(file, Form("%struth_B",   endtag));
 };
 RooUnfoldResponse* ioJetMatcher100::make_ruu(const char* fname, const char* M_tag, 
-        const char* T_tag, const char* name, bool write) 
-{
-    return make_ruu( ioBinVec{fname, M_tag}, ioBinVec{fname, T_tag}, name, write);
-};
-RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, const char* name, bool write) {
+        const char* T_tag, string name, bool write, bool make_AB)  {
+/* { */
+    /* return make_ruu( ioBinVec{fname, M_tag}, ioBinVec{fname, T_tag}, name, write, _make_AB); */
+/* }; */
+/* RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, */ 
+        /* string name, bool write, bool write_AB) { */
+    ioBinVec bins_M { fname, M_tag };
+    ioBinVec bins_T { fname, T_tag };
+    cout << " bins_M " << bins_M << endl;
+    cout << " bins_T " << bins_T << endl;
+    cout << " name "  << name << endl;
+    cout << " hg2_response: " << hg2_response->GetName() << endl;
+    cout << " truth: " << hg1_truth->GetName() << endl;
+
+    /* cout << " measured: " << measured->GetName() << endl; */
+
     TH2D* response = rebin(hg2_response, bins_M, bins_T);
     TH1D* truth    = rebin(hg1_truth,    bins_T);
     TH1D* measured = (TH1D*) response->ProjectionX(ioUniqueName());
-    RooUnfoldResponse* ruu = new RooUnfoldResponse(measured, truth, response, name);
+    RooUnfoldResponse* ruu = new RooUnfoldResponse(measured, truth, response, name.c_str());
     if (write) ruu->Write();
+
+    if (make_AB) {
+        TH2D* response_A = rebin(hg2_response_A, bins_M, bins_T);
+        TH1D* truth_A    = rebin(hg1_truth_A,    bins_T);
+        TH1D* measured_A = (TH1D*) response_A->ProjectionX(ioUniqueName());
+        RooUnfoldResponse* ruu_A = new RooUnfoldResponse(measured_A, truth_A, response_A,Form("%s_A",name.c_str()));
+        if (write) ruu_A->Write();
+
+        TH2D* response_B = rebin(hg2_response_B, bins_M, bins_T);
+        TH1D* truth_B    = rebin(hg1_truth_B,    bins_T);
+        TH1D* measured_B = (TH1D*) response_B->ProjectionX(ioUniqueName());
+        RooUnfoldResponse* ruu_B = new RooUnfoldResponse(measured_B, truth_B, response_B, Form("%s_B",name.c_str()));
+        cout << " name : " << name << (truth_A->Integral() - truth_B->Integral()) << endl;
+        if (write) ruu_B->Write();
+    }
+
     return ruu;
 };
 ioJetMatcher100::ioJetMatcher100 (
@@ -192,13 +224,14 @@ TH2D* ioJetMatcher100::rebin(TH2D* hg2, ioBinVec bins_M, ioBinVec bins_T) {
         int y0 = ax_Y->FindBin(bins_T[y]+0.5);
         int y1 = ax_Y->FindBin(bins_T[y+1]-0.5);
         TH1D* proj = (TH1D*) hg2->ProjectionY(ioUniqueName(),y0,y1);
-        TH1D* rebin = (TH1D*) hg2->Rebin(bins_M,ioUniqueName(),bins_M);
+        TH1D* rebin = (TH1D*) proj->Rebin(bins_M,ioUniqueName(),bins_M);
         rebin->SetBinContent(0,0.);
         rebin->SetBinContent(bins_T+1,0.);
         rebin->SetBinError(0,0.);
         rebin->SetBinError(bins_T+1,0.);
         for (int x=0;x<bins_M;++x) {
             r_hg->SetBinContent(x+1,y+1,rebin->GetBinContent(x+1));
+            r_hg->SetBinError(x+1,y+1,rebin->GetBinError(x+1));
         }
     };
     return r_hg;
