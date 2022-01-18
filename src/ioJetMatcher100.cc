@@ -17,13 +17,14 @@ ioJetMatcher100::ioJetMatcher100 ( const char* file, const char* endtag ) {
     hg2_response_B   = (TH2D*) got(file, Form("%sresponse_B",endtag));
     hg1_truth_B      = (TH1D*) got(file, Form("%struth_B",   endtag));
 };
-RooUnfoldResponse* ioJetMatcher100::make_ruu(const char* fname, const char* M_tag, 
-        const char* T_tag, string name, bool write, bool make_AB)  {
-/* { */
-    /* return make_ruu( ioBinVec{fname, M_tag}, ioBinVec{fname, T_tag}, name, write, _make_AB); */
-/* }; */
-/* RooUnfoldResponse* ioJetMatcher100::make_ruu(ioBinVec bins_M, ioBinVec bins_T, */ 
-        /* string name, bool write, bool write_AB) { */
+RooUnfoldResponse* ioJetMatcher100::make_ruu(
+        const char* fname, 
+        const char* M_tag, 
+        const char* T_tag, 
+        string name, 
+        bool write, 
+        bool make_AB
+)  {
     ioBinVec bins_M { fname, M_tag };
     ioBinVec bins_T { fname, T_tag };
     cout << " bins_M " << bins_M << endl;
@@ -225,6 +226,7 @@ TH2D* ioJetMatcher100::rebin(TH2D* hg2, ioBinVec bins_M, ioBinVec bins_T) {
         int y1 = ax_Y->FindBin(bins_T[y+1]-0.5);
         TH1D* proj = (TH1D*) hg2->ProjectionY(ioUniqueName(),y0,y1);
         TH1D* rebin = (TH1D*) proj->Rebin(bins_M,ioUniqueName(),bins_M);
+        rebin->ClearUnderflowAndOverflow();
         rebin->SetBinContent(0,0.);
         rebin->SetBinContent(bins_T+1,0.);
         rebin->SetBinError(0,0.);
@@ -239,6 +241,7 @@ TH2D* ioJetMatcher100::rebin(TH2D* hg2, ioBinVec bins_M, ioBinVec bins_T) {
 TH1D* ioJetMatcher100::rebin(TH1D* hg1, ioBinVec bins_T) {
     /* TH1D* r_hg = new TH1D(name, Form("%s;Measured;",name), bins_T, bins_T); */
     TH1D* rebin = (TH1D*) hg1->Rebin(bins_T,ioUniqueName(),bins_T);
+    rebin->ClearUnderflowAndOverflow();
     rebin->SetBinContent(0,0.);
     rebin->SetBinContent(bins_T+1,0.);
     rebin->SetBinError(0,0.);

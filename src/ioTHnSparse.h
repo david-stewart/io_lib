@@ -3,6 +3,7 @@
 #include "TH1D.h"
 #include "ioClass.h"
 #include "fastjet/PseudoJet.hh"
+#include "TRandom3.h"
 
 using fastjet::PseudoJet;
 
@@ -65,7 +66,17 @@ class ioAjSparse {
     double hopper[8];
     double dphi_min{0};
 
+    // add a possibility to re-weight the ioAjSparse with a correction to the jets
+    TH1D*  hg_pTCorr   { nullptr };
+    double mean_pTCorr { 1. };
+    double sig_pTCorr  { 0. };
+    bool   flag_pTCorr { false };
+    TRandom3* pTrand { nullptr };
+    double jet_area { 0.50265482457436691815402294132472 }; // assume R=0.4 jets
+
     public:
+    void set_pTCorr ( TH1D* _hg_pTCorr, double _mean_pTCorr=1., double _sig_pTCorr=0. );
+
     bool scaleByBinWidth=true;
     ioBinVec* bins {nullptr};
     ioAjSparse(const char* bin_file, const char* tag="", double _recoil_match=0.4);

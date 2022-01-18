@@ -163,6 +163,14 @@ ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match)
 void ioAjSparse::write() { 
     data->Write();
 };
+
+void ioAjSparse::set_pTCorr ( TH1D* _hg_pTCorr, double _mean_pTCorr, double _sig_pTCorr ) {
+    hg_pTCorr = _hg_pTCorr;
+    mean_pTCorr = _mean_pTCorr;
+    flag_pTCorr = true;
+    pTrand = new TRandom3();
+};
+
 void ioAjSparse::fill(
         double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz, double leadPt, double matchPt){
     hopper[0] = EAbbc;
@@ -185,7 +193,15 @@ void ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
             for (int k=0; k<5; ++k) hopper[k] = _in[k];
             hopper[5] = jets[0].perp();
             hopper[6] = jet.perp();
-            hopper[7] = (hopper[5]-hopper[6])/(hopper[5]+hopper[6]);
+            double pT_0 = hopper[5];
+            double pT_1 = hopper[6];
+            if (flag_pTCorr) {
+                pT_0 -= _in[1] * jet_area * (pTrand->Gaus(mean_pTCorr, sig_pTCorr));
+                pT_1 -= _in[1] * jet_area * (pTrand->Gaus(mean_pTCorr, sig_pTCorr));
+            }
+            /* } else { */
+            hopper[7] = (pT_0-pT_1)/(pT_0+pT_1);
+            /* } */
             data->Fill(hopper,weight);
             break;
         }

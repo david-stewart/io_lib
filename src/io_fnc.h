@@ -32,7 +32,6 @@
 
 using std::pair;
 
-
 TH1D* ioDivideTH1(TH1* num, TH1* den, ioOptMap opt={}, 
       ioOptMap dict={{"norm",0,"style-den",0}});
 
