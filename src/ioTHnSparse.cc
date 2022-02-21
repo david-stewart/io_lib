@@ -2,9 +2,18 @@
 #include "io_fnc.h"
 #include "ioClass.h"
 
-ioJetSpectraSparse::ioJetSpectraSparse(THnSparseD* _data_jet, THnSparseD* _data_trig) :
-    data_trig { _data_trig }, data_jet { _data_jet } {};
-ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
+ioJetSpectraSparse::ioJetSpectraSparse(
+        THnSparseD* _data_jet, THnSparseD* _data_trig,
+        bool _dbprint
+) :
+    data_trig { _data_trig }, data_jet { _data_jet }, debug_print{_dbprint} 
+{};
+
+ioJetSpectraSparse::ioJetSpectraSparse(
+        const char* bin_file, const char* tag, bool _dbprint) :
+    debug_print{_dbprint} 
+{
+    if (debug_print) cout << " bin_file: " << bin_file << endl;
     TString s_tag = tag;
     int i_bins = (s_tag.Contains("_10")) ? 10 : 3;
     ioBinVec bin_EAbbc { bin_file, Form("EAbbc_%ibin",i_bins) };
@@ -30,8 +39,13 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
     nbins[5] = bin_JetPt;
     nbins[6] = bin_absDphi;
 
+    if (debug_print) {
+        cout << " debug_print, nbins: " << endl;
+        for (int i{0}; i<7; ++i) cout << " nbins["<<i<<"] " << nbins[i] << endl;
+    }
+
     data_trig = new THnSparseD(Form("data_trig%s",tag),
-            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz",
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;",
             5, nbins, NULL, NULL);
     data_trig->SetBinEdges(0,bin_EAbbc);
     data_trig->SetBinEdges(1,bin_EAtpc);
@@ -39,10 +53,23 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
     data_trig->SetBinEdges(3,bin_ZDCx);
     data_trig->SetBinEdges(4,bin_vz);
 
+    if (debug_print) {
+        for (int k = 0; k<5; ++k) {
+            TAxis* x = data_trig->GetAxis(k);
+            cout << k << " debug print: THnSparse Axis: " << x->GetTitle() 
+                 << " axis:  " << x->GetTitle() << " nbins: " << x->GetNbins() << endl;
+            for (int j = 1; j<=x->GetNbins()+1; ++j) 
+                cout << "bin["<<j<<"] " << x->GetBinLowEdge(j) << " ";
+            cout << endl;
+            cout << k << " ------------- " << endl;
+        }
+    }
+
     data_jet = new THnSparseD(Form("data_jet%s",tag),
-            "jets;EAbbc;EAtpc;TrigEt;ZDCx;Vz;Jet #it{p}_{T}",
+            "jets;EAbbc;EAtpc;TrigEt;ZDCx;Vz;Jet #it{p}_{T};|#Delta#phi|;",
             7, nbins, NULL, NULL);
     data_jet->SetBinEdges(0,bin_EAbbc);
+    if (debug_print) cout << "bin_EAbbc: " << bin_EAbbc << endl;
     data_jet->SetBinEdges(1,bin_EAtpc);
     data_jet->SetBinEdges(2,bin_TrigEt);
     data_jet->SetBinEdges(3,bin_ZDCx);
@@ -53,6 +80,19 @@ ioJetSpectraSparse::ioJetSpectraSparse(const char* bin_file, const char* tag) {
     data_jet->Sumw2();
 };
 void ioJetSpectraSparse::write() { 
+    if (debug_print) {
+        cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
+            data_trig->GetEntries() << " jet-entries: " << data_jet->GetEntries() << endl;
+        auto t_proj = data_trig->Projection(0);
+        t_proj->SetName("p_trip");
+        cout << " First axes: (mean) trig " << t_proj->GetMean() << endl;
+        delete t_proj;
+
+        auto j_proj = data_jet->Projection(0);
+        j_proj->SetName("j_trip");
+        cout << " First axes: (mean) jet  " << j_proj->GetMean() << endl;
+        delete j_proj;
+    }
     data_trig->Write();
     data_jet->Write();
 };
@@ -148,7 +188,7 @@ ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match)
     nbins[6] = bin_matchPt;
     nbins[7] = bin_AJ;
     data = new THnSparseD(Form("data_%s",tag),
-            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;leadPt;matchPt;AJ",
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;leadPt;matchPt;AJ;",
             8, nbins, NULL, NULL);
     data->SetBinEdges(0,bin_EAbbc);
     data->SetBinEdges(1,bin_EAtpc);
@@ -161,12 +201,13 @@ ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match)
     data->Sumw2();
 };
 void ioAjSparse::write() { 
+    cout << " entries for " << data->GetName() << ": " << data->GetEntries() << endl;
     data->Write();
 };
 
-void ioAjSparse::set_pTCorr ( TH1D* _hg_pTCorr, double _mean_pTCorr, double _sig_pTCorr ) {
-    hg_pTCorr = _hg_pTCorr;
+void ioAjSparse::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
     mean_pTCorr = _mean_pTCorr;
+    sig_pTCorr = _sig_pTCorr;
     flag_pTCorr = true;
     pTrand = new TRandom3();
 };
@@ -265,7 +306,7 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     nbins[6] = bin_absDphi;
 
     data_trig = new THnSparseD(Form("data_trig%s",tag),
-            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz",
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;",
             5, nbins, NULL, NULL);
     data_trig->SetBinEdges(0,bin_EAbbc);
     data_trig->SetBinEdges(1,bin_EAtpc);
@@ -274,7 +315,8 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     data_trig->SetBinEdges(4,bin_vz);
 
     data_track = new THnSparseD(Form("data_track%s",tag),
-            "tracks;EAbbc;EAtpc;TrigEt;ZDCx;Vz;track #it{p}_{T};|#phi_{track}-#phi{trigger}|",
+            "tracks;EAbbc;EAtpc;TrigEt;ZDCx;Vz;track #it{p}_{T};"
+            "|#phi_{track}-#phi{trigger}|;",
             7, nbins, NULL, NULL);
     data_track->SetBinEdges(0,bin_EAbbc);
     data_track->SetBinEdges(1,bin_EAtpc);
@@ -287,6 +329,8 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     data_track->Sumw2();
 };
 void ioTrackSparse::ioTrackSparse::write() { 
+    cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
+        data_trig->GetEntries() << " track-entries: " << data_track->GetEntries() << endl;
     data_trig->Write();
     data_track->Write();
 };

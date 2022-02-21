@@ -14,15 +14,18 @@ class ioJetSpectraSparse {
 
     public:
     bool scaleByBinWidth=true;
-    double weight;
+    double weight{1.};
     double hopper[7];
     ioBinVec* bins {nullptr};
-    ioJetSpectraSparse(const char* bin_file, const char* tag="");
-    ioJetSpectraSparse(THnSparseD* _data_jet, THnSparseD* data_trig);
+    ioJetSpectraSparse(const char* bin_file, const char* tag="", 
+            bool debug_print=false);
+    ioJetSpectraSparse(THnSparseD* _data_jet, THnSparseD* data_trig, 
+            bool debug_print=false);
     void write();
 
     THnSparseD* data_trig;
     THnSparseD* data_jet;
+    bool debug_print {false};
     // axes:
     // 0 : EAbbc  - 3 bins
     // 1 : EAtpc  - 3 bins
@@ -62,12 +65,11 @@ class ioJetSpectraSparse {
 class ioAjSparse {
     private:
     int nbins[8];
-    double weight;
+    double weight{1.};
     double hopper[8];
     double dphi_min{0};
 
     // add a possibility to re-weight the ioAjSparse with a correction to the jets
-    TH1D*  hg_pTCorr   { nullptr };
     double mean_pTCorr { 1. };
     double sig_pTCorr  { 0. };
     bool   flag_pTCorr { false };
@@ -75,7 +77,7 @@ class ioAjSparse {
     double jet_area { 0.50265482457436691815402294132472 }; // assume R=0.4 jets
 
     public:
-    void set_pTCorr ( TH1D* _hg_pTCorr, double _mean_pTCorr=1., double _sig_pTCorr=0. );
+    void set_pTCorr ( double _mean_pTCorr=1., double _sig_pTCorr=0. );
 
     bool scaleByBinWidth=true;
     ioBinVec* bins {nullptr};
