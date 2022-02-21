@@ -293,7 +293,7 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
     ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
     ioBinVec bin_trackPt { bin_file, "trackpt_resolution" };
-    ioBinVec bin_absDphi {{ 0., 0., 8., IO_pi }};
+    ioBinVec bin_absDphi {{ 0., 0., 64., IO_pi }};
 
     // get the ZDCx bins:
 

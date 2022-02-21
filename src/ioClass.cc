@@ -2339,3 +2339,57 @@ ostream& operator<<(ostream& os, io_TF1fitter& fit) {
     }
     return os;
 };
+
+ioParticleThrower::ioParticleThrower(TH1D* hg, double multiple, unsigned int _seed) :
+    r3{_seed} 
+{
+    TAxis* ax { hg->GetXaxis() };
+    for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) {
+        auto val { hg->GetBinContent(i) };
+        if (val<=0) continue;
+        val *= multiple;
+
+        l_bound.push_back(ax->GetBinLowEdge(i));
+        u_bound.push_back(ax->GetBinUpEdge(i));
+        whole.push_back(static_cast<int>(TMath::Floor(val)));
+        remainder.push_back(val-TMath::Floor(val));
+    }
+    i_size = l_bound.size();
+};
+ostream& operator<<(ostream& os, ioParticleThrower& io) {
+    for (int i{0}; i<static_cast<int>(io.whole.size()); ++i) {
+        cout << Form("bin[%2i]  [%5.1f-%5.1f] : %i   ",
+                i,io.l_bound[i],io.u_bound[i],io.whole[i]) 
+            << io.remainder[i] << endl;
+    }
+    return os;
+};
+bool ioParticleThrower::throw_particle() {
+    if (i_bin == i_size) {
+        i_bin = 0;
+        i_whole = 0;
+        return false;
+    }
+    unsigned int n_whole = whole[i_bin];
+    if (i_whole < n_whole) {
+        set_rand(i_bin);
+        ++i_whole;
+        is_thrown = true;
+    } else {
+        i_whole = 0;
+        if (r3.Uniform()<remainder[i_bin]) {
+            set_rand(i_bin);
+            is_thrown=true;
+        } else {
+            is_thrown=false;
+        }
+        ++i_bin;
+    }
+    return true;
+};
+void ioParticleThrower::set_rand(unsigned int i) {
+    phi = r3.Uniform(IO_twopi);
+    eta = r3.Uniform(-1.,1.);
+    pt =  r3.Uniform(l_bound[i],u_bound[i]);
+};
+

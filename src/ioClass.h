@@ -5,7 +5,6 @@
 #include "TFile.h"
 #include <vector>
 #include "TPad.h"
-#include <iostream>
 #include <fstream>
 #include "TCanvas.h"
 #include <map>
@@ -18,7 +17,7 @@
 #include "io_operators.h"
 #include "TF1.h"
 #include <set>
-#include <iostream>
+#include "TRandom3.h"
 
 // --------------------------------------------------------------------------------------
 // ioGetter:
@@ -781,6 +780,26 @@ struct io_TF1fitter {
             double lo=0, double hi=0);
     void set_presets(vector<double>);
     friend ostream& operator<<(ostream& os, io_TF1fitter& ft);
+};
+
+struct ioParticleThrower {
+    TRandom3 r3;
+    vector<unsigned int>    whole;
+    vector<double> remainder;
+    vector<double> l_bound;
+    vector<double> u_bound;
+    ioParticleThrower( TH1D* _hg_probs, double multiple=1., unsigned int _seed=0 );
+    friend ostream& operator<<(ostream& os, ioBinVec& ioParticleThrower);
+
+    bool throw_particle();
+    void set_rand(unsigned int);
+    bool is_thrown;
+    unsigned int i_bin{0};
+    unsigned int i_whole{0};
+    unsigned int i_size;
+    double pt;
+    double phi;
+    double eta;
 };
 
 
