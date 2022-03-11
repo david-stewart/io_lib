@@ -87,6 +87,7 @@ class ioAjSparse {
     void write();
 
     THnSparseD* data;
+    double Aj();
     
     // axes:
     // 0 : EAbbc  - X bins
@@ -98,9 +99,9 @@ class ioAjSparse {
     // 7 : MatchPt
     // 8 : AJ
     
-    void fill(double EAbbc, double EAtpc, double TrigEt, double ZDCx, 
+    bool fill(double EAbbc, double EAtpc, double TrigEt, double ZDCx, 
               double Vz, double leadPt, double matchPt);
-    void fill(double* _in, vector<PseudoJet>& jets);
+    bool fill(double* _in, vector<PseudoJet>& jets);
 
     void range_axes    (int i_axis, int i0, int i1);
     void range_EAbbc   (int i0, int i1) { range_axes(0,i0,i1); };

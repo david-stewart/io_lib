@@ -212,7 +212,10 @@ void ioAjSparse::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
     pTrand = new TRandom3();
 };
 
-void ioAjSparse::fill(
+double ioAjSparse::Aj() {
+    return hopper[7];
+};
+bool ioAjSparse::fill(
         double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz, double leadPt, double matchPt){
     hopper[0] = EAbbc;
     hopper[1] = EAtpc;
@@ -223,9 +226,10 @@ void ioAjSparse::fill(
     hopper[6] = matchPt;
     hopper[7] = (leadPt - matchPt)/(leadPt+matchPt);
     data->Fill(hopper,weight);
+    return (leadPt >= 20 && matchPt >= 10);
 };
-void ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
-    if (jets.size() < 2) return;
+bool ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
+    if (jets.size() < 2) return false;
     double lead_phi = jets[0].phi();
     double matchPt = -1.;
     for (unsigned int i{1}; i<jets.size(); ++i) {
@@ -244,9 +248,11 @@ void ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
             hopper[7] = (pT_0-pT_1)/(pT_0+pT_1);
             /* } */
             data->Fill(hopper,weight);
-            break;
+
+            return (hopper[5] >= 20 && hopper[6] >= 10);
         }
     }
+    return false;
 };
 
 void ioAjSparse::range_axes (int i_axis, int i0, int i1) {

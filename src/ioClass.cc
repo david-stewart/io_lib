@@ -2393,3 +2393,28 @@ void ioParticleThrower::set_rand(unsigned int i) {
     pt =  r3.Uniform(l_bound[i],u_bound[i]);
 };
 
+ioPoissonParticleThrower::ioPoissonParticleThrower(
+        TRandom3& _r3, TH1D& _dist, double mult) 
+    : r3{_r3}, dist{_dist}
+{
+    mean = mult * dist.Integral();
+    i_to_throw = r3.Poisson(mean);
+    // remove any negative bins
+    for (int i=0; i<dist.GetXaxis()->GetNbins(); ++i) {
+        if (dist.GetBinContent(i)<0) dist.SetBinContent(i,0.);
+    }
+};
+
+bool ioPoissonParticleThrower::throw_particle() {
+    if (i_to_throw == i_thrown) {
+        i_thrown = 0;
+        i_to_throw = r3.Poisson(mean);
+        return false;
+    } else {
+        phi = r3.Uniform(IO_twopi);
+        eta = r3.Uniform(-1.,1.);
+        pt =  dist.GetRandom();
+        ++i_thrown;
+        return true;
+    }
+};

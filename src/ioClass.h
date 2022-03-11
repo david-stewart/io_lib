@@ -802,5 +802,24 @@ struct ioParticleThrower {
     double eta;
 };
 
+struct ioPoissonParticleThrower {
+    ioPoissonParticleThrower(TRandom3& _0, TH1D& _1, double mult=1.);
+    // Give it a distribution of particle pT values
+    // It will then integrate for the mean number of particles, and throw
+    // that number, distributed from the distribution
+    
+    // public
+    TRandom3& r3;
+    TH1D&     dist;
+    bool      throw_particle(); // will keep returning true until the last particle has been thrown.
+    double pt;
+    double phi;
+    double eta;
+    double mean;
+
+    // internal
+    unsigned int  i_to_throw;
+    unsigned int  i_thrown   {0};
+};
 
 #endif
