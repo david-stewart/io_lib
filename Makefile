@@ -1,5 +1,8 @@
 all:
 	./make.sh
+_class: 
+	./tmake.sh
+
 
 clear:
 	rm src/*.pcm || true

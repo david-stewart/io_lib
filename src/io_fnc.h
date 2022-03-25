@@ -29,6 +29,7 @@
 #define IO_piless1 2.14159265
 #define IO_3to8pi  1.17809725
 #define IO_5to8pi  1.96349541
+#define IO_halfpi  1.5707963267948966
 
 using std::pair;
 
