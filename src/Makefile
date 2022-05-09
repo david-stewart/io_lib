@@ -4,7 +4,7 @@
 # ldflg=-L${PYTHIA8}/lib -lpythia8 `${FASTJET3}/fastjet-config --libs` `root-config --glibs`
  
 # v- ccflg= `root-config --cflags` these are the -I include paths -v
-io_setter=${HOME}/root_macros/io_lib/iolib-config
+io_setter=${IO_LIB}/iolib-config
 ccflg=`${FASTJET3}/fastjet-config --cxxflags` `root-config --cflags` `${io_setter} -I`
 #                                
 # v- ccflg= `root-config --cflags` these are the -L paths

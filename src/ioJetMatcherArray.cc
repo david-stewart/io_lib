@@ -136,17 +136,17 @@ void ioJetMatcherArray::cull_add_array(array<TH1D*,9>& data, string which, const
     }
 };
 
-/* void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, string which, const char* posttag) { */
-/*     TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName()); */
-/*     truth->Add(truth_add); */
-/*     truth->SetName(Form("%s_Truth_%s%s",name.c_str(),which.c_str(),posttag)); */
-/*     TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName()); */
-/*     meas->SetName(Form("%s_Measured_%s%s",name.c_str(),which.c_str(),posttag)); */
-/*     h2->SetName(Form("%s_Matched_%s%s",name.c_str(),which.c_str(),posttag)); */
-/*     RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, */ 
-/*             h2, Form("%s_%s%s", name.c_str(), which.c_str(), posttag)); */
-/*     ruu->Write(); */
-/* }; */
+void ioJetMatcherArray::write_response(TH2D* h2, TH1D* truth, string which, const char* posttag) {
+    TH1D* truth_add = (TH1D*) h2->ProjectionY(ioUniqueName());
+    truth->Add(truth_add);
+    truth->SetName(Form("%s_Truth_%s%s",name.c_str(),which.c_str(),posttag));
+    TH1D* meas = (TH1D*) h2->ProjectionX(ioUniqueName());
+    meas->SetName(Form("%s_Measured_%s%s",name.c_str(),which.c_str(),posttag));
+    h2->SetName(Form("%s_Matched_%s%s",name.c_str(),which.c_str(),posttag));
+    RooUnfoldResponse* ruu = new RooUnfoldResponse(meas, truth, 
+            h2, Form("%s_%s%s", name.c_str(), which.c_str(), posttag));
+    ruu->Write();
+};
 
 void ioJetMatcherArray::write() {
     // cull data with bins < 10 entries

@@ -701,7 +701,7 @@ TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2>,
         ioOptMap opts, array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
 
 struct ioSysErrors {
-    ioSysErrors();
+    /* ioSysErrors(); */
     ioSysErrors(const ioSysErrors&);
     ioSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5}, array<ioPtrDbl,2>_err={});
     ioSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
@@ -821,5 +821,17 @@ struct ioPoissonParticleThrower {
     unsigned int  i_to_throw;
     unsigned int  i_thrown   {0};
 };
+
+struct ioHopper1D {
+    vector<double> edges;
+    vector<pair<double,double>> hopper;
+    void reset();
+    int nbins;
+    ioHopper1D(vector<double> _edges);
+    vector<pair<double,double>>::iterator begin();
+    vector<pair<double,double>>::iterator end();
+    int fill(double val, double weight=1.);
+};
+
 
 #endif

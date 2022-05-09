@@ -2251,7 +2251,7 @@ ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) {
         double p_center = anchor + r_center * deltaX + offset_c;
         tgase->SetPointEXlow (i,  p_center-p_left);
         tgase->SetPointEXhigh(i,  p_right-p_center);
-        tgase->SetPointX(i,p_center);
+        tgase->SetPoint(i,p_center,tgase->GetY()[i]);
     }
     return *this;
 };
@@ -2418,3 +2418,30 @@ bool ioPoissonParticleThrower::throw_particle() {
         return true;
     }
 };
+
+ioHopper1D::ioHopper1D(vector<double> _edges) :
+    edges { _edges }
+{
+    nbins = static_cast<int>( edges.size()-1 ); 
+    for (int i{0}; i<nbins; ++i) {
+        double center { 0.5*(edges[i]+edges[i+1]) };
+        hopper.push_back({center,0.});
+    }
+};
+int ioHopper1D::fill(double val, double weight) {
+    auto lb = upper_bound(edges.begin(), edges.end(), val);
+    if (lb == edges.begin()) return -1; // don't fill anything
+    if (lb == edges.end())   return -1; // don't fill anything
+    int bin = static_cast<int>(lb-edges.begin()-1);
+    hopper[bin].second += weight;
+    return bin;
+};
+void ioHopper1D::reset() {
+    for (auto& v : hopper) v.second = 0.;
+};
+vector<pair<double,double>>::iterator ioHopper1D::begin() {
+    return hopper.begin();
+}
+vector<pair<double,double>>::iterator ioHopper1D::end() {
+    return hopper.end();
+}
