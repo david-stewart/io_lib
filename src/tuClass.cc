@@ -1,6 +1,6 @@
-#include "ioClass.h"
-/* #include "io_fmt.h" */
-/* #include "io_fnc.h" */
+#include "tuClass.h"
+#include "tu_fmt.h"
+#include "tu_fnc.h"
 
 #include <sstream>
 #include <algorithm>
@@ -10,35 +10,13 @@
 #include <string>
 #include <set>
 #include "TTreeReader.h"
+#include "tuConst.h"
 
 using namespace std;
 
-/* double ioJetMatcher_float::operator()(const ioJetMatcher_float& B, const float jetR2) { */
-/*     const float deta {eta-B.eta}; */
-/*     const float dphi {io_dphi(phi, B.phi)}; */
-/*     const float dist2 = deta*deta + dphi*dphi; */
-/*     if (dist2 == 0.) return 0.0001; */
-/*     else if (dist2 > jetR2) return 0.; */
-/*     else return dist2; */
-/* }; */
+tuGetter::tuGetter() : n_objects{0} {};
 
-/* ioJetMatcher_float::ioJetMatcher_float(float _eta, float _phi, float _pT) : */
-/*     eta{_eta}, phi{_phi}, pT{_pT}, is_matched{false} {}; */
-/* ioJetMatcher_float::ioJetMatcher_float() : */
-/*     eta{0.}, phi{0.}, pT{0.}, is_matched{false} {}; */
-/* bool operator==(const ioJetMatcher_float& L, const ioJetMatcher_float R) */ 
-/*     { return L.pT == R.pT; }; */
-
-/* bool operator<(const ioJetMatcher_float& L, const ioJetMatcher_float R) */ 
-/*     { return L.pT < R.pT; }; */
-
-/* bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) */ 
-/*     { return L.pT > R.pT; }; */
-
-/* // ioGetter Class */
-ioGetter::ioGetter() : n_objects{0} {};
-
-TFile* ioGetter::get_file(string f_name) {
+TFile* tuGetter::get_file(string f_name) {
     if (f_name.find(".root") == string::npos) f_name += ".root";
     TFile *f = ( files.count(f_name) ? files[f_name] : new TFile(f_name.c_str(), "read") );
     if (!f->IsOpen()) {
@@ -48,7 +26,7 @@ TFile* ioGetter::get_file(string f_name) {
     return f;
 };
 
-TObject* ioGetter::operator()(string f_name, string object_name) {
+TObject* tuGetter::operator()(string f_name, string object_name) {
     TFile *s_current = gDirectory->GetFile();
     TFile *f = get_file(f_name);
     TObject* obj;
@@ -67,119 +45,36 @@ TObject* ioGetter::operator()(string f_name, string object_name) {
     return obj;
 };
 
-/* ioRanger::ioRanger(double _lo_range, double _hi_range, double _lo_out, double _hi_out) : */
-/*     lo_range {_lo_range}, */
-/*     hi_range {_hi_range}, */
-/*     lo_out   {_lo_out}, */
-/*     hi_out   {_hi_out} */
-/* {}; */
-/* double ioRanger::operator()(double x) { */
-/*     double val = lo_out + (hi_out-lo_out)*(x-lo_range)/(hi_range-lo_range); */
-/*     if (has_min_out && val < min_out) return min_out; */
-/*     if (has_max_out && val > max_out) return max_out; */
-/*     return val; */
-/* }; */
-/* void ioRanger::set_min_out(double _val) { */
-/*     has_min_out = true; */
-/*     min_out = _val; */
-/* }; */
-/* void ioRanger::set_max_out(double _val) { */
-/*     has_max_out = true; */
-/*     max_out = _val; */
-/* }; */
-
-vector<double> ioBinVec::bin_centers() {
+vector<double> tuBinVec::bin_centers() {
     vector<double> V;
     for (int i{0}; i<(int)vec.size()-1; ++i) V.push_back(0.5*(vec[i]+vec[i+1]));
     return V;
 };
-ioBinVec::ioBinVec(TAxis* ax) {
+tuBinVec::tuBinVec(TAxis* ax) {
     vector<double> build_vec;
     for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
     init(build_vec);
 };
-ioBinVec::ioBinVec(int nbins, double lo, double hi) :
-    size {nbins} 
-{
-    double step = (hi-lo)/nbins;
-    for (int i{1}; i<=size; ++i) vec.push_back(lo+i*step);
-    build_ptr();
-};
-void ioBinVec::build_ptr() {
+void tuBinVec::build_ptr() {
     size = vec.size();
     ptr = new double[size];
     for (int i{0}; i<size; ++i) ptr[i] = vec[i];
 };
-ioBinVec::operator int () { return size-1; };
-ioBinVec::operator double* () { return ptr; };
-ioBinVec::operator vector<double> () { return vec; };
+tuBinVec::operator int () { return size-1; };
+tuBinVec::operator double* () { return ptr; };
+tuBinVec::operator vector<double> () { return vec; };
 
-ioBinVec::ioBinVec(vector<double> V, bool range_setter) { 
-    init(V, range_setter);
+/* tuBinVec::tuBinVec(vector<double> V) { init(V); }; */
+tuBinVec::tuBinVec(const char* file, tuOptMap options) {
+    init( tuReadValVec(file, options) );;
 };
-ioBinVec::ioBinVec(const char* file, ioOptMap options, bool nbin_range){
-    init( ioReadValVec(file, options), nbin_range );
-};
-ioBinVec::ioBinVec(const char* file, const char* tag, ioOptMap options, bool nbin_range){
-    options["tag"] = tag;
-    init( ioReadValVec(file, options), nbin_range );
-};
-ioBinVec::ioBinVec(vector<vector<double>> V_in) {
-    for (auto& VEC : V_in)
-    for (auto    v : VEC) 
-        vec.push_back(v);
-    build_ptr();
+tuBinVec::tuBinVec(const char* file, const char* tag, tuOptMap options){
+    options("tag") = tag;
+    init( tuReadValVec(file, options) ) ;
 };
 // copy constructor
-ioBinVec::ioBinVec(const ioBinVec& cp) {
-    init(cp.vec, true);
-};
-ioBinVec::ioBinVec(TH1* h, const char axis) {
-    TAxis* ax;
-    switch (axis) {
-        case 'x':
-        case 'X':
-            ax = h->GetXaxis();
-            break;
-        case 'y':
-        case 'Y':
-            ax = h->GetYaxis();
-            break;
-        case 'z':
-        case 'Z':
-            ax = h->GetZaxis();
-            break;
-        default:
-            throw std::runtime_error("in ioBinVec initializer, must select axis 'xXyYzZ'");
-    }
-    vector<double> build_vec;
-    for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
-    init(build_vec);
-};
-
-void ioBinVec::set_val(int i, double val) {
-    if (i >= size) throw std::runtime_error(
-    Form("fatal in ioBinVec::set_val(), trying to change entry %i of vector size %i",
-        i, size)
-    );
-    ptr[i] = val;
-    vec[i] = val;
-};
-
-ioBinVec ioBinVec::operator+=(const ioBinVec& _) {
-    for (auto v : _.vec) vec.push_back(v);
-    delete[] ptr;
-    build_ptr();
-    return *this;
-};
-ioBinVec operator+ (ioBinVec lhs, const ioBinVec& rhs) { lhs += rhs; return lhs; };
-
-void ioBinVec::init(vector<double> V, bool range_repeat) {
-    if (!range_repeat || V.size()==0) {
-        for (auto v : V) vec.push_back(v);
-        build_ptr();
-        return;
-    }
+tuBinVec::tuBinVec(const tuBinVec& cp) { init(cp.vec); };
+void tuBinVec::init(vector<double> V) {
     // range repeate will add a range leading to the next number
     // it is triggered by a repeat value of the last number, followed by the number
     // of bins
@@ -190,7 +85,7 @@ void ioBinVec::init(vector<double> V, bool range_repeat) {
     int i{1}; 
     while (i<(int)S) {
         if ( V[i] == V[i-1] ) {
-            if (i>(S-3)) throw std::runtime_error( "fatal in ioBinVec with range_repeat");
+            if (i>(S-3)) throw std::runtime_error( "fatal in tuBinVec with range_repeat");
             double step = (V[i+2]-V[i])/V[i+1];
             for (int k{1}; k<=V[i+1]; ++k) vec.push_back(V[i]+k*step);
             i+=3;
@@ -201,179 +96,231 @@ void ioBinVec::init(vector<double> V, bool range_repeat) {
     }
     build_ptr();
 };
-ioBinVec::~ioBinVec() {
+tuBinVec::~tuBinVec() {
     delete[] ptr;
 };
-/* int ioBinVec::nbins() { return (int) size-1; }; */
-vector<double>::iterator ioBinVec::begin() { return vec.begin(); };
-vector<double>::iterator ioBinVec::end()   { return vec.end(); };
-double ioBinVec::operator[](int i) { return vec[i]; };
-double ioBinVec::bin_underflow() { 
+/* int tuBinVec::nbins() { return (int) size-1; }; */
+vector<double>::iterator tuBinVec::begin() { return vec.begin(); };
+vector<double>::iterator tuBinVec::end()   { return vec.end(); };
+double tuBinVec::operator[](int i) { return vec[i]; };
+double tuBinVec::bin_underflow() { 
     if (vec.size()<2)  return 0.;
     return vec[0]-(vec[1]-vec[0]);
 };
-double ioBinVec::bin_overflow() { 
+double tuBinVec::bin_overflow() { 
     if (vec.size()<2)  return 0.;
     int i { static_cast<int>(vec.size())-1 };
     return vec[i]+(vec[i]-vec[i-1]);
 };
-ostream& operator<<(ostream& os, ioBinVec& io) {
-    for (auto v : io) cout << " " << v;
+ostream& operator<<(ostream& os, tuBinVec& tu) {
+    for (auto v : tu) cout << " " << v;
     return os;
 };
 
-bool ioInBounds::operator()(double x) {
+bool tuInBounds::operator()(double x) {
     return (x >= lo_bound && x <= hi_bound);
 };
-void ioInBounds::init(ioBinVec bins) {
+void tuInBounds::init(tuBinVec bins) {
     if (bins.vec.size()<2) {
         throw std::runtime_error(
-        "Fatal: tried to initialize a ioInBounds with "
-        "an input ioBinVec with less than 2 entries!"
+        "Fatal: tried to initialize a tuInBounds with "
+        "an input tuBinVec with less than 2 entries!"
         );
     };
     lo_bound = bins[0];
     hi_bound = bins[bins.vec.size()-1];
 };
-ioInBounds::ioInBounds(const char* file, const char* tag){
+tuInBounds::tuInBounds(const char* file, const char* tag){
     init( {file, tag} );
 };
-ioInBounds::ioInBounds(ioBinVec bins) { init(bins); };
-ioInBounds::ioInBounds(double lo, double hi) :
+tuInBounds::tuInBounds(tuBinVec bins) { init(bins); };
+tuInBounds::tuInBounds(double lo, double hi) :
     lo_bound{lo}, hi_bound(hi) {}; 
 
-/* ostream& operator<<(ostream& os, ioInBounds& rhs) { */
-/*     os << " ioInBounds("<<rhs.lo_bound<<","<<rhs.hi_bound<<")"<<endl; */
+/* ostream& operator<<(ostream& os, tuInBounds& rhs) { */
+/*     os << " tuInBounds("<<rhs.lo_bound<<","<<rhs.hi_bound<<")"<<endl; */
 /*     return os; */
 /* }; */
 
-/* // ioPads class (with helper class ioPadDim) */
-/* void ioPadDim::check_input() { */
-/*     if (   low   < 0. || low   > 1. */ 
-/*             || p_low < 0. || p_low > 1. */ 
-/*             || p_up  < 0. || p_up  > 1. */ 
-/*             || up    < 0. || up    > 1. ) { */
-/*         cout << " Fatal error: input coordinates for ioPadDim for pads must all " */
-/*             " be in range [0,1] " << endl; */
-/*         print(); */
-/*         exit (2); */
-/*     } else if ( low > p_low || p_low > p_up || p_up > up ) { */
-/*         cout << " Fatal error: input coordinates must monotonically increase " << endl; */
-/*         print(); */
-/*         exit(2); */
-/*     } */
-/* }; */
+// tuPads class (with helper class tuPadDim)
+void tuPadDim::check_input() {
+    if (   low   < 0. || low   > 1. 
+            || p_low < 0. || p_low > 1. 
+            || p_up  < 0. || p_up  > 1. 
+            || up    < 0. || up    > 1. ) {
+        cout << " Fatal error: input coordinates for tuPadDim for pads must all "
+            " be in range [0,1] " << endl;
+        print();
+        exit (2);
+    } else if ( low > p_low || p_low > p_up || p_up > up ) {
+        cout << " Fatal error: input coordinates must monotonically increase " << endl;
+        print();
+        exit(2);
+    }
+};
 
-/* ioPadDim::ioPadDim( double _low, double _p_low, double _p_up, double _up ) : */
-/*     low{_low}, p_low{_p_low}, p_up{_p_up}, up{_up} { check_input(); }; */
-/* ioPadDim::ioPadDim( double _low, double _up ) : */ 
-/*     low{_low}, p_low{_low}, p_up{_up}, up{_up} { check_input(); }; */
-/* ioPadDim::ioPadDim( double _low, double _p_low, double _up ) : */ 
-/*     low{_low}, p_low{_p_low}, p_up{_up}, up{_up} { check_input(); }; */
-/* ioPadDim::ioPadDim( ) : */
-/*     low{0.}, p_low{0.}, p_up{1.}, up{1.} { check_input(); }; */
+tuPadDim::tuPadDim( double _low, double _p_low, double _p_up, double _up ) :
+    low{_low}, p_low{_p_low}, p_up{_p_up}, up{_up} { check_input(); };
+tuPadDim::tuPadDim( double _low, double _up ) : 
+    low{_low}, p_low{_low}, p_up{_up}, up{_up} { check_input(); };
+tuPadDim::tuPadDim( double _low, double _p_low, double _up ) : 
+    low{_low}, p_low{_p_low}, p_up{_up}, up{_up} { check_input(); };
+tuPadDim::tuPadDim( ) :
+    low{0.}, p_low{0.}, p_up{1.}, up{1.} { check_input(); };
 
 
-/* void ioPadDim::print() const { */
-/*     cout << Form(" Four points are: (%.2f, %.2f %.2f, %.2f)",low,p_low,p_up,up) << endl; */
-/* }; */
+void tuPadDim::print() const {
+    cout << Form(" Four points are: (%.2f, %.2f %.2f, %.2f)",low,p_low,p_up,up) << endl;
+};
 
-/* double ioPadDim::low_margin () const { */
-/*     double margin { (p_low - low) / (up - low) }; */
-/*     if (margin < 0) margin = 0; */
-/*     return margin; */
-/* }; */
-/* double ioPadDim::up_margin () const { */
-/*     // use to get set the lower margin */
-/*     double margin { (up - p_up) / (up - low) }; */
-/*     if (margin < 0) margin = 0; */
-/*     return margin; */
-/* }; */
+double tuPadDim::low_margin () const {
+    double margin { (p_low - low) / (up - low) };
+    if (margin < 0) margin = 0;
+    return margin;
+};
+double tuPadDim::up_margin () const {
+    // use to get set the lower margin
+    double margin { (up - p_up) / (up - low) };
+    if (margin < 0) margin = 0;
+    return margin;
+};
 
-/* bool ioPadDim::operator==(ioPadDim& B) const { */
-/*     return low == B.low */
-/*         && p_low == B.p_low */
-/*         && p_up  == B.p_up */
-/*         && up    == B.up; */
-/* }; */
+bool tuPadDim::operator==(tuPadDim& B) const {
+    return low == B.low
+        && p_low == B.p_low
+        && p_up  == B.p_up
+        && up    == B.up;
+};
 
-/* ioPadDimSet::ioPadDimSet(vector<double> _lefts, vector<double> _rights ) : */
-/*           rights{_rights} */ 
-/* { */
-/*     if (_lefts.size() == 0) nPads = 1; */
-/*     else if (_lefts[0] >= 1.) { */
-/*         nPads = (int) _lefts[0]; */
-/*         for (int i{0}; i<(int)_lefts.size()-1; ++i) lefts.push_back(_lefts[i+1]); */
-/*     } else { */
-/*         nPads = 1; */
-/*         lefts = _lefts; */
-/*     } */
-/* }; */
+tuPadDimSet::tuPadDimSet(vector<double> _lefts, vector<double> _rights ) :
+          rights{_rights} 
+{
+    if (_lefts.size() == 0) nPads = 1;
+    else if (_lefts[0] >= 1.) {
+        nPads = (int) _lefts[0];
+        for (int i{0}; i<(int)_lefts.size()-1; ++i) lefts.push_back(_lefts[i+1]);
+    } else {
+        nPads = 1;
+        lefts = _lefts;
+    }
+};
 
-/* ioPadDim ioPadDimSet::make_pad(double left, */ 
-/*             double left_margin, double pad_width, */ 
-/*             double right_margin) */ 
-/* { */
-/*     return ioPadDim{ left, */ 
-/*                      left+left_margin, */
-/*                      left+left_margin+pad_width, */
-/*                      left+left_margin+pad_width+right_margin }; */
-/* }; */
+tuPadDim tuPadDimSet::make_pad(double left, 
+            double left_margin, double pad_width, 
+            double right_margin) 
+{
+    return tuPadDim{ left, 
+                     left+left_margin,
+                     left+left_margin+pad_width,
+                     left+left_margin+pad_width+right_margin };
+};
 
-/* vector<ioPadDim> ioPadDimSet::calc_pads() { */
-/*     int npads = nPads; */
-/*     bool flip_direction = false; */
-/*     if (npads < 0) { */ 
-/*         npads = -npads; */ 
-/*         flip_direction=true; */
-/*     }; */
-/*     vector<ioPadDim> pads (npads) ; */
+vector<tuPadDim> tuPadDimSet::calc_pads() {
+    int npads = nPads;
+    bool flip_direction = false;
+    if (npads < 0) { 
+        npads = -npads; 
+        flip_direction=true;
+    };
+    vector<tuPadDim> pads (npads) ;
 
-/*     double first_left = (lefts.size() > 0) ? lefts[0] : 0.2; */
-/*     double inner_left = (lefts.size() > 1) ? lefts[1] : 0.0001; */
-/*     double page_left  = (lefts.size() > 2) ? lefts[2] : 0.01; */
+    double first_left = (lefts.size() > 0) ? lefts[0] : 0.2;
+    double inner_left = (lefts.size() > 1) ? lefts[1] : 0.0001;
+    double page_left  = (lefts.size() > 2) ? lefts[2] : 0.01;
 
-/*     double last_right  = (rights.size() > 0) ? rights[0] : 0.0001; */
-/*     double inner_right = (rights.size() > 1) ? rights[1] : 0.0; */
-/*     double page_right  = (rights.size() > 2) ? rights[2] : 0.01; */
+    double last_right  = (rights.size() > 0) ? rights[0] : 0.0001;
+    double inner_right = (rights.size() > 1) ? rights[1] : 0.0;
+    double page_right  = (rights.size() > 2) ? rights[2] : 0.01;
 
-/*     if (npads == 0) throw std::runtime_error( */
-/*         "fatal in ioPadDimSet must request at least one pad"); */
-/*     if (npads == 1) { */
-/*         double pad_width = 1.-first_left-page_left-last_right-page_right; */
-/*         if (pad_width<=0) throw std::runtime_error( */
-/*                 "fatal in ioPadDimSet margins have consumed more than 100\% of TCanvas"); */
-/*         pads[0] = make_pad( page_left, first_left, pad_width, last_right ); */
-/*         return pads; */
-/*     } */ 
+    if (npads == 0) throw std::runtime_error(
+        "fatal in tuPadDimSet must request at least one pad");
+    if (npads == 1) {
+        double pad_width = 1.-first_left-page_left-last_right-page_right;
+        if (pad_width<=0) throw std::runtime_error(
+                "fatal in tuPadDimSet margins have consumed more than 100\% of TCanvas");
+        pads[0] = make_pad( page_left, first_left, pad_width, last_right );
+        return pads;
+    } 
 
-/*     double pad_width { (1.-(first_left+page_left+last_right+page_right+ */
-/*             (inner_left+inner_right)*(npads-1)))/npads }; */
-/*     if (pad_width<=0) throw std::runtime_error( */
-/*             "fatal in ioPadDimSet margins have consumed more than 100\% of TCanvas"); */
+    double pad_width { (1.-(first_left+page_left+last_right+page_right+
+            (inner_left+inner_right)*(npads-1)))/npads };
+    if (pad_width<=0) throw std::runtime_error(
+            "fatal in tuPadDimSet margins have consumed more than 100\% of TCanvas");
 
-/*     int index = flip_direction ? npads-1 : 0; */
-/*     pads[index] = make_pad(page_left, first_left, pad_width, inner_right); */
-/*     double left = pads[index].up; */
+    int index = flip_direction ? npads-1 : 0;
+    pads[index] = make_pad(page_left, first_left, pad_width, inner_right);
+    double left = pads[index].up;
 
-/*     for (int i=1;i<npads-1;++i) { */
-/*         int index = flip_direction ? npads-i-1 : i; */
-/*         pads[index] = make_pad(left, inner_left, pad_width, inner_right); */
-/*         left = pads[index].up; */
-/*     } */
-/*     pads[flip_direction ? 0 : npads-1] = make_pad(left, inner_left, pad_width, last_right); */
-/*     return pads; */
-/* }; */
+    for (int i=1;i<npads-1;++i) {
+        int index = flip_direction ? npads-i-1 : i;
+        pads[index] = make_pad(left, inner_left, pad_width, inner_right);
+        left = pads[index].up;
+    }
+    pads[flip_direction ? 0 : npads-1] = make_pad(left, inner_left, pad_width, last_right);
+    return pads;
+};
 
-/* ioPads::ioPads ( vector<pair<ioPadDim, ioPadDim>> _pad_dimensions, int */
-/*         _canvas_width, int _canvas_height) : */
-/*     pad_dimensions{ _pad_dimensions } */
-/* { */
-/*     if (_canvas_width)  canvas_width  = _canvas_width; */
-/*     if (_canvas_height) canvas_height = _canvas_height; */
-/* }; */
-/* ioPads::ioPads ( int nYpads, int nXpads, int c_wide, int c_height, */ 
-/*             ioPadDimSet Ypads, ioPadDimSet Xpads) { */
+tuPads::tuPads ( int nYpads, vector<double> dimensions, int nXpads ) {
+    // build the tuPadDimSet out of dimensions
+    tuPadDimSet xPads{ {0.2, 0.0001, 0.01}, {0.0001,0.0,0.01 }};
+    tuPadDimSet yPads{ {0.2, 0.0001, 0.01}, {0.0001,0.0,0.01 }};
+
+    int which = 0;
+    int cnt   = 0;
+    canvas_width  = -1;
+    canvas_height = -1;
+    for (auto val : dimensions) {
+        if (val > 6) { // set first dimensions
+            if (canvas_width == -1) canvas_width  = val;
+            else                    canvas_height = val;
+            continue;
+        } else if (val > 1) { 
+            which = (int) val;
+            cnt = 0;
+            continue;
+        } else if (which == 0) {
+            which = kLeft;
+        }
+        switch (which) {
+            case 6:  // kTop
+                yPads.rights[cnt] = val;
+                break;
+            case 5: // kBottom
+                yPads.lefts[cnt] = val;
+                break;
+            case kLeft:
+                xPads.lefts[cnt] = val;
+                break;
+            case kRight:
+                xPads.rights[cnt] = val;
+                break;
+            default:
+                throw std::runtime_error(Form("fatal error: tuPads::tuPads: Error in selection of pad dimensions: was %i but must be (2,3,5,6:kLeft,Right,Bottom,Top)",
+                            which));
+        }
+        ++cnt;
+    }
+    yPads.nPads = -nYpads;
+    xPads.nPads =  nXpads;
+    if (canvas_width  == -1) canvas_width = 1200;
+    if (canvas_height == -1) canvas_height =  800;
+    nCol = TMath::Abs(nXpads);
+    nRow = TMath::Abs(nYpads);
+    for (auto x_pad : xPads.calc_pads())
+        for (auto y_pad : yPads.calc_pads())
+            pad_dimensions.push_back( {y_pad, x_pad} );
+};
+
+                
+tuPads::tuPads ( vector<pair<tuPadDim, tuPadDim>> _pad_dimensions, int
+        _canvas_width, int _canvas_height) :
+    pad_dimensions{ _pad_dimensions }
+{
+    if (_canvas_width)  canvas_width  = _canvas_width;
+    if (_canvas_height) canvas_height = _canvas_height;
+};
+/* tuPads::tuPads ( int nYpads, int nXpads, int c_wide, int c_height, */ 
+/*             tuPadDimSet Ypads, tuPadDimSet Xpads) { */
 
 /*     if (c_wide)   canvas_width = c_wide; */
 /*     if (c_height) canvas_height = c_height; */
@@ -388,168 +335,166 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         for (auto y_pad : Ypads.calc_pads()) */
 /*             pad_dimensions.push_back( {y_pad, x_pad} ); */
 /* }; */
-/* ioPads::ioPads( vector<ioPadDim> y_dim, vector<ioPadDim> x_dim, int c_wide, int c_height) { */
-/*     if (x_dim.size()==1) { */
-/*         ioPadDim temp_pad; */
-/*         if (x_dim[0] == temp_pad) { */
-/*             x_dim[0].low = 0.; */
-/*             x_dim[0].p_low = 0.15; */
-/*             x_dim[0].p_up  = 0.95; */
-/*             x_dim[0].up    = 0.99; */
-/*         } */
-/*     } */
-/*     if (y_dim[0].low < 0) { */
-/*         y_dim[0].low = TMath::Abs(y_dim[0].low); */
-/*         if (y_dim[0].low < 0.01) y_dim[0].low = 0.; */
-/*         vector<ioPadDim> temp; */
-/*         for (int i{(int)y_dim.size()-1};i>=0;--i) temp.push_back(y_dim[i]); */
-/*         y_dim = temp; */
-/*     } */
-/*     for (auto& x : x_dim) */ 
-/*         for (auto& y : y_dim) */
-/*             pad_dimensions.push_back({y,x}); */
+tuPads::tuPads( vector<tuPadDim> y_dim, vector<tuPadDim> x_dim, int c_wide, int c_height) {
+    if (x_dim.size()==1) {
+        tuPadDim temp_pad;
+        if (x_dim[0] == temp_pad) {
+            x_dim[0].low = 0.;
+            x_dim[0].p_low = 0.15;
+            x_dim[0].p_up  = 0.95;
+            x_dim[0].up    = 0.99;
+        }
+    }
+    if (y_dim[0].low < 0) {
+        y_dim[0].low = TMath::Abs(y_dim[0].low);
+        if (y_dim[0].low < 0.01) y_dim[0].low = 0.;
+        vector<tuPadDim> temp;
+        for (int i{(int)y_dim.size()-1};i>=0;--i) temp.push_back(y_dim[i]);
+        y_dim = temp;
+    }
+    for (auto& x : x_dim) 
+        for (auto& y : y_dim)
+            pad_dimensions.push_back({y,x});
 
-/*     nCol = x_dim.size(); */
-/*     nRow = y_dim.size(); */
-/*     if (c_wide)   canvas_width = c_wide; */
-/*     if (c_height) canvas_height = c_height; */
-/* }; */
-/* void ioPads::stamp(const char* msg, ioOptMap options, ioOptMap dict) { */
-/*     dict += options; */
-/*     canvas_pad->cd(); */
-/*     /1* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; *1/ */
-/*     ioDrawTLatex(msg,dict["x-loc"](), dict["y-loc"](), dict); */
-/* }; */
+    nCol = x_dim.size();
+    nRow = y_dim.size();
+    if (c_wide)   canvas_width = c_wide;
+    if (c_height) canvas_height = c_height;
+};
+void tuPads::stamp(const char* msg, tuOptMap options, tuOptMap dict) {
+    dict += options;
+    canvas_pad->cd();
+    /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
+    tuDrawTLatex(msg,dict("x-loc"), dict("y-loc"), dict);
+};
+TPad* tuPads::operator()(int row, int col) {
+    if (pads.size() == 0) init();
+    if (row < 0) {
+        row = -row;
+        col = row % nCol;
+        row = row / nCol;
+    }
+    int i_pad = row+col*nRow;
+    if (i_pad >= (int)pads.size()) {
+        i_pad = i_pad % (int) pads.size();
+    }
+    pads[i_pad]->cd();
+    return pads[i_pad];
+};
+void tuPads::init() {
+    // make and stylize the TCanvas and pads currently in the list
+    const char* t_name = Form("canv_%s",tuUniqueName());
+    canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
+    tu_fmt(canvas);
+    canvas->Draw();
+    canvas->cd();
 
-/* TPad* ioPads::operator()(int row, int col) { */
-/*     if (pads.size() == 0) init(); */
-/*     if (row < 0) { */
-/*         row = -row; */
-/*         col = row % nCol; */
-/*         row = row / nCol; */
-/*     } */
-/*     int i_pad = row+col*nRow; */
-/*     if (i_pad >= (int)pads.size()) { */
-/*         i_pad = i_pad % (int) pads.size(); */
-/*     } */
-/*     pads[i_pad]->cd(); */
-/*     return pads[i_pad]; */
-/* }; */
+    // add all pads
+    add_pad(pad_dimensions);
 
-/* void ioPads::init() { */
-/*     // make and stylize the TCanvas and pads currently in the list */
-/*     const char* t_name = Form("canv_%s",ioUniqueName()); */
-/*     canvas = new TCanvas(t_name, "",canvas_width, canvas_height); */
-/*     io_fmt(canvas); */
-/*     canvas->Draw(); */
-/*     canvas->cd(); */
-
-/*     // add all pads */
-/*     add_pad(pad_dimensions); */
-
-/*     canvas->cd(); */
-/*     /1* canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.); *1/ */
-/*     /1* io_fmt(canvas_pad); *1/ */
-/*     /1* canvas_pad->Draw(); *1/ */
-/* }; */
+    canvas->cd();
+    /* canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.); */
+    /* tu_fmt(canvas_pad); */
+    /* canvas_pad->Draw(); */
+};
 
 
-/* void ioPads::add_pad(pair<ioPadDim,ioPadDim>& coord){ */
-/*     canvas->cd(); */
+void tuPads::add_pad(pair<tuPadDim,tuPadDim>& coord){
+    canvas->cd();
 
-/*     if (pads.size()==0) { */
-/*         canvas_pad = new TPad(ioUniqueName(),"",0.,0.,1.,1.); */
-/*         io_fmt(canvas_pad); */
-/*         canvas_pad->Draw(); */
-/*         canvas->cd(); */
-/*     } */
+    if (pads.size()==0) {
+        canvas_pad = new TPad(tuUniqueName(),"",0.,0.,1.,1.);
+        tu_fmt(canvas_pad);
+        canvas_pad->Draw();
+        canvas->cd();
+    }
 
-/*     const ioPadDim x { coord.second }; */
-/*     const ioPadDim y { coord.first  }; */
-/*     int i{0}; */
-/*     /1* while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; } *1/ */
-/*     TPad* p = new TPad(ioUniqueName(),"",x.low,y.low,x.up,y.up); */
+    const tuPadDim x { coord.second };
+    const tuPadDim y { coord.first  };
+    int i{0};
+    /* while (gDirectory->FindObjectAny(Form("loc_pad_%i",i))) { ++i; } */
+    TPad* p = new TPad(tuUniqueName(),"",x.low,y.low,x.up,y.up);
 
-/*     // set the boundaries left(l), right(r), top(t), bottom(b) */
-/*     p->SetLeftMargin(x.low_margin()); */
-/*     p->SetRightMargin(x.up_margin()); */
-/*     p->SetBottomMargin(y.low_margin()); */
-/*     p->SetTopMargin(y.up_margin()); */
+    // set the boundaries left(l), right(r), top(t), bottom(b)
+    p->SetLeftMargin(x.low_margin());
+    p->SetRightMargin(x.up_margin());
+    p->SetBottomMargin(y.low_margin());
+    p->SetTopMargin(y.up_margin());
 
-/*     io_fmt(p); */
-/*     p->Draw(); */
-/*     pads.push_back(p); */
-/* }; */
+    tu_fmt(p);
+    p->Draw();
+    pads.push_back(p);
+};
 
-/* void ioPads::add_pad(vector<pair<ioPadDim,ioPadDim>> input) { */
-/*     for (auto& inp : input) add_pad(inp); */
-/* }; */
+void tuPads::add_pad(vector<pair<tuPadDim,tuPadDim>> input) {
+    for (auto& inp : input) add_pad(inp);
+};
 
-/* // Implementation of ioIntList */
-/* string ioIntList::make(const char* in_file, bool print) { */
-/*     ostringstream msg; */
-/*     ifstream file; */
-/*     file.open(in_file); */
-/*     if (!file.is_open()) { */
-/*         msg << "Could not open int list \"" << in_file << "\". No entries entered." << endl; */
-/*         cout << msg.str() << endl; */
-/*         return msg.str(); */
-/*     } */
-/*     string line; */
-/*     while (getline(file,line)) { */
-/*         line.append(" "); */
-/*         stringstream words(line); */
-/*         TString word; */
-/*         int n_words {0}; */
-/*         while (words >> word) { */
-/*             if (word.BeginsWith("//") || word.BeginsWith("#")) break; */
-/*             // skip lines that start with a non-number (assume it is a header) */
-/*             if (n_words==0) { */
-/*                 if (!word.IsAlnum()) break; */
-/*             } */
-/*             ++n_words; */
-/*             list.push_back(word.Atoi()); */
-/*         } */
-/*     } */
-/*     sort(list.begin(),list.end()); */
-/*     file.close(); */
-/*     msg << " Successfully read in integer list from \"" << in_file << "\""; */
-/*     if (print) msg << ". Values: "; */
-/*     msg << endl; */
-/*     if (print) { */
-/*         for (auto& i : list) msg << "  " << i << endl; */
-/*     } */
-/*     cout << msg.str(); */
-/*     return msg.str(); */
-/* }; */
+// Implementation of tuIntList
+string tuIntList::make(const char* in_file, bool print) {
+    ostringstream msg;
+    ifstream file;
+    file.open(in_file);
+    if (!file.is_open()) {
+        msg << "Could not open int list \"" << in_file << "\". No entries entered." << endl;
+        cout << msg.str() << endl;
+        return msg.str();
+    }
+    string line;
+    while (getline(file,line)) {
+        line.append(" ");
+        stringstream words(line);
+        TString word;
+        int n_words {0};
+        while (words >> word) {
+            if (word.BeginsWith("//") || word.BeginsWith("#")) break;
+            // skip lines that start with a non-number (assume it is a header)
+            if (n_words==0) {
+                if (!word.IsAlnum()) break;
+            }
+            ++n_words;
+            list.push_back(word.Atoi());
+        }
+    }
+    sort(list.begin(),list.end());
+    file.close();
+    msg << " Successfully read in integer list from \"" << in_file << "\"";
+    if (print) msg << ". Values: ";
+    msg << endl;
+    if (print) {
+        for (auto& i : list) msg << "  " << i << endl;
+    }
+    cout << msg.str();
+    return msg.str();
+};
 
-/* ioIntList::ioIntList(const char* in_file, ofstream& log, bool print) { */
+/* tuIntList::tuIntList(const char* in_file, ofstream& log, bool print) { */
 /*     log << make(in_file, print); */
 /* }; */
-/* ioIntList::ioIntList(const char* in_file, bool print) { make(in_file, print); }; */
+/* tuIntList::tuIntList(const char* in_file, bool print) { make(in_file, print); }; */
 
-/* bool ioIntList::operator()(int val) { */
+/* bool tuIntList::operator()(int val) { */
 /*     return std::binary_search(list.begin(), list.end(), val); */
 /* }; */
-/* int ioIntList::operator[](int val) { */
+/* int tuIntList::operator[](int val) { */
 /*     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin()); */
 /* }; */
-/* bool ioIntList::has(int val) { return this->operator()(val); }; */
-/* bool ioIntList::has_not(int val) { return !(this->operator()(val)); }; */
+/* bool tuIntList::has(int val) { return this->operator()(val); }; */
+/* bool tuIntList::has_not(int val) { return !(this->operator()(val)); }; */
 
 
-/* bool ioRunListId::has_run(int id) { */
+/* bool tuRunListId::has_run(int id) { */
 /*     return static_cast<bool>(map_id.count(id)); */
 /* }; */
 
-/* int ioRunListId::size() { return map_id.size(); }; */
+/* int tuRunListId::size() { return map_id.size(); }; */
 
-/* double ioRunListId::operator()(int run_id) { */
+/* double tuRunListId::operator()(int run_id) { */
 /*     set_id(run_id); */
 /*     return id; */
 /* }; */
 
-/* double ioRunListId::set_id(int run_id) { */
+/* double tuRunListId::set_id(int run_id) { */
 /*     if (has_run(run_id)) { */
 /*         id = static_cast<double>(map_id[run_id]); */
 /*     } else { */
@@ -558,27 +503,27 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return id; */
 /* }; */
 
-/* // Implementation of ioIntMap */
-/* ioIntMap::ioIntMap(const char* file, */
+/* // Implementation of tuIntMap */
+/* tuIntMap::tuIntMap(const char* file, */
 /*         int index_column, */ 
 /*         int data_column, */
 /*         bool echo_print, */
 /*         vector<int> skip_vals */
 /*         ) { */
-/*     ioIntMap_constructor(file, index_column, data_column, */ 
+/*     tuIntMap_constructor(file, index_column, data_column, */ 
 /*             echo_print, skip_vals); */
 /* }; */
-/* ioIntMap::ioIntMap(const char* file, */
+/* tuIntMap::tuIntMap(const char* file, */
 /*         int index_column, */ 
 /*         int data_column, */
 /*         bool echo_print, */
 /*         ofstream& log, */
 /*         vector<int> skip_vals */
 /*         ) { */
-/*     log << ioIntMap_constructor(file, index_column, data_column, */ 
+/*     log << tuIntMap_constructor(file, index_column, data_column, */ 
 /*             echo_print, skip_vals); */
 /* }; */
-/* string ioIntMap::ioIntMap_constructor ( */
+/* string tuIntMap::tuIntMap_constructor ( */
 /*         const char* in_file, */
 /*         int index_column, */ 
 /*         int data_column, */
@@ -587,7 +532,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         ) { */
 /*     set<int> skip_val_set; */
 /*     for (auto& v : skip_vals) skip_val_set.insert(v); */
-/*     /1* string ioIntMap::make(const char* in_file, bool print) { *1/ */
+/*     /1* string tuIntMap::make(const char* in_file, bool print) { *1/ */
 /*     ostringstream msg; */
 /*     ifstream file; */
 /*     file.open(in_file); */
@@ -638,7 +583,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         if (comment_flag) continue; */
 /*         if (!has_index || !has_data) { */
 /*             /1* ostringstream loc_msg; *1/ */
-/*             msg << "fatal error in reading ioIntMap line from file: " */
+/*             msg << "fatal error in reading tuIntMap line from file: " */
 /*                 << "  -> " << in_file << endl; */
 /*             if (!has_index) */ 
 /*                 msg << " Couldn't read index column("<<index_column */ 
@@ -661,29 +606,29 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return msg.str(); */
 /* }; */
 
-/* bool ioIntMap::has(int key) { */
+/* bool tuIntMap::has(int key) { */
 /*     return (bool) data_map.count(key); */
 /* }; */
 
-/* int& ioIntMap::operator[](int key) { return data_map[key]; }; */
+/* int& tuIntMap::operator[](int key) { return data_map[key]; }; */
 
-/* vector<int> ioIntMap::keys() { */
+/* vector<int> tuIntMap::keys() { */
 /*     vector<int> vec; */
 /*     for (auto m : data_map) vec.push_back(m.first); */
 /*     sort(vec.begin(), vec.end()); */
 /*     return vec; */
 /* }; */
-/* int ioIntMap::size() { return data_map.size(); }; */
+/* int tuIntMap::size() { return data_map.size(); }; */
 
 
-/* // ioHgStats */
-/* ioHgStats::ioHgStats(vector<double> ax_vals, vector<double> _vals, vector<double> _errs, bool cut_zeros) { */
+/* // tuHgStats */
+/* tuHgStats::tuHgStats(vector<double> ax_vals, vector<double> _vals, vector<double> _errs, bool cut_zeros) { */
 /*     if (ax_vals.size() != _vals.size() || _vals.size() != _errs.size()) */
 /*         throw std::runtime_error( */
-/*                 "ioHgStats(vec, vec, vec) required vectors of same length"); */
+/*                 "tuHgStats(vec, vec, vec) required vectors of same length"); */
 /*     if (ax_vals.size() < 2) */ 
 /*         throw std::runtime_error( */
-/*                 "ioHgStats(vec, vec, vec) required vectors size > 1"); */
+/*                 "tuHgStats(vec, vec, vec) required vectors size > 1"); */
 /*     vals = _vals; */
 /*     errs = _errs; */
 /*     nbins = ax_vals.size(); */
@@ -705,9 +650,9 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     calc_stats(); */
 /* }; */
-/* ioHgStats::ioHgStats(TH1D* hg, bool cut_zeros) { */
-/*     vals = io_vecBinContent(hg); */
-/*     errs = io_vecBinError  (hg); */
+/* tuHgStats::tuHgStats(TH1D* hg, bool cut_zeros) { */
+/*     vals = tu_vecBinContent(hg); */
+/*     errs = tu_vecBinError  (hg); */
 /*     axis=hg->GetXaxis(); */
 /*     nbins = axis->GetNbins(); */
 /*     if (cut_zeros) { */
@@ -721,13 +666,13 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     calc_stats(); */
 /* }; */
-/* ioHgStats::ioHgStats(TProfile* hg, bool cut_zeros, bool weight_by_entries) { */
-/*     vals = io_vecBinContent(hg); */
-/*     errs = io_vecBinError  (hg); */
+/* tuHgStats::tuHgStats(TProfile* hg, bool cut_zeros, bool weight_by_entries) { */
+/*     vals = tu_vecBinContent(hg); */
+/*     errs = tu_vecBinError  (hg); */
 /*     axis=hg->GetXaxis(); */
 /*     nbins = axis->GetNbins(); */
 /*     if (weight_by_entries) { */
-/*         weight = io_vecBinEntries(hg); */
+/*         weight = tu_vecBinEntries(hg); */
 /*     } else { */
 /*         if (cut_zeros) { */
 /*             for (auto i{0}; i<nbins;++i) { */
@@ -741,11 +686,11 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     calc_stats(); */
 /* }; */
-/* void ioHgStats::calc_stats() { */
+/* void tuHgStats::calc_stats() { */
 /*     mean   = TMath::Mean(vals.begin(), vals.end(), weight.begin()); */
 /*     stddev = TMath::StdDev(vals.begin(), vals.end(), weight.begin()); */
 /* }; */
-/* double ioHgStats::mean_Xsigma(double X) { */
+/* double tuHgStats::mean_Xsigma(double X) { */
 /*     /1* double sumW{0}; *1/ */
 /*     /1* double sumV{0}; *1/ */
 /*     /1* double sumE{0}; *1/ */
@@ -756,13 +701,13 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     /1* mean+X*stddev << " >> npts" << nbins << Form("stats:%f,%f,%f",sumV,sumE,sumW) <<endl; *1/ */
 /*     return mean+ X * stddev; */
 /* }; */
-/* TLine* ioHgStats::get_horizontal_TLine(double cut, bool cut_times_sigma) { */
+/* TLine* tuHgStats::get_horizontal_TLine(double cut, bool cut_times_sigma) { */
 /*     double x0 = axis->GetBinLowEdge(1); */
 /*     double x1 = axis->GetBinUpEdge(axis->GetNbins()); */
 /*     double y = cut_times_sigma ? mean_Xsigma(cut) : cut; */
 /*     return new TLine(x0,y,x1,y); */
 /* }; */
-/* TGraph* ioHgStats::points_above(double cut, bool cut_times_sigma) { */
+/* TGraph* tuHgStats::points_above(double cut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y = cut_times_sigma ? mean_Xsigma(cut) : cut; */
 /*     int n_above {0}; */
@@ -781,7 +726,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return new TGraph(n_above,xpts,ypts); */
 /* }; */
-/* TGraph* ioHgStats::points_below(double cut, bool cut_times_sigma) { */
+/* TGraph* tuHgStats::points_below(double cut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y = cut_times_sigma ? mean_Xsigma(cut) : cut; */
 /*     int n_pts {0}; */
@@ -800,7 +745,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return new TGraph(n_pts,xpts,ypts); */
 /* }; */
-/* TGraph* ioHgStats::points_between(double locut, double hicut, bool cut_times_sigma) { */
+/* TGraph* tuHgStats::points_between(double locut, double hicut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut; */
 /*     double y_hi = cut_times_sigma ? mean_Xsigma(hicut) : hicut; */
@@ -821,7 +766,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return new TGraph(n_pts,xpts,ypts); */
 /* }; */
 /* // cuts */
-/* ioHgStats& ioHgStats::cut_above(double cut, bool cut_times_sigma) { */
+/* tuHgStats& tuHgStats::cut_above(double cut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y = cut_times_sigma ? mean_Xsigma(cut) : cut; */
 /*     int n_above {0}; */
@@ -831,7 +776,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     calc_stats(); */
 /*     return *this; */
 /* }; */
-/* ioHgStats& ioHgStats::cut_below(double cut, bool cut_times_sigma) { */
+/* tuHgStats& tuHgStats::cut_below(double cut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y = cut_times_sigma ? mean_Xsigma(cut) : cut; */
 /*     int n_pts {0}; */
@@ -841,16 +786,16 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     calc_stats(); */
 /*     return *this; */
 /* }; */
-/* vector<double> ioHgStats::unmasked_vals() { */
+/* vector<double> tuHgStats::unmasked_vals() { */
 /*     vector<double> r_vec; */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         if (weight[i]!=0.) r_vec.push_back(vals[i]); */
 /*     } */
 /*     return r_vec; */
 /* }; */
-/* ioHgStats& ioHgStats::mask(const vector<bool>  mask) { */
+/* tuHgStats& tuHgStats::mask(const vector<bool>  mask) { */
 /*     if ((int)mask.size() != nbins) { */
-/*         cout << " error in ioHgStats::mask " << endl */
+/*         cout << " error in tuHgStats::mask " << endl */
 /*             << " There are " << nbins << " bins, but only " << mask.size() */
 /*             << " points in in put mask " << endl << endl */
 /*             << " Therefore mask is not applied." << endl; */
@@ -862,9 +807,9 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return *this; */
 /* }; */
-/* /1* ioHgStats& ioHgStats::mask(vector<int>& mask, bool mask_keep_true) { *1/ */
+/* /1* tuHgStats& tuHgStats::mask(vector<int>& mask, bool mask_keep_true) { *1/ */
 /* /1*     if ((int)mask.size() != nbins) { *1/ */
-/* /1*         cout << " error in ioHgStats::mask " << endl *1/ */
+/* /1*         cout << " error in tuHgStats::mask " << endl *1/ */
 /* /1*              << " There are " << nbins << " bins, but only " << mask.size() *1/ */
 /* /1*              << " points in in put mask " << endl << endl *1/ */
 /* /1*              << " Therefore mask is not applied." << endl; *1/ */
@@ -876,7 +821,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* /1*     } *1/ */
 /* /1*     return *this; *1/ */
 /* /1* }; *1/ */
-/* ioHgStats& ioHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) { */
+/* tuHgStats& tuHgStats::cut_to_range(double locut, double hicut, bool cut_times_sigma) { */
 /*     // count how many points are above */
 /*     double y_lo = cut_times_sigma ? mean_Xsigma(locut) : locut; */
 /*     double y_hi = cut_times_sigma ? mean_Xsigma(hicut) : hicut; */
@@ -887,7 +832,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     calc_stats(); */
 /*     return *this; */
 /* }; */
-/* TGraph* ioHgStats::points() { */
+/* TGraph* tuHgStats::points() { */
 /*     int n_pts {0}; */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         if (weight[i]!=0.) ++n_pts; */
@@ -904,28 +849,28 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return new TGraph(n_pts,xpts,ypts); */
 /* }; */
-/* int ioHgStats::count_points() { */
+/* int tuHgStats::count_points() { */
 /*     int n_pts {0}; */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         if (weight[i]!=0.) ++n_pts; */
 /*     } */
 /*     return n_pts; */
 /* }; */
-/* vector<int> ioHgStats::bin_indices() { */
+/* vector<int> tuHgStats::bin_indices() { */
 /*     vector<int> vec; */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         if (weight[i]!=0.) vec.push_back(i+1); */
 /*     } */
 /*     return vec; */
 /* }; */
-/* ioHgStats& ioHgStats::restore_points() { */
+/* tuHgStats& tuHgStats::restore_points() { */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         weight[i] = 1.; */
 /*     } */
 /*     calc_stats(); */
 /*     return *this; */
 /* }; */
-/* ioHgStats& ioHgStats::cut_zeros() { */
+/* tuHgStats& tuHgStats::cut_zeros() { */
 /*     for (auto i{0}; i<nbins; ++i) { */
 /*         if (vals[i]==0) weight[i] =0.; */
 /*     } */
@@ -934,9 +879,9 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* }; */
 
 /* // ------------------------------------------------------ */
-/* // | Implementation of ioMsgTree                        | */
+/* // | Implementation of tuMsgTree                        | */
 /* // ------------------------------------------------------ */
-/* ioMsgTree::ioMsgTree(bool set_echo) : */ 
+/* tuMsgTree::tuMsgTree(bool set_echo) : */ 
 /*     b_msg{""}, */ 
 /*     tree{"Messages", "Tree of messages"} */
 /* { */
@@ -946,27 +891,27 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     dash(); */
 /*     echo_to_cout = set_echo; */
 /* }; */
-/* void ioMsgTree::msg(string msg) { */
+/* void tuMsgTree::msg(string msg) { */
 /*     b_msg = msg; */
 /*     if (echo_to_cout) cout << b_msg << endl; */
 /*     tree.Fill(); */
 /* }; */
-/* void ioMsgTree::msg(vector<string> messages) { */
+/* void tuMsgTree::msg(vector<string> messages) { */
 /*     for (auto& msg : messages) { */
 /*         b_msg = msg; */
 /*         if (echo_to_cout) cout << b_msg << endl; */
 /*         tree.Fill(); */
 /*     } */
 /* }; */
-/* void ioMsgTree::dash() { */
+/* void tuMsgTree::dash() { */
 /*     b_msg = "---------------"; */
 /*     if (echo_to_cout) cout << b_msg << endl; */
 /*     tree.Fill(); */
 /* }; */
-/* void ioMsgTree::write(){ */
+/* void tuMsgTree::write(){ */
 /*     tree.Write(); */
 /* }; */
-/* void ioMsgTree::read_messages(const char* f_name){ */
+/* void tuMsgTree::read_messages(const char* f_name){ */
 /*     cout << " Reading file: " << f_name << endl; */
 /*     /1* TTree *tree; *1/ */
 /*     TFile* fin  = new TFile(f_name, "read"); */
@@ -983,7 +928,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     delete fin; */
 /*     /1* } *1/ */
 /*     }; */
-/* void ioMsgTree::slurp_file(const char* which_file) { */
+/* void tuMsgTree::slurp_file(const char* which_file) { */
 /*     // try and read all lines of which_file into the tree */
 /*     msg(Form("--Begin contents of file \"%s\"",which_file)); */
 /*     ifstream f_in {which_file}; */
@@ -997,7 +942,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return; */
 /* }; */
 
-/* vector<int> ioIntVec::vals(string tag) { */
+/* vector<int> tuIntVec::vals(string tag) { */
 /*     assert_tag(tag,"vals"); */
 /*     int col { i_tag(tag) }; */
 /*     vector<int> r_vec {}; */
@@ -1005,20 +950,20 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return r_vec; */
 /* }; */
 
-/* vector<int> ioIntVec::vals(string tag, vector<bool> mask) { */
+/* vector<int> tuIntVec::vals(string tag, vector<bool> mask) { */
 /*     assert_tag(tag,"vals"); */
 /*     int col { i_tag(tag) }; */
 
 /*     if (mask.size() != data.size()) */
 /*         throw std::runtime_error( */
-/*                 Form("fatal error in ioIntVec::vals: size of mask and data do not match")); */
+/*                 Form("fatal error in tuIntVec::vals: size of mask and data do not match")); */
 
 /*     vector<int> r_vec {}; */
 /*     for (auto i{0}; i<(int)mask.size(); ++i) if (mask[i]) r_vec.push_back(data[i][col]); */
 /*     return r_vec; */
 /* }; */
 
-/* bool ioIntVec::flip_tag(string& tag) { */
+/* bool tuIntVec::flip_tag(string& tag) { */
 /*     int t_size = tag.size(); */
 /*     if (t_size==0) return true; */
 /*     if (tag.substr(0,1)=="!") { */
@@ -1028,7 +973,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return true; */
 /* }; */
 
-/* vector<bool> ioIntVec::mask(string tag, const char* module) { */
+/* vector<bool> tuIntVec::mask(string tag, const char* module) { */
 /*     bool on_true = flip_tag(tag); */
 /*     assert_tag(tag,module); */
 /*     int col { i_tag(tag) }; */
@@ -1037,14 +982,14 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return r_vec; */
 /* }; */
 
-/* vector<bool> ioIntVec::is_any(vector<string> _tags){ */
+/* vector<bool> tuIntVec::is_any(vector<string> _tags){ */
 /*     int s = _tags.size(); */
 /*     if (!s) return {}; */
 /*     auto r_vec = mask(_tags[0]); */
 /*     for (int i{1}; i<s; ++i) r_vec = r_vec || mask(_tags[i],"is_any"); */
 /*     return r_vec; */
 /* }; */
-/* vector<bool> ioIntVec::is_all(vector<string> _tags){ */
+/* vector<bool> tuIntVec::is_all(vector<string> _tags){ */
 /*     int s = _tags.size(); */
 /*     if (!s) return {}; */
 /*     auto r_vec = mask(_tags[0]); */
@@ -1053,17 +998,17 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* }; */
 
 
-/* ioIntVec::ioIntVec( const char* file_name, bool echo_print, vector<string>_tags) */ 
-/* { ioIntVec_constructor(file_name, echo_print, _tags); }; */
+/* tuIntVec::tuIntVec( const char* file_name, bool echo_print, vector<string>_tags) */ 
+/* { tuIntVec_constructor(file_name, echo_print, _tags); }; */
 
-/* ioIntVec::ioIntVec( const char* file_name, ofstream& log, */ 
+/* tuIntVec::tuIntVec( const char* file_name, ofstream& log, */ 
 /*         bool echo_print, vector<string>_tags) */ 
 /* { */ 
-/*     log << ioIntVec_constructor(file_name, echo_print, _tags); */ 
+/*     log << tuIntVec_constructor(file_name, echo_print, _tags); */ 
 /*     log << *this; */
 /* }; */
 
-/* string ioIntVec::ioIntVec_constructor(const char* in_file, */ 
+/* string tuIntVec::tuIntVec_constructor(const char* in_file, */ 
 /*         bool echo_print, vector<string>tags_requested) */ 
 /* { */
 /*     // read until the tag line is read */
@@ -1137,7 +1082,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*             data_in.push_back({key,c_vec}); */
 /*             if ((int)c_vec.size() < (max_col+1)) */
 /*                 throw std::runtime_error( */
-/*                         Form("In ioIntVec needs at least %i entries (+id) in line \"%s\"", */
+/*                         Form("In tuIntVec needs at least %i entries (+id) in line \"%s\"", */
 /*                             max_col+1, line.c_str()) */
 /*                         ); */
 /*         } */
@@ -1160,17 +1105,17 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return msg.str(); */
 /* }; */
 
-/* int ioIntVec::i_tag(string tag) { */
+/* int tuIntVec::i_tag(string tag) { */
 /*     auto it = std::find(tags.begin(), tags.end(), tag); */
 /*     if (it == tags.end()) return -1; */
 /*     else return (int)(it-tags.begin()); */
 /* }; */
 
-/* void ioIntVec::assert_tag(string tag, const char* module) { */
+/* void tuIntVec::assert_tag(string tag, const char* module) { */
 /*     if (!has_tag(tag)) */ 
-/*         throw std::runtime_error(Form("fatal in ioIntVec::%s, couldn't find tag \"%s\"",module,tag.c_str())); */
+/*         throw std::runtime_error(Form("fatal in tuIntVec::%s, couldn't find tag \"%s\"",module,tag.c_str())); */
 /* }; */
-/* vector<int> ioIntVec::tag_cols(vector<string> _tags, const char* name) { */
+/* vector<int> tuIntVec::tag_cols(vector<string> _tags, const char* name) { */
 /*     vector<int> cols; */
 /*     if (_tags.size()==0) { */
 /*         for (int i{0}; i<(int)_tags.size(); ++i) cols.push_back(i); */
@@ -1182,21 +1127,21 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return cols; */
 /* }; */
-/* bool ioIntVec::has_tag(string tag) { */
+/* bool tuIntVec::has_tag(string tag) { */
 /*     return ( i_tag(tag) != -1 ); */
 /* }; */
-/* ioIntVec& ioIntVec::swap_tags(string tag0, string tag1) { */
+/* tuIntVec& tuIntVec::swap_tags(string tag0, string tag1) { */
 /*     // find the two tags among tags */
 /*     int i0 = i_tag(tag0); */
 /*     if (i0 == -1) { */ 
-/*         cout << "fatal error in ioIntVec::swap_tags " */
+/*         cout << "fatal error in tuIntVec::swap_tags " */
 /*             << "could not find tag \"" << tag0 << "\"" << endl; */
 /*         return *this; */
 /*     } */
 
 /*     int i1 = i_tag(tag1); */
 /*     if (i1 == -1) { */
-/*         cout << "fatal error in ioIntVec::swap_tags " */
+/*         cout << "fatal error in tuIntVec::swap_tags " */
 /*             << "could not find tag \"" << tag1 << "\"" << endl; */
 /*         return *this; */
 /*     } */
@@ -1210,7 +1155,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     tags[i1] = tag0; */
 /*     return *this; */
 /* }; */
-/* ioIntVec& ioIntVec::subset(vector<string> sub_tags) { */
+/* tuIntVec& tuIntVec::subset(vector<string> sub_tags) { */
 /*     // cut down the table to only the subset of tags */
 /*     auto keep_cols = tag_cols(sub_tags,"subset"); */
 /*     for (auto& vec : data) { */
@@ -1223,7 +1168,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     tags = sub_tags; */
 /*     return *this; */
 /* }; */
-/* ioIntVec& ioIntVec::rm_tags(vector<string> tags) { */
+/* tuIntVec& tuIntVec::rm_tags(vector<string> tags) { */
 /*     auto rm_cols = tag_cols(tags,"rm_tags"); */
 /*     sort(rm_cols.begin(), rm_cols.end()); */
 /*     vector<string> keep_tags {}; */
@@ -1233,10 +1178,10 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return subset(tags); */
 /* }; */
-/* ioIntVec& ioIntVec::add_tag(string tag, int def_val) { */
+/* tuIntVec& tuIntVec::add_tag(string tag, int def_val) { */
 /*     int i_col = i_tag(tag); */
 /*     if (i_col != -1) { */
-/*         cout << " error in ioIntVec::add_tag; added tag " << tag << " already exists! " << endl; */
+/*         cout << " error in tuIntVec::add_tag; added tag " << tag << " already exists! " << endl; */
 /*         return *this; */
 /*     } */
 /*     tags.push_back(tag); */
@@ -1245,30 +1190,30 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     /1* for (auto key : keys()) data_map[key].push_back(def_val); *1/ */
 /*     return *this; */
 /* }; */
-/* void ioIntVec::rename_tag(string tag0, string tag1) { */
+/* void tuIntVec::rename_tag(string tag0, string tag1) { */
 /*     assert_tag(tag0,"rename_tag"); */
 /*     tags[i_tag(tag0)] = tag1; */
 /* }; */
-/* bool ioIntVec::has_key(int key) { */ 
+/* bool tuIntVec::has_key(int key) { */ 
 /*     return binary_search(keys.begin(), keys.end(), key); */
 /* }; */
-/* vector<int>& ioIntVec::operator[](int key) { */ 
+/* vector<int>& tuIntVec::operator[](int key) { */ 
 /*     if (!has_key(key)) { */
-/*         throw std::runtime_error(Form("fatal: no key \"%i\" in ioIntVec",key)); */
+/*         throw std::runtime_error(Form("fatal: no key \"%i\" in tuIntVec",key)); */
 /*     } */
 /*     int i = (int)(std::lower_bound(keys.begin(), keys.end(), key) - keys.begin()); */
 /*     return data[i]; */
 /* }; */
-/* /1* vector<int>    ioIntVec::keys() const { *1/ */
+/* /1* vector<int>    tuIntVec::keys() const { *1/ */
 /* /1*     vector<int> vec; *1/ */
 /* /1*     for (auto m : data_map) vec.push_back(m.first); *1/ */
 /* /1*     sort(vec.begin(), vec.end()); *1/ */
 /* /1*     return vec; *1/ */
 /* /1* }; *1/ */
-/* vector<int> ioIntVec::get_keys(vector<bool> mask, bool keep_on_true) { */
+/* vector<int> tuIntVec::get_keys(vector<bool> mask, bool keep_on_true) { */
 /*     if (mask.size() != data.size()) */
 /*         throw std::runtime_error( */
-/*                 Form("fatal error in ioIntVec::keys: size of mask and data do not match")); */
+/*                 Form("fatal error in tuIntVec::keys: size of mask and data do not match")); */
 
 /*     vector<int> r_vec {}; */
 /*     for (auto i{0}; i<(int)mask.size(); ++i) { */
@@ -1276,7 +1221,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return r_vec; */
 /* }; */
-/* /1* vector<bool> ioIntVec::is_any(vector<pair<string,bool>> mask_keep_true) { *1/ */
+/* /1* vector<bool> tuIntVec::is_any(vector<pair<string,bool>> mask_keep_true) { *1/ */
 /* /1*     vector<bool>   v_keep_true; *1/ */
 /* /1*     vector<string> v_tags; *1/ */
 /* /1*     for (auto mpair : mask_keep_true) { *1/ */
@@ -1298,8 +1243,8 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* /1*     } *1/ */
 /* /1*     return r_vec; *1/ */
 /* /1* }; *1/ */
-/* int ioIntVec::size(){ return (int)keys.size(); }; */
-/* /1* vector<bool> ioIntVec::is_all(vector<pair<string,bool>> mask_keep_true) { *1/ */
+/* int tuIntVec::size(){ return (int)keys.size(); }; */
+/* /1* vector<bool> tuIntVec::is_all(vector<pair<string,bool>> mask_keep_true) { *1/ */
 /* /1*     vector<bool>   v_keep_true; *1/ */
 /* /1*     vector<string> v_tags; *1/ */
 /* /1*     for (auto mpair : mask_keep_true) { *1/ */
@@ -1321,32 +1266,32 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* /1*     } *1/ */
 /* /1*     return r_vec; *1/ */
 /* /1* }; *1/ */
-/* ostream& operator<<(ostream& os, ioIntVec& io) { */
+/* ostream& operator<<(ostream& os, tuIntVec& tu) { */
 /*     // generate the max charactures needed in each column */
 
 /*     // max length id line */
 /*     int max_id = 2; */
-/*     for (auto key : io.keys) { */
-/*         int n = io_count_digits(key); */
+/*     for (auto key : tu.keys) { */
+/*         int n = tu_count_digits(key); */
 /*         if (n > max_id) max_id = n; */
 /*     } */
 /*     os << Form(Form(" %%%is",max_id),"id"); */
 
 /*     vector<int> max_chars; */
-/*     for (auto tag : io.tags) { */
+/*     for (auto tag : tu.tags) { */
 /*         max_chars.push_back(tag.size()); */
 /*     } */
-/*     for (auto& vec : io.data) { */
+/*     for (auto& vec : tu.data) { */
 /*         int i{0}; */
 /*         for (auto val : vec) { */
-/*             int n = io_count_digits(val); */
+/*             int n = tu_count_digits(val); */
 /*             if (n > max_chars[i]) max_chars[i] = n; */
 /*             ++i; */
 /*         } */
 /*     } */
 
 /*     int i{0}; */
-/*     for (auto tag : io.tags) { */
+/*     for (auto tag : tu.tags) { */
 /*         os << Form(Form(" %%%is",max_chars[i]),tag.c_str()); */
 /*         ++i; */
 /*     } */
@@ -1360,21 +1305,21 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 
 /*     int z { 0}; */
-/*     const int n_tags = io.tags.size(); */
-/*     for (int i{0}; i<(int)io.keys.size(); ++i) { */
-/*         os << " " << std::right << std::setw(max_id) << io.keys[i]; */
+/*     const int n_tags = tu.tags.size(); */
+/*     for (int i{0}; i<(int)tu.keys.size(); ++i) { */
+/*         os << " " << std::right << std::setw(max_id) << tu.keys[i]; */
 /*         for (int k{0}; k<n_tags; ++k) { */
-/*             os << " " << std::setw(max_chars[k]) << io.data[i][k]; */
+/*             os << " " << std::setw(max_chars[k]) << tu.data[i][k]; */
 /*         } */
 /*         os << endl; */
 /*     } */
 /*     return os; */
 /* }; */
 
-/* void ioIntVec::write_to_file(const char* which_file, vector<string>comments) { */
+/* void tuIntVec::write_to_file(const char* which_file, vector<string>comments) { */
 /*     ofstream f_out { which_file }; */
 /*     if (!f_out.is_open()) { */
-/*         cout <<  "  fatal error in ioIntVec::write_to_file : " << endl */
+/*         cout <<  "  fatal error in tuIntVec::write_to_file : " << endl */
 /*             <<  "    Couldn't open file \""<<which_file<<"\""<< endl */
 /*             <<  "    -> not file being written to " << endl; */
 /*     } */
@@ -1384,121 +1329,8 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     f_out.close(); */
 /* }; */
 
-/* void ioMinMaxPtr::operator()(double _, void* p){ */
-/*     if (!has_data) { */
-/*         has_data = true; */
-/*         min_ptr = p; */
-/*         max_ptr = p; */
-/*         min_val = _; */
-/*         max_val = _; */
-/*     } else { */
-/*         if (_ > max_val) { */
-/*             max_val = _; */
-/*             max_ptr = p; */
-/*         } */
-/*         if (_ < min_val) { */
-/*             min_val = _; */
-/*             min_ptr = p; */
-/*         } */
-/*     } */
-/* }; */
 
-/* ioMinMax::ioMinMax(string _name) : name{_name} {}; */
-/* long long int ioMinMax::fill(double val) { */
-/*     if (n_entries == 0) { */
-/*         min = val; */
-/*         max = val; */
-/*     } else { */
-/*         if (val < min) min = val; */
-/*         if (val > max) max = val; */
-/*     } */
-/*     ++n_entries; */
-/*     return n_entries; */
-/* }; */
-/* ioMinMax::ioMinMax(double& ptr, string _name) : */ 
-/*     name{_name}, fill_option{5}, ptr_double{&ptr} {}; */
-/* ioMinMax::ioMinMax(int& ptr, string _name) : */ 
-/*     name{_name}, fill_option{6}, ptr_int{&ptr} {}; */
-/* ioMinMax::ioMinMax(unsigned int& ptr, string _name) : */ 
-/*     name{_name}, fill_option{7}, ptr_uint{&ptr} {}; */
-/* ioMinMax::ioMinMax(short& ptr, string _name) : */ 
-/*     name{_name}, fill_option{8}, ptr_short{&ptr} {}; */
-/* ioMinMax::ioMinMax(char& ptr, string _name) : */ 
-/*     name{_name}, fill_option{9}, ptr_char{&ptr} {}; */
-
-/* ioMinMax::ioMinMax(double* ptr, string _name) : */ 
-/*     name{_name}, fill_option{10}, ptr_double{ptr} {}; */
-/* ioMinMax::ioMinMax(int* ptr, string _name) : */ 
-/*     name{_name}, fill_option{11}, ptr_int{ptr} {}; */
-/* ioMinMax::ioMinMax(unsigned int* ptr, string _name) : */ 
-/*     name{_name}, fill_option{12}, ptr_uint{ptr} {}; */
-/* ioMinMax::ioMinMax(short* ptr, string _name) : */ 
-/*     name{_name}, fill_option{13}, ptr_short{ptr} {}; */
-/* ioMinMax::ioMinMax(char* ptr, string _name) : */ 
-/*     name{_name}, fill_option{14}, ptr_char{ptr} {}; */
-
-/* ioMinMax::ioMinMax(double* ptr, int& _index, string _name) : */ 
-/*     name{_name}, fill_option{0}, ptr_double{ptr}, index{&_index} {}; */
-/* ioMinMax::ioMinMax(int* ptr, int& _index, string _name) : */ 
-/*     name{_name}, fill_option{1}, ptr_int{ptr}, index{&_index} {}; */
-/* ioMinMax::ioMinMax(unsigned int* ptr, int& _index, string _name) : */ 
-/*     name{_name}, fill_option{2}, ptr_uint{ptr}, index{&_index} {}; */
-/* ioMinMax::ioMinMax(short* ptr, int& _index, string _name) : */ 
-/*     name{_name}, fill_option{3}, ptr_short{ptr}, index{&_index} {}; */
-/* ioMinMax::ioMinMax(char* ptr, int& _index, string _name) : */ 
-/*     name{_name}, fill_option{4}, ptr_char{ptr}, index{&_index} {}; */
-
-/* long long int ioMinMax::operator()() { */
-/*     switch (fill_option) { */
-/*         case 0: */
-/*             return fill(ptr_double[*index]); */
-/*         case 1: */
-/*             return fill(ptr_int[*index]); */
-/*         case 2: */
-/*             return fill(ptr_uint[*index]); */
-/*         case 3: */
-/*             return fill(ptr_short[*index]); */
-/*         case 4: */
-/*             return fill(ptr_char[*index]); */
-
-/*         case 5: */
-/*             return fill(*ptr_double); */
-/*         case 6: */
-/*             return fill(*ptr_int); */
-/*         case 7: */
-/*             return fill(*ptr_uint); */
-/*         case 8: */
-/*             return fill(*ptr_short); */
-/*         case 9: */
-/*             return fill(*ptr_char); */
-/*         default: */
-/*             throw std::runtime_error("ioMinMax::operator()() called with no pointer set"); */
-/*     } */
-/* }; */
-/* long long int ioMinMax::operator()(int index) { */
-/*     switch (fill_option) { */
-/*         case 10: */
-/*             return fill(ptr_double[index]); */
-/*         case 11: */
-/*             return fill(ptr_int[index]); */
-/*         case 12: */
-/*             return fill(ptr_uint[index]); */
-/*         case 13: */
-/*             return fill(ptr_short[index]); */
-/*         case 14: */
-/*             return fill(ptr_char[index]); */
-/*         default: */
-/*             throw std::runtime_error("ioMinMax::operator()(int) called with no pointer set"); */
-/*     } */
-/* }; */
-/* int ioMinMax::nbins() { return (int)(max-min)+1; }; */
-/* ostream& operator<<(ostream& os, ioMinMax& self) { */
-/*     if (self.name != "") cout << self.name << ": "; */
-/*     os << self.min << " " << self.max; */
-/*     return os; */
-/* }; */
-
-/* ioIntSet& ioIntSet::operator+=(const ioIntSet& rhs) { */
+/* tuIntSet& tuIntSet::operator+=(const tuIntSet& rhs) { */
 /*     vector<int> new_vals; */
 /*     for (auto val : rhs.list) { */
 /*         if (!binary_search(list.begin(),list.end(),val)) { */
@@ -1509,7 +1341,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     sort(list.begin(),list.end()); */
 /*     return *this; */
 /* }; */
-/* ioIntSet& ioIntSet::operator-=(const ioIntSet& rhs) { */
+/* tuIntSet& tuIntSet::operator-=(const tuIntSet& rhs) { */
 /*     vector<int> new_list; */
 /*     for (auto val : list) { */
 /*         if (!binary_search(rhs.list.begin(),rhs.list.end(),val)) { */
@@ -1520,7 +1352,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     list = new_list; */
 /*     return *this; */
 /* }; */
-/* ioIntSet& ioIntSet::operator*=(const ioIntSet& sec) { */
+/* tuIntSet& tuIntSet::operator*=(const tuIntSet& sec) { */
 /*     vector<int> new_list; */
 /*     for (auto val : sec.list) */
 /*         if (binary_search(list.begin(),list.end(),val)) */ 
@@ -1529,7 +1361,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return *this; */
 /* }; */
 
-/* void ioIntSet::write_to_file(const char* file_name, vector<string> comments) { */
+/* void tuIntSet::write_to_file(const char* file_name, vector<string> comments) { */
 /*     ofstream fout; */
 /*     fout.open(file_name); */
 /*     for (auto& comment : comments) fout << "// " << comment << endl; */
@@ -1538,16 +1370,16 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /* }; */
 
 
-/* int ioIntSet::size() { return list.size(); }; */
-/* void ioIntSet::clear() { list.clear(); }; */
-/* ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) { */
+/* int tuIntSet::size() { return list.size(); }; */
+/* void tuIntSet::clear() { list.clear(); }; */
+/* ostringstream tuIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) { */
 /*     ostringstream msg; */
 /*     if (!strcmp(in_file,"")) return msg; */
 /*     if (print) { */
 /*         msg << " Reading following values from col " << col << " from " << in_file << endl; */
 /*     } */
 /*     try { */
-/*         auto new_data = ioReadIntVec(in_file, col, true, strip_commas); */
+/*         auto new_data = tuReadIntVec(in_file, col, true, strip_commas); */
 /*         if (list.size()>0) { */
 /*             vector<int> add_vals{}; */
 /*             for (int i{0}; i<(int)new_data.size(); ++i) { */
@@ -1567,37 +1399,37 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         if (print) cout << " Done reading col " << col << " from " << in_file << endl; */
 /*     } */
 /*     catch (std::runtime_error err) { */
-/*         cerr << " fatal error in ioIntSet::read_file " << endl; */
+/*         cerr << " fatal error in tuIntSet::read_file " << endl; */
 /*         cerr << err.what() << endl; */
 /*         /1* cout << err << endl; *1/ */
 /*     } */
 /*     return msg; */
 /* }; */
-/* /1* ioIntSet::ioIntSet() {}; *1/ */
-/* ostream& operator<<(ostream& os, ioIntSet& dt) { */ 
+/* /1* tuIntSet::tuIntSet() {}; *1/ */
+/* ostream& operator<<(ostream& os, tuIntSet& dt) { */ 
 /*     for (auto& v : dt.list) cout << v << endl; */
 /*     return os; */
 /* }; */
-/* ioIntSet::ioIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) { */
+/* tuIntSet::tuIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) { */
 /*     log << read_file(in_file, col, print, strip_commas).str() << endl; */
 /* }; */
-/* ioIntSet::ioIntSet(const char* in_file, int col, bool print, bool strip_commas) { */
+/* tuIntSet::tuIntSet(const char* in_file, int col, bool print, bool strip_commas) { */
 /*     read_file(in_file, col, print, strip_commas); */
 /* }; */
-/* ioIntSet::ioIntSet(const char* file, const char* tag) { */
-/*     for (auto val : ioReadValVec(file,tag,{{"sort",true}})) { */
+/* tuIntSet::tuIntSet(const char* file, const char* tag) { */
+/*     for (auto val : tuReadValVec(file,tag,{{"sort",true}})) { */
 /*         list.push_back((int)val); */
 /*     } */
 /* }; */
-/* bool ioIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); }; */
-/* bool ioIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); }; */
-/* int ioIntSet::operator[](int val) { */
+/* bool tuIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); }; */
+/* bool tuIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); }; */
+/* int tuIntSet::operator[](int val) { */
 /*     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin()); */
 /* }; */
 
-/* ioIntBinCnt::ioIntBinCnt(const char* name, vector<int> x_dim, const char* title) : */
-/*     ioIntBinCnt{name, x_dim, {}, title} {}; */
-/* ioIntBinCnt::ioIntBinCnt(const char* name, vector<int> x_dim, */ 
+/* tuIntBinCnt::tuIntBinCnt(const char* name, vector<int> x_dim, const char* title) : */
+/*     tuIntBinCnt{name, x_dim, {}, title} {}; */
+/* tuIntBinCnt::tuIntBinCnt(const char* name, vector<int> x_dim, */ 
 /*         vector<int> y_dim, const char* title) { */
 /*     if (y_dim.size()>0) { */
 /*         is2D = true; */
@@ -1609,87 +1441,87 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         hg1 = new TH1D(name,use_title, x_dim.size(), ax_doubleptr(x_dim)); */
 /*     } */
 /* }; */
-/* double ioIntBinCnt::getcnt(TH1D* hg, int i) { */
+/* double tuIntBinCnt::getcnt(TH1D* hg, int i) { */
 /*     int i_bin = hg->FindBin((double)i); */
 /*     return hg->GetBinContent(i_bin); */
 /* }; */
-/* double ioIntBinCnt::getcnt(TH2D* hg, int i, int j) { */
+/* double tuIntBinCnt::getcnt(TH2D* hg, int i, int j) { */
 /*     int i_bin = hg->FindBin((double)i,(double)j); */
 /*     return hg->GetBinContent(i_bin); */
 /* }; */
-/* void ioIntBinCnt::fill(int i, double weight){ */
+/* void tuIntBinCnt::fill(int i, double weight){ */
 /*     hg1->Fill( (double)i,  weight); */
 /* }; */
-/* void ioIntBinCnt::fill(int i, int j, double weight){ */
+/* void tuIntBinCnt::fill(int i, int j, double weight){ */
 /*     if (!is2D) { */
 /*         cout << " Error: only 1D counter generated " << endl; */
 /*         return; */
 /*     } */
 /*     hg2->Fill( (double)i, (double)j, weight); */
 /* }; */
-/* void ioIntBinCnt::write() { */
+/* void tuIntBinCnt::write() { */
 /*     if (is2D) hg2->Write(); */
 /*     else hg1->Write(); */
 /* }; */
 
-/* ioFnCaller::ioFnCaller(const char* file_data, double(&_fn)(double*,double*)) : */
+/* tuFnCaller::tuFnCaller(const char* file_data, double(&_fn)(double*,double*)) : */
 /*     fn{_fn}, x{new double[2]} */
 /* { */
-/*     auto p_vals = ioReadValVec(file_data); */
+/*     auto p_vals = tuReadValVec(file_data); */
 /*     p = new double[p_vals.size()]; */
 /*     int i{0}; */
 /*     for (auto val : p_vals) p[i++] = val; */
 /* }; */
-/* double ioFnCaller::operator()(double x0, double x1){ */
+/* double tuFnCaller::operator()(double x0, double x1){ */
 /*     x[0] = x0; */
 /*     x[1] = x1; */
 /*     return fn(x,p); */
 /* }; */
 
 /* //------------------------------------------------- */
-/* ioXsec::ioXsec( */
+/* tuXsec::tuXsec( */
 /*      const char* tag_file, */
 /*      const char* Xsection_tag, */
 /*      const char* pthatbin_tag, */
 /*      const char* nEvents_tag */
 /*  ) : */
-/*     Xsection  { ioReadValVec(tag_file, Xsection_tag) }, */
-/*     pthatbins { ioReadValVec(tag_file, pthatbin_tag) }, */
+/*     Xsection  { tuReadValVec(tag_file, Xsection_tag) }, */
+/*     pthatbins { tuReadValVec(tag_file, pthatbin_tag) }, */
 /*     nbins_pthat { static_cast<int>( Xsection.size()) }, */
 /*     Nevents {}, */
 /*     Ncollected ( nbins_pthat, 0 ) */
 /* { */
-/*     for (auto v : ioReadValVec(tag_file, nEvents_tag)) { */
+/*     for (auto v : tuReadValVec(tag_file, nEvents_tag)) { */
 /*         Nevents.push_back(static_cast<int>(v)); */
 /*     } */
-/*     ioBinVec pthat_edges { tag_file, {{"tag",pthatbin_tag}} }; */
+/*     tuBinVec pthat_edges { tag_file, {{"tag",pthatbin_tag}} }; */
 /*     hg_collected = new TH1D("pthat_bins_collected", */
 /*         "Number of events collected in each pthat bin;#hat{p}_{T};n-collected", */
 /*         pthat_edges, pthat_edges); */
 /* }; */
 
-/* double ioXsec::pthatbin_center(int bin) { */
+/* double tuXsec::pthatbin_center(int bin) { */
 /*     return 0.5*(pthatbins[bin]+pthatbins[bin+1]); */
 /* }; */
 
-/* int ioXsec::pthatbin(pair<double,double> bounds) { */
+/* int tuXsec::pthatbin(pair<double,double> bounds) { */
 /*     double first { bounds.first }; */
 /*     auto iter = std::lower_bound(pthatbins.begin(), pthatbins.end(), bounds.first); */
 /*     if (iter==pthatbins.end() || (*(iter)!=bounds.first)) { */ 
-/*         throw std::runtime_error(" fatal in ioXsec::pthatbin: pthatbin not found " ); */
+/*         throw std::runtime_error(" fatal in tuXsec::pthatbin: pthatbin not found " ); */
 /*         return -1; */
 /*     } */
 /*     if (*(iter+1) != bounds.second) { */
-/*         cout << " warning in ioXsec::pthatbin: pthatbin upperbound sought " << endl */
+/*         cout << " warning in tuXsec::pthatbin: pthatbin upperbound sought " << endl */
 /*              << " doesnt match pthatbin lower found." << endl; */
 /*     } */
 /*     return (iter - pthatbins.begin()); */
 /* }; */
 
-/* double ioXsec::Xsec(pair<double,double> bounds, int numEvents) { */
+/* double tuXsec::Xsec(pair<double,double> bounds, int numEvents) { */
 /*     return Xsec(pthatbin(bounds), numEvents); */
 /* }; */
-/* double ioXsec::Xsec(int pthatbin, int numEvents) { */
+/* double tuXsec::Xsec(int pthatbin, int numEvents) { */
 /*     check_pthatbin(pthatbin); */
 /*     if (numEvents != 0) return Xsection[pthatbin] / numEvents; */
 
@@ -1698,7 +1530,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*             cout << " fatal error: no events for bin " << pthatbin */ 
 /*                 << " have been collected." << endl */
 /*                 << " Cannot generate weighted cross section." << endl; */
-/*             throw std::runtime_error("Asking for ptbin with no events in ioXsec::Xsec"); */
+/*             throw std::runtime_error("Asking for ptbin with no events in tuXsec::Xsec"); */
 /*         } else { */
 /*             return Xsection[pthatbin] / Ncollected[pthatbin] ; */
 /*         } */
@@ -1706,60 +1538,60 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return Xsection[pthatbin] / Nevents[pthatbin]; */
 /* }; */
 
-/* void ioXsec::collect (int pthatbin) { */
+/* void tuXsec::collect (int pthatbin) { */
 /*     ++n_collected_total; */
 /*     ++Ncollected[pthatbin]; */
 /* }; */
-/* void ioXsec::collect(pair<double,double>bounds) { collect(pthatbin(bounds)); }; */
+/* void tuXsec::collect(pair<double,double>bounds) { collect(pthatbin(bounds)); }; */
 
-/* void ioXsec::check_pthatbin(int bin) { */
+/* void tuXsec::check_pthatbin(int bin) { */
 /*     if (bin >= nbins_pthat) { */
 /*         throw std::runtime_error( Form( */
-/*         "fatal in ioXsec : asked for pthatbin %i but there are only %i bins", */
+/*         "fatal in tuXsec : asked for pthatbin %i but there are only %i bins", */
 /*         bin, nbins_pthat)); */
 /*     } */
 /* }; */
 
-/* ioIntStrFunctor::ioIntStrFunctor ( const char* file, ioOptMap options, ioOptMap dict) */
+/* tuIntStrFunctor::tuIntStrFunctor ( const char* file, tuOptMap options, tuOptMap dict) */
 /* { */
 /*     dict += options; */
-/*     data = ioReadIntStrMap(file, dict); */
+/*     data = tuReadIntStrMap(file, dict); */
 /* }; */
-/* const char* ioIntStrFunctor::operator()(int index) { */
+/* const char* tuIntStrFunctor::operator()(int index) { */
 /*     try { */
 /*         return data[index].c_str(); */
 /*     } */
 /*     catch (...) { */
-/*         cout << " Key failure in ioIntStrFunctor with index " << index << endl; */
+/*         cout << " Key failure in tuIntStrFunctor with index " << index << endl; */
 /*         throw; */
 /*     }; */
 /* }; */
 
 
 /* //StrStr */
-/* ioStrStrFunctor::ioStrStrFunctor ( const char* file, ioOptMap options, ioOptMap dict) */
+/* tuStrStrFunctor::tuStrStrFunctor ( const char* file, tuOptMap options, tuOptMap dict) */
 /* { */
 /*     dict += options; */
-/*     data = ioReadMapStrStr(file, dict); */
+/*     data = tuReadMapStrStr(file, dict); */
 /* }; */
-/* const char* ioStrStrFunctor::operator()(const char* key) { */
+/* const char* tuStrStrFunctor::operator()(const char* key) { */
 /*     try { */
 /*         return data[key].c_str(); */
 /*     } */
 /*     catch (...) { */
-/*         cout << " Key failure in ioStrStrFunctor with key " << key << endl; */
+/*         cout << " Key failure in tuStrStrFunctor with key " << key << endl; */
 /*         throw; */
 /*     }; */
 /* }; */
 
-/* ioFirst::operator bool() { */ 
+/* tuFirst::operator bool() { */ 
 /*     if (is_first) { */
 /*         is_first = false; */
 /*         return true; */
 /*     } */
 /*     return false; */
 /* }; */
-/* bool ioFirst::operator()() { */
+/* bool tuFirst::operator()() { */
 /*     if (is_first) { */
 /*         is_first = false; */
 /*         return true; */
@@ -1767,10 +1599,10 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return false; */
 /* }; */
 
-/* ioCycleTrue::ioCycleTrue(int period_in) : */
+/* tuCycleTrue::tuCycleTrue(int period_in) : */
 /*     period { period_in }, cnt{0} */
 /* {}; */
-/* bool ioCycleTrue::operator()() { */
+/* bool tuCycleTrue::operator()() { */
 /*     ++ cnt; */
 /*     if (cnt == period) { */
 /*         cnt = 0; */
@@ -1779,10 +1611,10 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         return false; */
 /*     } */
 /* }; */
-/* ioCycleTrue::operator bool() { return this->operator()(); }; */
-/* void ioCycleTrue::reset() { cnt = 0; }; */
+/* tuCycleTrue::operator bool() { return this->operator()(); }; */
+/* void tuCycleTrue::reset() { cnt = 0; }; */
 
-/* ioXYbounder::ioXYbounder(vector<double> x, vector <double> y, ioOptMap opt) : */
+/* tuXYbounder::tuXYbounder(vector<double> x, vector <double> y, tuOptMap opt) : */
 /*     X{x}, Y{y}, */
 /*     size { (int) X.size() }, */
 /*     lodef{ opt.has("default-lo") ? opt["default-lo"]() : */ 
@@ -1793,15 +1625,15 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /* {}; */
 
-/* ioXYbounder::ioXYbounder() : X {}, Y{}, size{0}, lodef{0.}, hidef{0.} */
+/* tuXYbounder::tuXYbounder() : X {}, Y{}, size{0}, lodef{0.}, hidef{0.} */
 /* {}; */
 
-/* ioXYbounder::ioXYbounder( */
+/* tuXYbounder::tuXYbounder( */
 /*     const char* file, const char* tagX, */ 
-/*     const char* tagY, ioOptMap opt */
+/*     const char* tagY, tuOptMap opt */
 /* ) : */
-/*     X { ioReadValVec(file, {{"tag",tagX,"sort",true}}) }, */
-/*     Y { ioReadValVec(file, {{"tag",tagY,"sort",false}}) }, */
+/*     X { tuReadValVec(file, {{"tag",tagX,"sort",true}}) }, */
+/*     Y { tuReadValVec(file, {{"tag",tagY,"sort",false}}) }, */
 /*     size { (int) X.size() }, */
 /*     lodef{ opt.has("default-lo") ? opt["default-lo"]() : */ 
 /*            size > 0 ? Y[0] : 0. */
@@ -1811,7 +1643,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /* {}; */
 
-/* bool ioXYbounder::operator()(double x, double y) { */
+/* bool tuXYbounder::operator()(double x, double y) { */
 /*     if (size == 0) return false; */
 /*     int bin = (int)(std::lower_bound(X.begin(), X.end(), x) - X.begin()); */
 /*     /1* cout << " bin: " << bin << endl; *1/ */
@@ -1820,7 +1652,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     else return y>Y[bin]; */
 /* }; */
 
-/* double ioXYbounder::operator()(double x) { */
+/* double tuXYbounder::operator()(double x) { */
 /*     if (size == 0) return -1; */
 /*     int bin = (int)(std::lower_bound(X.begin(), X.end(), x) - X.begin()); */
 /*     if (bin == 0) return lodef; */
@@ -1828,24 +1660,24 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     else return Y[bin]; */
 /* }; */
 
-/* ioCycleSpacer::ioCycleSpacer(int period, int _n_width, const char* _spacer) : */
+/* tuCycleSpacer::tuCycleSpacer(int period, int _n_width, const char* _spacer) : */
 /*     cycle{period}, spacer{_spacer}, n_width{_n_width} */ 
 /* { */
 /*     cycle.cnt=-1; */
 /* }; */
 
-/* ostream& operator<<(ostream& os, ioCycleSpacer& cs) { */
+/* ostream& operator<<(ostream& os, tuCycleSpacer& cs) { */
 /*     if (cs.cycle) os << endl; */
 /*     os << cs.spacer; */
 /*     if (cs.n_width) os << setw(cs.n_width); */
 /*     return os; */
 /* }; */
 
-/* void ioCycleSpacer::reset() { cycle.cnt=-1; }; */
+/* void tuCycleSpacer::reset() { cycle.cnt=-1; }; */
 
 
 
-/* ioPtrDbl::ioPtrDbl(TAxis* ax, double bin_loc, bool get_widths) { */
+/* tuPtrDbl::tuPtrDbl(TAxis* ax, double bin_loc, bool get_widths) { */
 /*     int n_bins = ax->GetNbins(); */
 /*     if (get_widths) { */
 /*         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinWidth(i)*bin_loc); */
@@ -1865,11 +1697,11 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     build_ptr(); */
 /* }; */ 
 
-/* ioPtrDbl::ioPtrDbl(vector<double> V){ */
+/* tuPtrDbl::tuPtrDbl(vector<double> V){ */
 /*     for (auto v : V) vec.push_back(v); */
 /*     build_ptr(); */
 /* }; */
-/* ioPtrDbl::ioPtrDbl(TH1* hg, bool get_errors) { */
+/* tuPtrDbl::tuPtrDbl(TH1* hg, bool get_errors) { */
 /*     if (get_errors) { */
 /*         for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) { */
 /*             vec.push_back(hg->GetBinError(i)); */
@@ -1882,12 +1714,12 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     build_ptr(); */
 /* }; */
 
-/* ioPtrDbl::ioPtrDbl(const ioPtrDbl& ihs) { */
+/* tuPtrDbl::tuPtrDbl(const tuPtrDbl& ihs) { */
 /*     for (auto v : ihs.vec) vec.push_back(v); */
 /*     build_ptr(); */
 /* }; */
 
-/* ioPtrDbl& ioPtrDbl::operator=(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator=(const tuPtrDbl& rhs) { */
 /*     vec.clear(); */
 /*     if (ptr) delete ptr; */
 /*     for (auto v : rhs.vec) vec.push_back(v); */
@@ -1895,148 +1727,148 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return *this; */
 /* }; */
 
-/* /1* ioPtrDbl::ioPtrDbl(ioPtrDbl ihs) { *1/ */
+/* /1* tuPtrDbl::tuPtrDbl(tuPtrDbl ihs) { *1/ */
 /* /1*     for (auto v : ihs.vec) vec.push_back(v); *1/ */
 /* /1*     build_ptr(); *1/ */
 /* /1* }; *1/ */
 
-/* void ioPtrDbl::build_ptr() { */
+/* void tuPtrDbl::build_ptr() { */
 /*     size = vec.size(); */
 /*     ptr = new double[size]; */
 /*     for (int i{0}; i<size; ++i) ptr[i] = vec[i]; */
 /* }; */
 
-/* ioPtrDbl& ioPtrDbl::update() { */
+/* tuPtrDbl& tuPtrDbl::update() { */
 /*     for (int i{0}; i<size; ++i) ptr[i] = vec[i]; */
 /*     return *this; */
 /* }; */
 
-/* ioPtrDbl::operator int () { return size; }; */
-/* ioPtrDbl::operator double* () { return ptr; }; */
-/* ioPtrDbl::operator vector<double> () { return vec; }; */
+/* tuPtrDbl::operator int () { return size; }; */
+/* tuPtrDbl::operator double* () { return ptr; }; */
+/* tuPtrDbl::operator vector<double> () { return vec; }; */
 
-/* ioPtrDbl::ioPtrDbl(const char* file, const char* tag) { */
-/*     auto read_vec = ioReadValVec(file,tag); */
+/* tuPtrDbl::tuPtrDbl(const char* file, const char* tag) { */
+/*     auto read_vec = tuReadValVec(file,tag); */
 /*     for (auto v: read_vec) vec.push_back(v); */
 /*     build_ptr(); */
 /* }; */
-/* ioPtrDbl::ioPtrDbl(int n) { */
+/* tuPtrDbl::tuPtrDbl(int n) { */
 /*     for (auto i{0}; i<n; ++i) vec.push_back(0); */
 /*     build_ptr(); */
 /* }; */
 
-/* ioPtrDbl::~ioPtrDbl() { */
+/* tuPtrDbl::~tuPtrDbl() { */
 /*     delete[] ptr; */
 /* }; */
-/* vector<double>::iterator ioPtrDbl::begin() { return vec.begin(); }; */
-/* vector<double>::iterator ioPtrDbl::end()   { return vec.end(); }; */
+/* vector<double>::iterator tuPtrDbl::begin() { return vec.begin(); }; */
+/* vector<double>::iterator tuPtrDbl::end()   { return vec.end(); }; */
 
-/* double& ioPtrDbl::operator[](int i) { return vec[i]; }; */
-/* ostream& operator<<(ostream& os, ioPtrDbl& io) { */
-/*     for (auto v : io) cout << " " << v; */
+/* double& tuPtrDbl::operator[](int i) { return vec[i]; }; */
+/* ostream& operator<<(ostream& os, tuPtrDbl& tu) { */
+/*     for (auto v : tu) cout << " " << v; */
 /*     return os; */
 /* }; */
-/* int ioPtrDbl::throw_error(const char* msg) { */
-/*         throw std::runtime_error(Form(" fatal in ioPtrDbl::%s, sizes don't match",msg)); */
+/* int tuPtrDbl::throw_error(const char* msg) { */
+/*         throw std::runtime_error(Form(" fatal in tuPtrDbl::%s, sizes don't match",msg)); */
 /*         return -1; */
 /* }; */
 
-/* ioPtrDbl& ioPtrDbl::operator+=(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator+=(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("operator+="); */
 /*     for (auto i{0}; i<size; ++i) vec[i] += rhs.vec[i]; */
 /*     update(); */
 /*     return *this; */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator-=(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator-=(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("operator-="); */
 /*     for (auto i{0}; i<size; ++i) vec[i] -= rhs.vec[i]; */
 /*     update(); */
 /*     return *this; */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator*=(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator*=(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("operator-="); */
 /*     for (auto i{0}; i<size; ++i) vec[i] *= rhs.vec[i]; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::abs() { */
+/* tuPtrDbl& tuPtrDbl::abs() { */
 /*     for (auto& v : vec) if (v<0.) v = -v; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::sqrt() { */
+/* tuPtrDbl& tuPtrDbl::sqrt() { */
 /*     for (auto& v : vec) v = TMath::Sqrt(v); */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::zero_negatives() { */
+/* tuPtrDbl& tuPtrDbl::zero_negatives() { */
 /*     for (auto& v : vec) if (v<0.) v = 0; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::abs_diff(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::abs_diff(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("abs_diff"); */
 /*     *this -= rhs; */
 /*     this->abs(); */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::square_diff(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::square_diff(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("abs_diff"); */
 /*     *this -= rhs; */
 /*     *this *= *this; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::make_min(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::make_min(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("make_min"); */
 /*     for (auto i{0}; i<size; ++i) { */
 /*         if (rhs.vec[i] < vec[i]) vec[i] = rhs.vec[i]; */
 /*     } */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::make_max(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::make_max(const tuPtrDbl& rhs) { */
 /*     if (size != rhs.size) throw_error("make_max"); */
 /*     for (auto i{0}; i<size; ++i) { */
 /*         if (rhs.vec[i] > vec[i]) vec[i] = rhs.vec[i]; */
 /*     } */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator/=(const ioPtrDbl& rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator/=(const tuPtrDbl& rhs) { */
 /*     /1* cout << " z3 " << size << " " << rhs.size << endl; *1/ */
 /*     if (size != rhs.size) throw_error("operator/="); */
 /*     for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i]; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator/=(const double rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator/=(const double rhs) { */
 /*     for (auto& v : vec) v /= rhs; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator*=(const double rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator*=(const double rhs) { */
 /*     for (auto& v : vec) v *= rhs; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator+=(const double rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator+=(const double rhs) { */
 /*     for (auto& v : vec) v += rhs; */
 /*     return update(); */
 /* }; */
-/* ioPtrDbl& ioPtrDbl::operator-=(const double rhs) { */
+/* tuPtrDbl& tuPtrDbl::operator-=(const double rhs) { */
 /*     for (auto& v : vec) v -= rhs; */
 /*     return update(); */
 /* }; */
 
-/* ioPtrDbl  operator+(const ioPtrDbl& lhs, const ioPtrDbl& rhs) { */
+/* tuPtrDbl  operator+(const tuPtrDbl& lhs, const tuPtrDbl& rhs) { */
 /*     if (lhs.size != rhs.size) { */
-/*         throw std::runtime_error(" fatal in ioPtrDbl+ioPtrDbl, sizes don't match"); */
+/*         throw std::runtime_error(" fatal in tuPtrDbl+tuPtrDbl, sizes don't match"); */
 /*     } */
-/*     ioPtrDbl r_val{lhs}; */
+/*     tuPtrDbl r_val{lhs}; */
 /*     r_val += rhs; */
 /*     return r_val.update(); */
 /* }; */
-/* ioPtrDbl  operator-(const ioPtrDbl& lhs, const ioPtrDbl& rhs) { */
+/* tuPtrDbl  operator-(const tuPtrDbl& lhs, const tuPtrDbl& rhs) { */
 /*     if (lhs.size != rhs.size) { */
-/*         throw std::runtime_error(" fatal in ioPtrDbl-ioPtrDbl, sizes don't match"); */
+/*         throw std::runtime_error(" fatal in tuPtrDbl-tuPtrDbl, sizes don't match"); */
 /*     } */
-/*     ioPtrDbl r_val{lhs}; */
+/*     tuPtrDbl r_val{lhs}; */
 /*     r_val-=rhs; */
 /*     return r_val.update(); */
 /* }; */
-/* ioPtrDbl io_calc_quadrature(vector<ioPtrDbl> data) { */
-/*         if (data.size() == 0) return ioPtrDbl{vector<double>{}}; */
+/* tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data) { */
+/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
 /*         if (data.size() == 1) return data[0]; */
 /*         data[0] *= data[0]; */
 /*         for (unsigned int i=1; i<data.size(); ++i) { */
@@ -2044,13 +1876,13 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         } */
 /*         return data[0].sqrt(); */
 /* }; */
-/* ioPtrDbl io_calc_quadrature(vector<ioPtrDbl> data, ioPtrDbl mean) { */
+/* tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data, tuPtrDbl mean) { */
 /*         if (data.size() == 0) return mean; */
 /*         for (auto& dat : data) dat -= mean; */
-/*         return io_calc_quadrature(data); */
+/*         return tu_calc_quadrature(data); */
 /* }; */
-/* ioPtrDbl io_calc_mean(vector<ioPtrDbl> data) { */
-/*         if (data.size() == 0) return ioPtrDbl{vector<double>{}}; */
+/* tuPtrDbl tu_calc_mean(vector<tuPtrDbl> data) { */
+/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
 /*         if (data.size() == 1) return data[0]; */
 /*         for (unsigned int i=1; i<data.size(); ++i) { */
 /*             data[0] += data[i]; */
@@ -2058,69 +1890,69 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         data[0] /= data.size(); */
 /*         return data[0]; */
 /* }; */
-/* ioPtrDbl io_calc_max_bound(vector<ioPtrDbl> data) { */
-/*         if (data.size() == 0) return ioPtrDbl{vector<double>{}}; */
+/* tuPtrDbl tu_calc_max_bound(vector<tuPtrDbl> data) { */
+/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
 /*         if (data.size() == 1) return data[0]; */
 /*         for (unsigned int i=1; i<data.size(); ++i) { */
 /*             data[0].make_max(data[i]); */
 /*         } */
 /*         return data[0]; */
 /* }; */
-/* ioPtrDbl io_calc_max_berr(vector<ioPtrDbl> data, ioPtrDbl mean) { */
-/*         auto max_bound = io_calc_max_bound(data); */
+/* tuPtrDbl tu_calc_max_berr(vector<tuPtrDbl> data, tuPtrDbl mean) { */
+/*         auto max_bound = tu_calc_max_bound(data); */
 /*         return max_bound.abs_diff(mean); */
 /* }; */
-/* ioPtrDbl io_calc_min_bound(vector<ioPtrDbl> data) { */
-/*         if (data.size() == 0) return ioPtrDbl{vector<double>{}}; */
+/* tuPtrDbl tu_calc_min_bound(vector<tuPtrDbl> data) { */
+/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
 /*         if (data.size() == 1) return data[0]; */
 /*         for (unsigned int i=1; i<data.size(); ++i) { */
 /*             data[0].make_min(data[i]); */
 /*         } */
 /*         return data[0]; */
 /* }; */
-/* ioPtrDbl io_calc_min_berr(vector<ioPtrDbl> data, ioPtrDbl mean) { */
-/*         return mean.abs_diff(io_calc_min_bound(data)); */
+/* tuPtrDbl tu_calc_min_berr(vector<tuPtrDbl> data, tuPtrDbl mean) { */
+/*         return mean.abs_diff(tu_calc_min_bound(data)); */
 /* }; */
-/* pair<ioPtrDbl,ioPtrDbl> io_calc_bounds(vector<ioPtrDbl> data) { */
-/*     return { io_calc_min_bound(data), io_calc_max_bound(data) }; */
+/* pair<tuPtrDbl,tuPtrDbl> tu_calc_bounds(vector<tuPtrDbl> data) { */
+/*     return { tu_calc_min_bound(data), tu_calc_max_bound(data) }; */
 /* }; */
 
-/* TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, ioPtrDbl err, ioOptMap opts, array<double,4>x_set, */
+/* TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, tuPtrDbl err, tuOptMap opts, array<double,4>x_set, */
 /*         double range_lo, double range_hi) { */
-/*     return io_draw_error_boxes(mean, {err,err}, opts, x_set, range_lo, range_hi); */
+/*     return tu_draw_error_boxes(mean, {err,err}, opts, x_set, range_lo, range_hi); */
 /* }; */
-/* TGraphAsymmErrors* io_draw_error_boxes(TH1D* mean, array<ioPtrDbl,2> err, */ 
-/*         ioOptMap dict, array<double,4>x_set, */
+/* TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2> err, */ 
+/*         tuOptMap dict, array<double,4>x_set, */
 /*         double range_lo, double range_hi) */ 
 /* { */
-/*     ioSysErrors pts { mean, x_set, err }; */
+/*     tuSysErrors pts { mean, x_set, err }; */
 /*     /1* cout << " range_lo: " << range_lo << " " << range_hi << endl; *1/ */
 /*     if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); }; */
 /*     auto tgase = pts.tgase; */
-/*     io_fmt(tgase,dict); */
+/*     tu_fmt(tgase,dict); */
 /*     /1* tgase->SetFillColor(kBlue); *1/ */
 /*     if ( dict("FillColor") ) { */
 /*         tgase->Draw("E2"); */
 /*     }; */
-/*     if ( dict("LineColor") ) ioDrawBoxErrors(tgase, dict); */
+/*     if ( dict("LineColor") ) tuDrawBoxErrors(tgase, dict); */
 /*     return tgase; */
 /* }; */
 
-/* ioSysErrors::ioSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase} */
+/* tuSysErrors::tuSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase} */
 /* { */
 /*     size = tgase->GetN(); */ 
 /*     if (x_rat[0]>=0) set_rat_xbins(x_rat); */
 /* }; */
 
-/* ioSysErrors::ioSysErrors(TH1* hg, array<double,4> x_rat, array<ioPtrDbl,2> _err) { */
-/*     ioPtrDbl x     {hg->GetXaxis()}; */
-/*     ioPtrDbl err_x {hg->GetXaxis(), 0.5, true}; */
+/* tuSysErrors::tuSysErrors(TH1* hg, array<double,4> x_rat, array<tuPtrDbl,2> _err) { */
+/*     tuPtrDbl x     {hg->GetXaxis()}; */
+/*     tuPtrDbl err_x {hg->GetXaxis(), 0.5, true}; */
 
-/*     ioPtrDbl y     {hg}; */
-/*     ioPtrDbl err_y {hg,true}; */
+/*     tuPtrDbl y     {hg}; */
+/*     tuPtrDbl err_y {hg,true}; */
 
-/*     ioPtrDbl err_y_lo = _err[0].size==0 ? err_y : _err[0]; */
-/*     ioPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1]; */
+/*     tuPtrDbl err_y_lo = _err[0].size==0 ? err_y : _err[0]; */
+/*     tuPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1]; */
     
 /*     tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y_lo,err_y_hi); */
 /*     tgase->SetMarkerColor(hg->GetMarkerColor()); */
@@ -2133,12 +1965,12 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     if (x_rat[0]>=0) set_rat_xbins(x_rat); */
 /* }; */
 
-/* /1* ioSysErrors& ioSysErrors::add_data(ioPtrDbl data) { vec_data.push_back(data); return *this;}; *1/ */
-/* /1* ioSysErrors& ioSysErrors::add_data(vector<ioPtrDbl> data) { *1/ */ 
+/* /1* tuSysErrors& tuSysErrors::add_data(tuPtrDbl data) { vec_data.push_back(data); return *this;}; *1/ */
+/* /1* tuSysErrors& tuSysErrors::add_data(vector<tuPtrDbl> data) { *1/ */ 
 /*     /1* for (auto& dat : data) vec_data.push_back(dat); *1/ */
 /*     /1* return *this; *1/ */
 /* /1* }; *1/ */
-/* ioSysErrors& ioSysErrors::set_x_range (double x_lo, double x_hi) { */
+/* tuSysErrors& tuSysErrors::set_x_range (double x_lo, double x_hi) { */
 /*     int i_left  = 0; */
 /*     int i_right = size-1; */
 /*     double* x_old = tgase->GetX(); */
@@ -2170,7 +2002,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return *this; */
 /* }; */
 
-/* ioSysErrors& ioSysErrors::swap_xy () { */
+/* tuSysErrors& tuSysErrors::swap_xy () { */
 /*     double* x = new double[size]; */
 /*     double* y = new double[size]; */
 
@@ -2190,19 +2022,19 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     tgase = tgase_new; */
 /*     return *this; */
 /* }; */
-/* ioSysErrors& ioSysErrors::setYhigh(ioPtrDbl& data) { */
+/* tuSysErrors& tuSysErrors::setYhigh(tuPtrDbl& data) { */
 /*     for (int i{0}; i<data.size; ++i) { */
 /*         tgase->SetPointEYhigh(i,data[i]); */
 /*     } */
 /*     return *this; */
 /* }; */
-/* ioSysErrors& ioSysErrors::setYlow(ioPtrDbl& data) { */
+/* tuSysErrors& tuSysErrors::setYlow(tuPtrDbl& data) { */
 /*     for (int i{0}; i<data.size; ++i) { */
 /*         tgase->SetPointEYlow(i,data[i]); */
 /*     } */
 /*     return *this; */
 /* }; */
-/* ioSysErrors& ioSysErrors::setYhilo(ioPtrDbl& data) { */
+/* tuSysErrors& tuSysErrors::setYhilo(tuPtrDbl& data) { */
 /*     for (int i{0}; i<data.size; ++i) { */
 /*         tgase->SetPointEYlow(i,data[i]); */
 /*         tgase->SetPointEYhigh(i,data[i]); */
@@ -2210,32 +2042,32 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return *this; */
 /* }; */
 
-/* ioSysErrors::ioSysErrors(const ioSysErrors& rhs) { */
+/* tuSysErrors::tuSysErrors(const tuSysErrors& rhs) { */
 /*     tgase = (TGraphAsymmErrors*) rhs.tgase->Clone(); */
 /*     size = tgase->GetN(); */
 /* }; */
 
-/* ioPtrDbl ioSysErrors::getY() { */
-/*     ioPtrDbl y {size}; */
+/* tuPtrDbl tuSysErrors::getY() { */
+/*     tuPtrDbl y {size}; */
 /*     double* y_dat = tgase->GetY(); */
 /*     for (int i{0}; i<size; ++i) y[i] = y_dat[i]; */
 /*     y.update(); */
 /*     return y; */
 /* }; */
-/* ioPtrDbl ioSysErrors::getYlow() { */
-/*     ioPtrDbl y {size}; */
+/* tuPtrDbl tuSysErrors::getYlow() { */
+/*     tuPtrDbl y {size}; */
 /*     for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i); */
 /*     y.update(); */
 /*     return y; */
 /* }; */
-/* ioPtrDbl ioSysErrors::getYhigh() { */
-/*     ioPtrDbl y {size}; */
+/* tuPtrDbl tuSysErrors::getYhigh() { */
+/*     tuPtrDbl y {size}; */
 /*     for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYhigh(i); */
 /*     y.update(); */
 /*     return y; */
 /* }; */
 
-/* ioSysErrors& ioSysErrors::set_rat_xbins(array<double,4> rat_rel) { */
+/* tuSysErrors& tuSysErrors::set_rat_xbins(array<double,4> rat_rel) { */
 /*     double r_left   { rat_rel[0] }; */
 /*     double r_right  { rat_rel[1] }; */
 /*     double r_center { rat_rel[2] }; // relative position between left and right */
@@ -2255,11 +2087,11 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return *this; */
 /* }; */
 
-/* TGraphAsymmErrors* ioSysErrors::operator-> () { return tgase; }; */
-/* ioSysErrors::operator TGraphAsymmErrors* () { return tgase; }; */
+/* TGraphAsymmErrors* tuSysErrors::operator-> () { return tgase; }; */
+/* tuSysErrors::operator TGraphAsymmErrors* () { return tgase; }; */
 
-/* io_TF1fitter::io_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) : */
-/*     name { strcmp(_name,"")==0 ? ioUniqueName() : _name } , */
+/* tu_TF1fitter::tu_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) : */
+/*     name { strcmp(_name,"")==0 ? tuUniqueName() : _name } , */
 /*     fn_str { fnc_str } */
 /* { */
 /*     cout << " this name: " << name << endl; */
@@ -2273,10 +2105,10 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     n_par = fn->GetNpar(); */
 /*     if (hg)  fit(hg); */
 /* }; */
-/* void io_TF1fitter::set_presets(vector<double> pre_set) { */
+/* void tu_TF1fitter::set_presets(vector<double> pre_set) { */
 /*     for (unsigned int i{0}; i<pre_set.size(); ++i) fn->SetParameter(i,pre_set[i]); */
 /* }; */
-/* vector<double>& io_TF1fitter::fit(TH1D* hg, double _lo, double _hi) { */
+/* vector<double>& tu_TF1fitter::fit(TH1D* hg, double _lo, double _hi) { */
 /*     if (_lo || _hi) { */
 /*         lo = _lo; */
 /*         hi = _hi; */
@@ -2295,27 +2127,27 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     }; */
 /*     return fval; */
 /* }; */
-/* vector<double>& io_TF1fitter::operator()(TH1D* hg, double lo, double hi) { */
+/* vector<double>& tu_TF1fitter::operator()(TH1D* hg, double lo, double hi) { */
 /*     return fit                          (hg, lo, hi); */
 /* }; */
-/* vector<double>& io_TF1fitter::operator()() { return fval; } ; */
-/* pair<double,double> io_TF1fitter::operator()(int i){ */
+/* vector<double>& tu_TF1fitter::operator()() { return fval; } ; */
+/* pair<double,double> tu_TF1fitter::operator()(int i){ */
 /*     if (i>=(int)n_par) { */
 /*         throw std::runtime_error( */
-/*                 Form("Error: requesting paremeter %i of io_TF1fitter (%s) which has only %i pars", */
+/*                 Form("Error: requesting paremeter %i of tu_TF1fitter (%s) which has only %i pars", */
 /*                     i, name.c_str(), n_par) ); */
 /*     } */
 /*     return {fval[i], ferr[i]}; */
 /* }; */
-/* double io_TF1fitter::operator[](int i){ */
+/* double tu_TF1fitter::operator[](int i){ */
 /*     if (i>=(int)n_par) { */
 /*         throw std::runtime_error( */
-/*                 Form("Error: requesting paremeter %i of io_TF1fitter (%s) which has only %i pars", */
+/*                 Form("Error: requesting paremeter %i of tu_TF1fitter (%s) which has only %i pars", */
 /*                     i, name.c_str(), n_par) ); */
 /*     } */
 /*     return fval[i]; */
 /* }; */
-/* void io_TF1fitter::fix_match_params(io_TF1fitter& to_match, std::set<int> which) { */
+/* void tu_TF1fitter::fix_match_params(tu_TF1fitter& to_match, std::set<int> which) { */
 /*     for (int i=0; i<(int) n_par; ++i) { */
 /*         if (which.count(i) != 0) { */
 /*             fn->FixParameter(i, to_match[i]); */
@@ -2325,7 +2157,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     }; */
 /* }; */
 
-/* ostream& operator<<(ostream& os, io_TF1fitter& fit) { */
+/* ostream& operator<<(ostream& os, tu_TF1fitter& fit) { */
 /*     os << " Fit for TF1 \"" << fit.name << "\" fn: " << fit.fn_str << endl; */    
 /*     double lo, hi; */
 /*     for (unsigned int i{0}; i<fit.n_par; ++i) { */
@@ -2339,7 +2171,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     return os; */
 /* }; */
 
-/* ioParticleThrower::ioParticleThrower(TH1D* hg, double multiple, unsigned int _seed) : */
+/* tuParticleThrower::tuParticleThrower(TH1D* hg, double multiple, unsigned int _seed) : */
 /*     r3{_seed} */ 
 /* { */
 /*     TAxis* ax { hg->GetXaxis() }; */
@@ -2355,15 +2187,15 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     i_size = l_bound.size(); */
 /* }; */
-/* ostream& operator<<(ostream& os, ioParticleThrower& io) { */
-/*     for (int i{0}; i<static_cast<int>(io.whole.size()); ++i) { */
+/* ostream& operator<<(ostream& os, tuParticleThrower& tu) { */
+/*     for (int i{0}; i<static_cast<int>(tu.whole.size()); ++i) { */
 /*         cout << Form("bin[%2i]  [%5.1f-%5.1f] : %i   ", */
-/*                 i,io.l_bound[i],io.u_bound[i],io.whole[i]) */ 
-/*             << io.remainder[i] << endl; */
+/*                 i,tu.l_bound[i],tu.u_bound[i],tu.whole[i]) */ 
+/*             << tu.remainder[i] << endl; */
 /*     } */
 /*     return os; */
 /* }; */
-/* bool ioParticleThrower::throw_particle() { */
+/* bool tuParticleThrower::throw_particle() { */
 /*     if (i_bin == i_size) { */
 /*         i_bin = 0; */
 /*         i_whole = 0; */
@@ -2386,13 +2218,13 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /*     return true; */
 /* }; */
-/* void ioParticleThrower::set_rand(unsigned int i) { */
-/*     phi = r3.Uniform(IO_twopi); */
+/* void tuParticleThrower::set_rand(unsigned int i) { */
+/*     phi = r3.Uniform(tu_twopi); */
 /*     eta = r3.Uniform(-1.,1.); */
 /*     pt =  r3.Uniform(l_bound[i],u_bound[i]); */
 /* }; */
 
-/* ioPoissonParticleThrower::ioPoissonParticleThrower( */
+/* tuPoissonParticleThrower::tuPoissonParticleThrower( */
 /*         TRandom3& _r3, TH1D& _dist, double mult) */ 
 /*     : r3{_r3}, dist{_dist} */
 /* { */
@@ -2404,13 +2236,13 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /* }; */
 
-/* bool ioPoissonParticleThrower::throw_particle() { */
+/* bool tuPoissonParticleThrower::throw_particle() { */
 /*     if (i_to_throw == i_thrown) { */
 /*         i_thrown = 0; */
 /*         i_to_throw = r3.Poisson(mean); */
 /*         return false; */
 /*     } else { */
-/*         phi = r3.Uniform(IO_twopi); */
+/*         phi = r3.Uniform(tu_twopi); */
 /*         eta = r3.Uniform(-1.,1.); */
 /*         pt =  dist.GetRandom(); */
 /*         ++i_thrown; */
@@ -2418,7 +2250,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     } */
 /* }; */
 
-/* ioHopper1D::ioHopper1D(vector<double> _edges) : */
+/* tuHopper1D::tuHopper1D(vector<double> _edges) : */
 /*     edges { _edges } */
 /* { */
 /*     nbins = static_cast<int>( edges.size()-1 ); */ 
@@ -2427,7 +2259,7 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*         hopper.push_back({center,0.}); */
 /*     } */
 /* }; */
-/* int ioHopper1D::fill(double val, double weight) { */
+/* int tuHopper1D::fill(double val, double weight) { */
 /*     auto lb = upper_bound(edges.begin(), edges.end(), val); */
 /*     if (lb == edges.begin()) return -1; // don't fill anything */
 /*     if (lb == edges.end())   return -1; // don't fill anything */
@@ -2435,12 +2267,12 @@ ioInBounds::ioInBounds(double lo, double hi) :
 /*     hopper[bin].second += weight; */
 /*     return bin; */
 /* }; */
-/* void ioHopper1D::reset() { */
+/* void tuHopper1D::reset() { */
 /*     for (auto& v : hopper) v.second = 0.; */
 /* }; */
-/* vector<pair<double,double>>::iterator ioHopper1D::begin() { */
+/* vector<pair<double,double>>::iterator tuHopper1D::begin() { */
 /*     return hopper.begin(); */
 /* } */
-/* vector<pair<double,double>>::iterator ioHopper1D::end() { */
+/* vector<pair<double,double>>::iterator tuHopper1D::end() { */
 /*     return hopper.end(); */
 /* } */

@@ -21,7 +21,7 @@
 #include "io_IOS.h"
 #include "io_enum.h"
 #include "ioOptMap.h"
-#include "RooUnfoldResponse.h"
+/* #include "RooUnfoldResponse.h" */
 /* #include "ioClass.h" */
 
 #define IO_pi      3.14159266
@@ -135,8 +135,8 @@ void io_apply_prior(TF1*, TH1D*); // weight TH1D* by intergral of TF1*
 void io_apply_prior(TF1*, TH2D*, TH1D*, bool weight_both=false); 
 
 TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr);
-TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold=3);
-RooUnfoldResponse* rebinRooUnfoldResponse(TH1D* hg_bins, RooUnfoldResponse* response);
+/* TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold=3); */
+/* RooUnfoldResponse* rebinRooUnfoldResponse(TH1D* hg_bins, RooUnfoldResponse* response); */
 
 TLegend* ioNewTLegend();
 
@@ -239,19 +239,19 @@ double io_R2(double eta0,double phi0,double eta1,double phi1);
 double ioRatCircleOverLine (double R, double d);
 double ioRatCircleInTwoParallelLines (const double d0,const double d1, double C, double R);
 
-RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double lo_bin, double hi_bin, 
-            const char* tag="", const char* title="");
-RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double* edges, 
-        const char* tag="", const char* title="");
-// non-symmetric in truth and measured
-RooUnfoldResponse ioMakeRooUnfoldResponse(
-        int nb_measured, double lo_measured, double hi_measured,
-        int nb_truth, double lo_truth, double hi_truth, 
-        const char* tag="", const char* title="");
-RooUnfoldResponse ioMakeRooUnfoldResponse(
-        int nb_measured, double* edges_measured, 
-        int nb_truth,    double* edges_truth,
-        const char* tag="", const char* title="");
+/* RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double lo_bin, double hi_bin, */ 
+            /* const char* tag="", const char* title=""); */
+/* RooUnfoldResponse ioMakeRooUnfoldResponse(int nbins, double* edges, */ 
+        /* const char* tag="", const char* title=""); */
+/* // non-symmetric in truth and measured */
+/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+        /* int nb_measured, double lo_measured, double hi_measured, */
+        /* int nb_truth, double lo_truth, double hi_truth, */ 
+        /* const char* tag="", const char* title=""); */
+/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+        /* int nb_measured, double* edges_measured, */ 
+        /* int nb_truth,    double* edges_truth, */
+        /* const char* tag="", const char* title=""); */
 
 double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p);
 
@@ -283,12 +283,12 @@ const char* io_cutdiff(int a, int b, const char* fmt = "%6i(%6i,%5.2f)");
 // bound_lo : quantile from quant_lo
 // bound_hi : quantile from quant_hi
 
-IOS_keepcut_stats io_keepcutbin(TH1*, int ibin, double minval, 
-        double zero_val=0., double zero_err=0.);
+/* IOS_keepcut_stats io_keepcutbin(TH1*, int ibin, double minval, */ 
+/*         double zero_val=0., double zero_err=0.); */
 
-IOS_keepcut_stats io_cullsmallbins(TH1*, double min_val, IO area=IO::in, 
-                                   bool remove_underoverflow=true);
-vector<int> io_binvec(TH1* _h, IO=IO::in);
+/* IOS_keepcut_stats io_cullsmallbins(TH1*, double min_val, IO area=IO::in, */ 
+/*                                    bool remove_underoverflow=true); */
+/* vector<int> io_binvec(TH1* _h, IO=IO::in); */
 
 TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma=5., double offset=0., bool print=true);
 TH1D* io_cut_high_sigmaX(TH1D* hg, double n_sigma=5., double offset=0., bool print=true);

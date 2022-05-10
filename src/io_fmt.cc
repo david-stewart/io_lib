@@ -504,7 +504,7 @@ TH1D* io_fmt (TH1D* hg, ioOptMap _override, ioOptMap dict) {
         hg->GetZaxis()->SetLabelOffset(dict["zAxisLabelOffset"].val());
 
     if (dict("Normalize")) hg->Scale(1./hg->Integral());
-    if (dict("ScaleByBinWidth")) io_scaleByBinWidth(hg);
+    /* if (dict("ScaleByBinWidth")) io_scaleByBinWidth(hg); */
     /* cout << " MarkerColor: " << hg->GetMarkerColor() << endl; */
     return hg;
 };

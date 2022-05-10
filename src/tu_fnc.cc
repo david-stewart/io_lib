@@ -1,33 +1,35 @@
-#include "io_fnc.h"
-#include "ioClass.h"
+#include "tu_fnc.h"
+/* #include "tuClass.h" */
 /* #include "RooUnfoldBayes.h" */
 /* #include "RooUnfoldResponse.h" */
 #include "TProfile2D.h"
-
 #include <numeric>
 #include <iostream>
 #include <fstream>
+#include "tuMiniClass.h"
 
-
-const char* ioUniqueName(int i) {
+//*
+void tuPause(int i)  {
+    TCanvas* c = new TCanvas( tuUniqueName(i+100), tuUniqueName(i+100), 100,100);
+    c->SetFillColor(kCyan);
+    c->SetFillStyle(1001);
+    c->Draw();
+    c->WaitPrimitive();
+};
+//*
+const char* tuUniqueName(int i) {
     while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;
     return Form("unique_name__%i",i);
 };
-
-
-void ioWaitPrimitive(int i)  {
-    TCanvas* c = new TCanvas( ioUniqueName(i+100), ioUniqueName(i+100), 500,500);
-    c->WaitPrimitive();
-};
-
-vector<int> ioColorVec(int n_colors, int palette, bool print) {
-    TCanvas *junk_canvas = new TCanvas(ioUniqueName(),"junk_canvas",1200,800);
+//*
+vector<int> tuColorVec(int n_colors, int palette, bool print) {
+    TCanvas *junk_canvas = new TCanvas(tuUniqueName(),"junk_canvas",1200,800);
     gStyle->SetPalette(palette);
     vector<TProfile*> hg;
     vector<int> colors;
     for (int i{0};i<n_colors;++i){
         if (print) cout << " i: " << i << endl;
-        hg.push_back(new TProfile(ioUniqueName(i),";;",n_colors,0.,n_colors) );
+        hg.push_back(new TProfile(tuUniqueName(i),";;",n_colors,0.,n_colors) );
         hg[i]->SetStats(0);
         hg[i]->SetMarkerStyle(kFullCircle);
         hg[i]->SetMarkerSize(10.);
@@ -47,96 +49,80 @@ vector<int> ioColorVec(int n_colors, int palette, bool print) {
     delete junk_canvas;
     return colors;
 };
+//*
+TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
+    dict += opt;
 
-TH1D* ioRebin(TH1D* hg, int nbins, double* edges)  {
-    if (edges == nullptr)  return (TH1D*) hg->Rebin(nbins, ioUniqueName());
-    else return (TH1D*) hg->Rebin(nbins,ioUniqueName(),edges);
-};
+    double norm_num {1};
+    double norm_den {1};
 
-TH1D* ioNorm(TH1D* hg, const char which) {
-    switch (which) {
-        case 'n':
-            hg->Scale(1./hg->Integral());
-            return hg;
-        case 'c':
-            hg->Scale(1./hg->Integral()/hg->GetBinWidth(1));
-            return hg;
-        case 'v':
-            {
-                double sum=0.;
-                TAxis *axis = hg->GetXaxis();
-                for (int i{1};i<axis->GetNbins(); ++i) 
-                    sum += hg->GetBinContent(i) * axis->GetBinWidth(i);
-                hg->Scale(1./sum);
-                return hg;
-            }
-        default:
-            cout << "Error in ioNorm, selected option '"<<which<<"' is not valid."<<endl;
-            cout << "Only options:" << endl;
-            cout << " n : 'none' -- don't scale by any width"<<endl;
-            cout << " c : 'constant' -- scale by 1/hg->GetBinWidth(1) width"<<endl;
-            cout << " v : 'variable' -- scale by all bin widths individually"<<endl;
-            return hg;
+    if (dict["norm"]) {
+        norm_num = num->Integral();
+        norm_den = den->Integral();
+    };
+
+    TH1D* ret;
+    if (dict("style-den").val==1) {
+        ret = (TH1D*) den->Clone(tuUniqueName());
+    } else {
+        ret = (TH1D*) num->Clone(tuUniqueName());
     }
-};
 
-void ioDrawTLatex(const char* msg, double x, double y, ioOptMap options, ioOptMap dict
+    for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
+        double n = num->GetBinContent(j) / norm_num;
+        double d = den->GetBinContent(j) / norm_den;
+        if (n == 0 || d == 0) {
+            ret->SetBinContent(j,0);
+            ret->SetBinError(j,0);
+            /* if (i==0) cout << "Jin: " << j << " val: " << den->GetBinContent(j) << endl; */
+            continue;
+        }
+        double n_err = num->GetBinError(j) / norm_num;
+        double d_err = den->GetBinError(j) / norm_den;
+        double val = n / d;
+        double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
+        ret->SetBinContent(j,val);
+        ret->SetBinError(j,err);
+    }
+    return ret;
+};
+//*
+void tuDrawTLatex(const char* msg, double x, double y, tuOptMap options, tuOptMap dict
 ) {
     dict += options;
     TLatex tlatex;
-    tlatex.SetTextColorAlpha(dict["TextColor"],dict["TextColorAlpha"]);
-    tlatex.SetTextAlign(dict["TextAlign"]);
-    tlatex.SetTextSize (dict["TextSize"]);
-    tlatex.SetTextFont (dict["TextFont"]);
-    tlatex.SetTextAngle (dict["TextAngle"].val());
+    tlatex.SetTextColorAlpha(dict("TextColor"),dict("TextColorAlpha"));
+    tlatex.SetTextAlign(dict("TextAlign"));
+    tlatex.SetTextSize (dict("TextSize"));
+    tlatex.SetTextFont (dict("TextFont"));
+    tlatex.SetTextAngle (dict("TextAngle"));
     tlatex.DrawLatex(x, y, msg);
 };
-
-void ioDrawTPaveText(double x0, double y0, double x1, double y1,
-        vector<const char*> msg, ioOptMap options, ioOptMap dict)
-{
-    dict += options;
-    TPaveText *pav = new TPaveText(x0,y0,x1,y1, dict["BorderOpt"]);
-    for (auto m : msg)  pav->AddText(m);
-
-    pav->SetTextColorAlpha(dict["TextColor"],dict["TextColorAlpha"].val());
-    pav->SetFillColorAlpha(dict["FillColor"],dict["FillColorAlpha"].val());
-    pav->SetTextAlign(dict["TextAlign"]);
-    pav->SetTextSize (dict["TextSize"].val());
-    pav->SetTextFont (dict["TextFont"]);
-    pav->SetTextAngle(dict["TextAngle"].val());
-    pav->SetLineWidth(dict["LineWidth"]);
-    pav->SetFillStyle(dict["FillStyle"]);
-
-    pav->Draw();
-};
-
-void ioDrawTLine(double x0, double y0, double x1, double y1, 
-        ioOptMap options, ioOptMap dict)
+//*
+void tuDrawTLine(double x0, double y0, double x1, double y1, 
+        tuOptMap options, tuOptMap dict)
 {
     dict += options;
     // ndc is needed when getting vertical lines in logaritymic plots
-    if (dict("ndc")) {
+    if (dict["ndc"]) {
         TLine* line = new TLine();
-        io_fmt(line, options);
+        tu_fmt(line, options);
         line->DrawLineNDC(x0,y0,x1,y1);
     } else {
         TLine* line = new TLine(x0,y0,x1,y1);
-        io_fmt(line, options);
+        tu_fmt(line, options);
         line->Draw();
     }
 };
-
-void ioDrawTLineBox(double x0, double y0, double x1, double y1, 
-        ioOptMap options) {
-    ioDrawTLine( x0, y0, x1, y0, options);
-    ioDrawTLine( x1, y0, x1, y1, options);
-    ioDrawTLine( x1, y1, x0, y1, options);
-    ioDrawTLine( x0, y1, x0, y0, options);
+//*
+void tuDrawTLineBox(double x0, double y0, double x1, double y1, tuOptMap options) {
+    tuDrawTLine( x0, y0, x1, y0, options);
+    tuDrawTLine( x1, y0, x1, y1, options);
+    tuDrawTLine( x1, y1, x0, y1, options);
+    tuDrawTLine( x0, y1, x0, y0, options);
 };
-
-void ioDrawBoxErrors(TGraphAsymmErrors* tgas,
-        ioOptMap options, ioOptMap dict)
+//*
+void tuDrawBoxErrors(TGraphAsymmErrors* tgas, tuOptMap options, tuOptMap dict)
 {
     dict += options;
     double* x = tgas->GetX();
@@ -146,116 +132,65 @@ void ioDrawBoxErrors(TGraphAsymmErrors* tgas,
         double x1 = x[i] + tgas->GetErrorXhigh(i);
         double y0 = y[i] - tgas->GetErrorYlow(i);
         double y1 = y[i] + tgas->GetErrorYhigh(i);
-        ioDrawTLineBox(x0,y0,x1,y1,options);
+        tuDrawTLineBox(x0,y0,x1,y1,options);
     }
 };
-
-double iGetUyminoPadxRat(double x_in){
-    gPad->Update();
-    /* cout << " x_in " << x_in << endl; */
-    double x0 = gPad->GetUxmin();
-    double x1 = gPad->GetUxmax();
-    /* cout << " x0 " << x0 << endl; */
-    /* cout << " x1 " << x1 << endl; */
-    return x0+x_in*(x1-x0);
-};
-double ioPadyRat(double y_in){
-    gPad->Update();
-    double y0 = gPad->GetUymin();
-    double y1 = gPad->GetUymax();
-    return y0+y_in*(y1-y0);
-};
-double ioPadxRat(double y_in){
+//*
+double tuPadxRat(double y_in){
     gPad->Update();
     double y0 = gPad->GetUxmin();
     double y1 = gPad->GetUxmax();
     return y0+y_in*(y1-y0);
 };
-
-void ioDrawTLineHorizontal(double y, ioOptMap options) {
+//*
+double tuPadyRat(double y_in){
     gPad->Update();
-    double x0 { ioPadxRat(0.) };
-    double x1 { ioPadxRat(1.) };
-    ioDrawTLine(x0,y,x1,y,options);
+    double y0 = gPad->GetUymin();
+    double y1 = gPad->GetUymax();
+    return y0+y_in*(y1-y0);
 };
-
-void ioDrawTLineVertical(double x, ioOptMap options) {
+//*
+void tuDrawTLineHorizontal(double y, tuOptMap options) {
     gPad->Update();
-    double y0 { ioPadyRat(0.) };
-    double y1 { ioPadyRat(1.) };
-    ioDrawTLine(x,y0,x,y1,options);
+    double x0 { tuPadxRat(0.) };
+    double x1 { tuPadxRat(1.) };
+    tuDrawTLine(x0,y,x1,y,options);
+};
+//*
+void tuDrawTLineVertical(double x, tuOptMap options) {
+    gPad->Update();
+    double y0 { tuPadyRat(0.) };
+    double y1 { tuPadyRat(1.) };
+    tuDrawTLine(x,y0,x,y1,options);
 }
-
-   /* gPad->Update(); */
-   /* Double_t lm = gPad->GetLeftMargin(); */
-   /* Double_t rm = 1.-gPad->GetRightMargin(); */
-   /* Double_t tm = 1.-gPad->GetTopMargin(); */
-   /* Double_t bm = gPad->GetBottomMargin(); */
-   /* Double_t xndc = (rm-lm)*((x-gPad->GetUxmin())/(gPad->GetUxmax()-gPad->GetUxmin()))+lm; */
-   /* options["ndc"] = "1"; */
-   /*  ioDrawTLine(xndc,bm,xndc,tm,options); */
-/* }; */
-
-double io_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
-    int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
-    int x1 { (p.first==0  && q.first==0)  ? hg->GetXaxis()->GetNbins() : hg->GetXaxis()->FindBin(q.first)};
-    int y0 { (p.second==0 && q.second==0) ? 1 : hg->GetYaxis()->FindBin(p.second)};
-    int y1 { (p.second==0 && q.second==0) ? hg->GetYaxis()->GetNbins() : hg->GetYaxis()->FindBin(q.second)};
-    return hg->Integral(x0,x1,y0,y1);
-};
-double io_get_box_integral(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
-    int x0 { (p.first==0  && q.first==0)  ? 1 : pr->GetXaxis()->FindBin(p.first)};
-    int x1 { (p.first==0  && q.first==0)  ? pr->GetXaxis()->GetNbins() : pr->GetXaxis()->FindBin(q.first)};
-    int y0 { (p.second==0 && q.second==0) ? 1 : pr->GetYaxis()->FindBin(p.second)};
-    int y1 { (p.second==0 && q.second==0) ? pr->GetYaxis()->GetNbins() : pr->GetYaxis()->FindBin(q.second)};
-    return pr->Integral(x0,x1,y0,y1);
-};
-double io_get_box_mean(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
-    if (p.first  != 0 || q.first != 0)  pr->GetXaxis()->SetRangeUser(p.first, q.first );
-    if (p.second != 0 || q.second != 0) pr->GetYaxis()->SetRangeUser(p.second,q.second);
-    return pr->GetMean(3);
-};
-
-    
-vector<double> io_vec_BinContent(TH1* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
-    return vec;
-};
-
-vector<double> io_vec_BinError(TH1* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
-    return vec;
-};
-
-/* template<class T> */
-vector<double> io_vec_BinCenter(TH1* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    TAxis* ax = hg->GetXaxis();
-    for (int i=i0;i<i1;++i) {
-        vec.push_back(ax->GetBinCenter(i));
+//*
+void tu_scaleByBinWidth(TH1* hg, double scale_factor) {
+    for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
+        if (hg->GetBinContent(i)) {
+            double factor { scale_factor / hg->GetBinWidth(i) };
+            hg->SetBinContent(i, hg->GetBinContent(i) * factor);
+            hg->SetBinError(i, hg->GetBinError(i) * factor);
+        }
     }
-    return vec;
 };
-
-/* template<class T> */
-pair<int, double*> io_vec_BinEdge(TH1* hg) {
-    int n_bins = hg->GetXaxis()->GetNbins();
-    double *edges = new double[n_bins+1];
-    for (int i{1};i<=n_bins+1;++i){
-        edges[i-1] = hg->GetXaxis()->GetBinLowEdge(i);
+//*
+void tu_scaleByBinWidth(TH2* hg, double scale_factor, bool byXwidth, bool byYwidth) {
+    if (!byXwidth && !byYwidth) {
+        hg->Scale(scale_factor);
+        return;
     }
-    return {n_bins,edges};
+    for (int x{1}; x<=(int) hg->GetNbinsX(); ++x) {
+        double x_wide { byXwidth ? hg->GetXaxis()->GetBinWidth(x) : 1. };
+        for (int y{1}; y<=(int) hg->GetNbinsY(); ++y)  {
+            double y_wide { byYwidth ? hg->GetYaxis()->GetBinWidth(y) : 1. };
+            double factor { scale_factor / y_wide / x_wide };
+            hg->SetBinContent(x, y, hg->GetBinContent(x,y) * factor);
+            hg->SetBinError  (x, y, hg->GetBinError(x,y)   * factor);
+        }
+    }
 };
-
-vector<string> io_split_string(string str){
+//*
+vector<string> tu_split_string(string str){
     // split strings like: "first name|| second name|| third name|| fourth name"
     vector<string> vec;
     TString s1 { str };
@@ -292,172 +227,28 @@ vector<string> io_split_string(string str){
     }
     return vec;
 };
-
-TH1D* ioDivideTH1(TH1* num, TH1* den, ioOptMap opt, ioOptMap dict) {
-    dict += opt;
-
-    double norm_num {1};
-    double norm_den {1};
-
-    if (dict["norm"]()) {
-        norm_num = num->Integral();
-        norm_den = den->Integral();
-    };
-
-    TH1D* ret;
-    if (dict["style-den"]==1) {
-        ret = (TH1D*) den->Clone(ioUniqueName());
-    } else {
-        ret = (TH1D*) num->Clone(ioUniqueName());
+//*
+void tu_print(TH1* hg, const char* tag) {
+    cout << "  " << tag << endl;
+    cout << " Printing histogram: " << hg->GetName() 
+         << "  xTitle " << hg->GetXaxis()->GetTitle()
+         << "  yTitle " << hg->GetYaxis()->GetTitle() << endl;
+    int nbins = hg->GetXaxis()->GetNbins();
+    for (int i=1; i<=nbins; ++i) {
+        /* cout << i << endl; */
+        cout << Form(" bin (%2i)  content(%10.5g)  error(%10.5g)",
+                i, hg->GetBinContent(i), hg->GetBinError(i)) << endl;
     }
-
-    for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
-        double n = num->GetBinContent(j) / norm_num;
-        double d = den->GetBinContent(j) / norm_den;
-        if (n == 0 || d == 0) {
-            ret->SetBinContent(j,0);
-            ret->SetBinError(j,0);
-            /* if (i==0) cout << "Jin: " << j << " val: " << den->GetBinContent(j) << endl; */
-            continue;
-        }
-        double n_err = num->GetBinError(j) / norm_num;
-        double d_err = den->GetBinError(j) / norm_den;
-        double val = n / d;
-        double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
-        ret->SetBinContent(j,val);
-        ret->SetBinError(j,err);
-    }
-    return ret;
+    cout << " end printing histogram" << endl;
 };
-
-TH2* ioDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols) {
-    int nbins = den->GetXaxis()->GetNbins();
-    if (scale_by_cols) {
-        if (num->GetXaxis()->GetNbins() != nbins) {
-             cout << " error in ioDivideTH2byTH1: TH2->xAxis->nBins="
-             << num->GetXaxis()->GetNbins() << " != TH1->xAxis->nBins="
-             << nbins <<"!" <<endl
-             << "Division not taking place."<<endl;
-             return num;
-        }
-    } else {
-        if (num->GetYaxis()->GetNbins() != nbins) {
-            cout << " error in ioDivideTH2byTH1: TH2->xYxis->nBins="
-             << num->GetYaxis()->GetNbins() << " != TH1->xAxis->nBins="
-             << nbins <<"!" <<endl
-             << "Division not taking place."<<endl;
-            return num;
-        }
-    }
-
-    int n_per_loop = scale_by_cols ? num->GetYaxis()->GetNbins() : num->GetXaxis()->GetNbins();
-    for (int n=0;n<=nbins+1;++n) {
-        double d = den->GetBinContent(n);
-        /* cout << " n: "<<n<<"  -> " << den->GetBinContent(n) << endl; */
-        for (int j=0;j<=n_per_loop+1;++j) {
-            int i;
-            if (n_per_loop) {
-                i=n;
-            } else {
-                i=j;
-                j=n;
-            }
-            double n = num->GetBinContent(i,j);
-            if (n == 0 || d == 0) {
-                num->SetBinContent(i,j,0);
-                num->SetBinError  (i,j,0);
-                continue;
-            } 
-            double n_err = num->GetBinError(i,j);
-            double d_err = den->GetBinError(n)  ;
-            double val = n / d;
-            double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
-            num->SetBinContent(i,j,val);
-            num->SetBinError(i,j,err);
-        }
-    }
-    return num;
+//*
+TLegend* tuNewTLegend() {
+    TLegend *leg = new TLegend(0.6455533,0.6332006,0.8911167,0.8938613,NULL,"brNDC");
+    tu_fmt(leg);
+    return leg;
 };
-
-void io_scaleByBinWidth(TH1D* hg, double scale_factor) {
-    for (int i{1}; i<=(int) hg->GetNbinsX(); ++i) {
-        if (hg->GetBinContent(i)) {
-            double factor { scale_factor / hg->GetBinWidth(i) };
-            hg->SetBinContent(i, hg->GetBinContent(i) * factor);
-            hg->SetBinError(i, hg->GetBinError(i) * factor);
-        }
-    }
-};
-void io_scaleByBinWidth(TH2D* hg, double scale_factor, bool byXwidth, bool byYwidth) {
-    if (!byXwidth && !byYwidth) {
-        hg->Scale(scale_factor);
-        return;
-    }
-    for (int x{1}; x<=(int) hg->GetNbinsX(); ++x) {
-        double x_wide { byXwidth ? hg->GetXaxis()->GetBinWidth(x) : 1. };
-        for (int y{1}; y<=(int) hg->GetNbinsY(); ++y)  {
-            double y_wide { byYwidth ? hg->GetYaxis()->GetBinWidth(y) : 1. };
-            double factor { scale_factor / y_wide / x_wide };
-            hg->SetBinContent(x, y, hg->GetBinContent(x,y) * factor);
-            hg->SetBinError  (x, y, hg->GetBinError(x,y)   * factor);
-        }
-    }
-};
-
-
-vector<double> io_vecBinContent(TH1D* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
-    return vec;
-};
-vector<double> io_vecBinError  (TH1D* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
-    return vec;
-};
-vector<double> io_vecBinContent(TProfile* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
-    return vec;
-};
-vector<double> io_vecBinError  (TProfile* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
-    return vec;
-};
-vector<double> io_vecBinEntries(TProfile* hg, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
-    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinEntries(i));
-    return vec;
-};
-vector<double> io_vecAxisBinCenter (TAxis* axis, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? axis->GetNbins()+1 : axis->GetNbins();
-    for (int i=i0;i<=i1;++i) {
-        vec.push_back(axis->GetBinCenter(i));
-    }
-    return vec;
-};
-vector<double> io_vecAxisBinEdges  (TAxis* axis, bool under_over_flow){
-    vector<double> vec;
-    int i0 = under_over_flow ? 0 : 1;
-    int i1 = under_over_flow ? axis->GetNbins()+2: axis->GetNbins()+1;
-    for (int i=i0;i<=i1;++i) vec.push_back(axis->GetBinLowEdge(i));
-    return vec;
-};
-
-int io_geant05(int geantid) {
+//*
+int tu_geant05(int geantid) {
     switch (geantid) {
         case 8: return 0;
         case 9: return 1;
@@ -468,7 +259,8 @@ int io_geant05(int geantid) {
     }
     return -1;
 };
-const char* io_geant05_ascii(int geantid) {
+//*
+const char* tu_geant05_ascii(int geantid) {
     switch (geantid) {
         case 8: return "pi";
         case 9: return "antipi";
@@ -486,7 +278,8 @@ const char* io_geant05_ascii(int geantid) {
     }
     return "none";
 };
-const char* io_geant05_greek(int geantid) {
+//*
+const char* tu_geant05_greek(int geantid) {
     switch (geantid) {
         case 8: return "#pi";
         case 9: return "#pi^{-}";
@@ -504,10 +297,9 @@ const char* io_geant05_greek(int geantid) {
     }
     return "none";
 };
-
-
-TF1*  io_TsallisFit(double m0, double A, double T, double n, double x_min, double x_max) {
-    TF1* fun = new TF1( ioUniqueName(), "[0] / TMath::Power((1.+"
+//*
+TF1*  tu_TsallisFit(double m0, double A, double T, double n, double x_min, double x_max) {
+    TF1* fun = new TF1( tuUniqueName(), "[0] / TMath::Power((1.+"
             "(TMath::Sqrt(x*x+[1]*[1])-[1])/([2]*[3])), [3])", x_min, x_max);
     fun->SetParameter(0, A);
     fun->SetParameter(1, m0);
@@ -515,18 +307,19 @@ TF1*  io_TsallisFit(double m0, double A, double T, double n, double x_min, doubl
     fun->SetParameter(3, n);
     return fun;
 };
-TF1* io_dAu_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
-    if ("pi") return io_TsallisFit( 0.135, 13.62511532585, 
+//*
+TF1* tu_dAu_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
+    if ("pi") return tu_TsallisFit( 0.135, 13.62511532585, 
             0.1505198389696, 10.0949606259, x_min, x_max);
-    else if (!strcmp(name,"antipi")) return io_TsallisFit( 0.135, 13.62511532585, 
+    else if (!strcmp(name,"antipi")) return tu_TsallisFit( 0.135, 13.62511532585, 
                 0.1505198389696, 10.0949606259, x_min, x_max);
-    else if (!strcmp(name,"p")) return io_TsallisFit( 0.938272, 0.2873036847272, 
+    else if (!strcmp(name,"p")) return tu_TsallisFit( 0.938272, 0.2873036847272, 
             0.2114254602693, 11.44109908352, x_min, x_max);
-    else if (!strcmp(name,"pbar")) return io_TsallisFit( 0.938272, 0.2257531137243, 
+    else if (!strcmp(name,"pbar")) return tu_TsallisFit( 0.938272, 0.2257531137243, 
             0.2195209346999, 13.02603055528, x_min, x_max);
-    else if (!strcmp(name,"K")) return io_TsallisFit( 0.493677, 0.461550522549, 
+    else if (!strcmp(name,"K")) return tu_TsallisFit( 0.493677, 0.461550522549, 
             0.2215729988205, 11.61375838522, x_min, x_max);
-    else if (!strcmp(name,"antiK")) return io_TsallisFit( 0.493677, 0.4675391506256, 
+    else if (!strcmp(name,"antiK")) return tu_TsallisFit( 0.493677, 0.4675391506256, 
             0.2192846302987, 11.44758460939, x_min, x_max);
     else {
         cout << "fatal error: particle name \"" << name << "\" not valid." << endl;
@@ -534,18 +327,19 @@ TF1* io_dAu_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
         return nullptr;
     }
 };
-TF1* io_pp_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
-    if (!strcmp(name,"pi")) return io_TsallisFit( 0.135, 5.503706201866,
+//*
+TF1* tu_pp_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
+    if (!strcmp(name,"pi")) return tu_TsallisFit( 0.135, 5.503706201866,
         0.1277746601471, 9.759524221237, x_min, x_max);
-    else if (!strcmp(name,"antipi")) return io_TsallisFit( 0.135, 5.58650216135,
+    else if (!strcmp(name,"antipi")) return tu_TsallisFit( 0.135, 5.58650216135,
         0.1270067076772, 9.73258646095,  x_min, x_max);
-    else if (!strcmp(name,"p")) return io_TsallisFit( 0.938272, 0.07499819855665,
+    else if (!strcmp(name,"p")) return tu_TsallisFit( 0.938272, 0.07499819855665,
         0.1758814595453, 10.54524945929, x_min, x_max);
-    else if (!strcmp(name,"pbar")) return io_TsallisFit( 0.938272, 0.06427254263927,
+    else if (!strcmp(name,"pbar")) return tu_TsallisFit( 0.938272, 0.06427254263927,
         0.1691919676508, 10.06359691238, x_min, x_max);
-    else if (!strcmp(name,"K")) return io_TsallisFit( 0.493677, 0.06934945866744,
+    else if (!strcmp(name,"K")) return tu_TsallisFit( 0.493677, 0.06934945866744,
         0.1929677543032, 11.82478291302, x_min, x_max);
-    else if (!strcmp(name,"antiK")) return io_TsallisFit( 0.493677, 0.06934945866744,
+    else if (!strcmp(name,"antiK")) return tu_TsallisFit( 0.493677, 0.06934945866744,
         0.1929677543032, 11.82478291302, x_min, x_max);
     else {
         cout << "fatal error: particle name \"" << name << "\" not valid." << endl;
@@ -553,7 +347,8 @@ TF1* io_pp_200GeV_TsallisFit(const char* name, double x_min, double x_max) {
         return nullptr;
     }
 };
-void io_apply_prior(TF1* fn, TH1D* T) {
+//*
+void tu_apply_prior(TF1* fn, TH1D* T) {
     // respone: x-axis=Meas. y-axis=True
     // Note: x-axis underflow may contain all the misses
     /* TH1D* T = response->ProjectionY(); */
@@ -569,7 +364,8 @@ void io_apply_prior(TF1* fn, TH1D* T) {
             T->SetBinError(y,err);
     };
 };
-void io_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
+//*
+void tu_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
     // Note: this only applies the prior to MT, NOT to T
     // respone: x-axis=Meas. y-axis=True
     // NB: assumed that the x-axis underflow bin contains all the misses
@@ -595,63 +391,147 @@ void io_apply_prior(TF1* fn, TH2D* MT, TH1D* T, bool both) {
         }
     };
 };
-
-/* TH1D* io_BayesUnfold(TH1D* data, RooUnfoldResponse* response, int iRepUnfold) { */
-/*     RooUnfoldBayes*    bayes     = new RooUnfoldBayes(response, data, iRepUnfold); */
-/*     TH1D* unfolded = (TH1D*) bayes->Hunfold(); */
-/*     unfolded->SetName(ioUniqueName()); */
-/*     return unfolded; */
-/* }; */
-
-/* TH1D* io_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) { */
+//*
+/* TH1D* tu_BayesUnfold(TH1D* data, TH1D* T, TH2D* R, int iRepUnfold, TH1D* M) { */
 /*     // return data unfolded with response matrix R */
 /*     // note that truth T is included for misses, and if present */
 /*     // M will include fakes */
-/*     if (M==nullptr) M = R->ProjectionX(ioUniqueName()); */
-/*     RooUnfoldResponse* rooUnfRes = new RooUnfoldResponse (M,T,R,ioUniqueName()); */
+/*     if (M==nullptr) M = R->ProjectionX(tuUniqueName()); */
+/*     RooUnfoldResponse* rooUnfRes = new RooUnfoldResponse (M,T,R,tuUniqueName()); */
 /*     RooUnfoldBayes*    bayes     = new RooUnfoldBayes(rooUnfRes, data, iRepUnfold); */
 /*     TH1D* unfolded = (TH1D*) bayes->Hunfold(); */
-/*     unfolded->SetName(ioUniqueName()); */
+/*     unfolded->SetName(tuUniqueName()); */
 /*     delete rooUnfRes; */
 /*     delete bayes; */
 /*     return unfolded; */
 /* }; */
-
-TLegend* ioNewTLegend() {
-    TLegend *leg = new TLegend(0.6455533,0.6332006,0.8911167,0.8938613,NULL,"brNDC");
-    io_fmt(leg);
-    return leg;
+//*
+TH1D* tuNorm(TH1D* hg, const char which) {
+    switch (which) {
+        case 'n':
+            hg->Scale(1./hg->Integral());
+            return hg;
+        case 'c':
+            hg->Scale(1./hg->Integral()/hg->GetBinWidth(1));
+            return hg;
+        case 'v':
+            {
+                double sum=0.;
+                TAxis *axis = hg->GetXaxis();
+                for (int i{1};i<axis->GetNbins(); ++i) 
+                    sum += hg->GetBinContent(i) * axis->GetBinWidth(i);
+                hg->Scale(1./sum);
+                return hg;
+            }
+        default:
+            cout << "Error in tuNorm, selected option '"<<which<<"' is not valid."<<endl;
+            cout << "Only options:" << endl;
+            cout << " n : 'none' -- don't scale by any width"<<endl;
+            cout << " c : 'constant' -- scale by 1/hg->GetBinWidth(1) width"<<endl;
+            cout << " v : 'variable' -- scale by all bin widths individually"<<endl;
+            return hg;
+    }
 };
-
-float io_dphi(float phi0, float phi1) {
+//*
+double tu_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
+    int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
+    int x1 { (p.first==0  && q.first==0)  ? hg->GetXaxis()->GetNbins() : hg->GetXaxis()->FindBin(q.first)};
+    int y0 { (p.second==0 && q.second==0) ? 1 : hg->GetYaxis()->FindBin(p.second)};
+    int y1 { (p.second==0 && q.second==0) ? hg->GetYaxis()->GetNbins() : hg->GetYaxis()->FindBin(q.second)};
+    return hg->Integral(x0,x1,y0,y1);
+};
+//*
+double tu_get_box_integral(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
+    int x0 { (p.first==0  && q.first==0)  ? 1 : pr->GetXaxis()->FindBin(p.first)};
+    int x1 { (p.first==0  && q.first==0)  ? pr->GetXaxis()->GetNbins() : pr->GetXaxis()->FindBin(q.first)};
+    int y0 { (p.second==0 && q.second==0) ? 1 : pr->GetYaxis()->FindBin(p.second)};
+    int y1 { (p.second==0 && q.second==0) ? pr->GetYaxis()->GetNbins() : pr->GetYaxis()->FindBin(q.second)};
+    return pr->Integral(x0,x1,y0,y1);
+};
+//*
+double tu_get_box_mean(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
+    if (p.first  != 0 || q.first != 0)  pr->GetXaxis()->SetRangeUser(p.first, q.first );
+    if (p.second != 0 || q.second != 0) pr->GetYaxis()->SetRangeUser(p.second,q.second);
+    return pr->GetMean(3);
+};
+//*
+vector<double> tu_vec_BinContent(TH1* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
+    return vec;
+};
+//*
+vector<double> tu_vec_BinError(TH1* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
+    return vec;
+};
+vector<double> tu_vec_BinCenter(TH1* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    TAxis* ax = hg->GetXaxis();
+    for (int i=i0;i<i1;++i) {
+        vec.push_back(ax->GetBinCenter(i));
+    }
+    return vec;
+};
+/* /1* template<class T> *1/ */
+pair<int, double*> tu_vecBinEdge(TH1* hg) {
+    int n_bins = hg->GetXaxis()->GetNbins();
+    double *edges = new double[n_bins+1];
+    for (int i{1};i<=n_bins+1;++i){
+        edges[i-1] = hg->GetXaxis()->GetBinLowEdge(i);
+    }
+    return {n_bins,edges};
+};
+vector<double> tu_vecBinContent(TH1* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinContent(i));
+    return vec;
+};
+vector<double> tu_vecBinError  (TH1* hg, bool under_over_flow){
+    vector<double> vec;
+    int i0 = under_over_flow ? 0 : 1;
+    int i1 = under_over_flow ? hg->GetNcells() : hg->GetNcells()-1;
+    for (int i=i0;i<i1;++i) vec.push_back(hg->GetBinError(i));
+    return vec;
+};
+float tu_dphi(float phi0, float phi1) {
     float rval = phi1-phi0;
-    while (rval < -IO_pi) rval += IO_twopi;
-    while (rval >  IO_pi) rval -= IO_twopi;
+    while (rval < -M_PI) rval += 2*M_PI;
+    while (rval >  M_PI) rval -= 2*M_PI;
     return rval;
 };
-float io_absDphi(float phi0, float phi1) { return TMath::Abs(io_dphi(phi0,phi1)); };
+float tu_absDphi(float phi0, float phi1) { return TMath::Abs(tu_dphi(phi0,phi1)); };
 
-bool io_isAbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){
-    float dphi = TMath::Abs(io_dphi(phi0,phi1));
-    return (dphi>=lo_bound && dphi<=hi_bound);
-};
-bool io_isAbsTrans358pi(float phi0, float phi1, float lo_bound, float hi_bound){
-    float dphi = TMath::Abs(io_dphi(phi0,phi1));
-    return (dphi>=lo_bound && dphi<=hi_bound);
-};
+/* bool tu_isAbsTransPhi(float phi0, float phi1, float lo_bound, float hi_bound){ */
+/*     float dphi = TMath::Abs(tu_dphi(phi0,phi1)); */
+/*     return (dphi>=lo_bound && dphi<=hi_bound); */
+/* }; */
+/* bool tu_isAbsTrans358pi(float phi0, float phi1, float lo_bound, float hi_bound){ */
+/*     float dphi = TMath::Abs(tu_dphi(phi0,phi1)); */
+/*     return (dphi>=lo_bound && dphi<=hi_bound); */
+/* }; */
 
-float io_02pi(float &phi){
-    while (phi<0)       phi += IO_twopi;
-    while (phi>IO_twopi) phi -= IO_twopi;
+float tu_02pi(float &phi){
+    while (phi<0)        phi += 2*M_PI;
+    while (phi>2*M_PI) phi -= 2*M_PI;
     return phi;
 };
-float io_02pi(float  phi){
-    while (phi<0)        phi += IO_twopi;
-    while (phi>IO_twopi) phi -= IO_twopi;
+float tu_02pi(float  phi){
+    while (phi<0)        phi += 2*M_PI;
+    while (phi>2*M_PI) phi -= 2*M_PI;
     return phi;
 };
 
-vector<double> ioQuantiles(TH1D* hg, vector<double> percents){
+vector<double> tuQuantiles(TH1D* hg, vector<double> percents){
     cout << hg->GetName() << endl;
     int n {(int)percents.size()};
     double *x = new double[n];
@@ -664,7 +544,7 @@ vector<double> ioQuantiles(TH1D* hg, vector<double> percents){
     delete[] q;
     return vec;
 };
-string  ioStringVec(vector<double> vec, const char* name, const char* formatter){
+string  tuStringVec(vector<double> vec, const char* name, const char* formatter){
     if (vec.size()==0) return "";
     ostringstream os;
     const char* fmt = Form("%%%s",formatter);
@@ -674,7 +554,7 @@ string  ioStringVec(vector<double> vec, const char* name, const char* formatter)
     return os.str();
 }
 
-int io_count_digits(int n, int min_val) {
+int tu_count_digits(int n, int min_val) {
     int cnt = 0;
     while (n != 0) { 
         n /= 10;
@@ -683,16 +563,16 @@ int io_count_digits(int n, int min_val) {
     if (cnt < min_val) cnt = min_val;
     return cnt;
 };
-int ioSum(const vector<int> vec)  { return std::accumulate(vec.begin(), vec.end(), 0); };
-int ioSum(const vector<bool> vec) { return std::accumulate(vec.begin(), vec.end(), 0); };
+int tuSum(const vector<int> vec)  { return std::accumulate(vec.begin(), vec.end(), 0); };
+int tuSum(const vector<bool> vec) { return std::accumulate(vec.begin(), vec.end(), 0); };
 
-map<int,string>    ioReadIntStrMap(const char* file, ioOptMap options, ioOptMap dict){
+map<int,string>    tuReadIntStrMap(const char* file, tuOptMap options, tuOptMap dict){
     dict += options;
     /* cout << " map =1 : " << options["tag"].str() << endl; */
-    auto data = ioReadStrVec(file, options);
+    auto data = tuReadStrVec(file, options);
     if (data.size() % 2) 
         throw std::runtime_error(
-                "Error in io_ReadIntStrMap : must have even number of entries");
+                "Error in tu_ReadIntStrMap : must have even number of entries");
     map<int,string> M;
     for (unsigned int i=0; i<(data.size()/2); ++i) {
         int index = atoi(data[i*2].c_str());
@@ -701,14 +581,14 @@ map<int,string>    ioReadIntStrMap(const char* file, ioOptMap options, ioOptMap 
     return M;
 };
 
-vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_commas) {
+vector<int> tuReadIntVec(const char* in_file, int col, bool sort, bool strip_commas) {
     vector<int> vec;
     ifstream file;
     file.open(in_file);
     ostringstream msg;
     if (!file.is_open()) {
         msg << "fatal error: could not open int map file \"" 
-            << in_file << " in ioReadIntVec" << endl;
+            << in_file << " in tuReadIntVec" << endl;
         throw std::runtime_error(msg.str());
     }
     /* int n_req { index_column > data_column ? index_column : data_column }; */
@@ -742,7 +622,7 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
         if (is_comment || found_val || read_all_cols) continue;
         msg << "fatal error: could not read col " << col << endl
             << "  in input line \""<<line<<"\""  << endl
-            << "  in input file \"" << in_file <<"\" in ioReadIntVec" << endl;
+            << "  in input file \"" << in_file <<"\" in tuReadIntVec" << endl;
         throw std::runtime_error(msg.str());
     }
     file.close();
@@ -751,47 +631,47 @@ vector<int> ioReadIntVec(const char* in_file, int col, bool sort, bool strip_com
 };
 
 //----------
-map<string,string> io_VecStrToMapStrStr (vector<string> data) 
+map<string,string> tu_VecStrToMapStrStr (vector<string> data) 
 {
     if (data.size() % 2) 
         throw std::runtime_error(
-                "Error in io_VecStrToMapStrStrg : must have even number of entries");
+                "Error in tu_VecStrToMapStrStrg : must have even number of entries");
     map<string,string> M;
     for (unsigned int i=0; i<(data.size()/2); ++i) {
         M[data[i*2]] = data[i*2+1];
     }
     return M;
 };
-map<string,string> ioReadMapStrStr(const char* in_file, const char* tag, 
-        ioOptMap options, ioOptMap dict) 
+map<string,string> tuReadMapStrStr(const char* in_file, const char* tag, 
+        tuOptMap options, tuOptMap dict) 
 {
     dict += options;
-    dict["tag"] = tag;
-    return io_VecStrToMapStrStr(ioReadStrVec(in_file, dict));
+    dict("tag") = tag;
+    return tu_VecStrToMapStrStr(tuReadStrVec(in_file, dict));
 };
-map<string,string> ioReadMapStrStr(const char* in_file, ioOptMap options, ioOptMap dict) {
+map<string,string> tuReadMapStrStr(const char* in_file, tuOptMap options, tuOptMap dict) {
     dict += options;
-    return io_VecStrToMapStrStr(ioReadStrVec(in_file, dict));
+    return tu_VecStrToMapStrStr(tuReadStrVec(in_file, dict));
 };
 
 
-vector<string> ioReadStrVec(const char* in_file, const char* tag, 
-        ioOptMap options, ioOptMap dict) {
+vector<string> tuReadStrVec(const char* in_file, const char* tag, 
+        tuOptMap options, tuOptMap dict) {
     dict += options;
-    dict["tag"] = tag;
-    return ioReadStrVec(in_file, dict);
+    dict("tag") = tag;
+    return tuReadStrVec(in_file, dict);
 };
-vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict) {
+vector<string> tuReadStrVec(const char* in_file, tuOptMap options, tuOptMap dict) {
     dict += options;
 
-    bool use_column = (dict["column"].str()!="all");
+    bool use_column = (dict("column").str!="all");
     int  which_column {0};
-    if  (use_column) { which_column = dict["column"]; }
-    /* cout << "a0 : " << dict["tag"].str() << endl; */
-    bool use_tag {dict["tag"].str() != "none"};
-    string tag = use_tag ? dict["tag"] : "";
+    if  (use_column) { which_column = dict("column"); }
+    /* cout << "a0 : " << dict("tag").str() << endl; */
+    bool use_tag {dict("tag").str != "none"};
+    string tag = use_tag ? dict("tag") : "";
     bool in_tag { !use_tag };
-    bool strip_commas { (bool) dict["strip_commas"]() };
+    bool strip_commas { dict["strip_commas"] };
 
     /* cout << " Tag: " << tag << endl; */
 
@@ -808,7 +688,7 @@ vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict
     ostringstream msg;
     if (!file.is_open()) {
         msg << "fatal error: could not open file \"" 
-            << in_file << " in ioReadStrVec" << endl;
+            << in_file << " in tuReadStrVec" << endl;
         throw std::runtime_error(msg.str());
     }
     string line;
@@ -828,19 +708,19 @@ vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict
         while (words >> word) {
             if (use_tag) {
                 if ( in_tag ) {
-                    if (ioWordIsEndTag(word, tag)) { 
+                    if (tuWordIsEndTag(word, tag)) { 
                         found_end_tag  = true;
                         break;
                     }
                 } else {
-                    if (ioWordIsTag(word,tag)) {
+                    if (tuWordIsTag(word,tag)) {
                         found_start_tag = true;
                         in_tag = true;
                     }
                     continue;
                 }
             }
-            if (ioIsAnyTag(word)) continue;
+            if (tuIsAnyTag(word)) continue;
             /* if (word.IsFloat()) { */
             ++col;
             if (!use_column || col==which_column) {
@@ -864,29 +744,26 @@ vector<string> ioReadStrVec(const char* in_file, ioOptMap options, ioOptMap dict
              + tag + ">\" in file \"" + in_file +"\"");
     };
              
-    if ( (bool) dict["sort"]() ) std::sort(vec.begin(), vec.end());
+    if ( dict["sort"] ) std::sort(vec.begin(), vec.end());
     return vec;
 };
 
-
-
-
-vector<double> ioReadValVec(const char* in_file, const char* tag, 
-        ioOptMap options, ioOptMap dict) {
+vector<double> tuReadValVec(const char* in_file, const char* tag, 
+        tuOptMap options, tuOptMap dict) {
     dict += options;
-    dict["tag"] = tag;
-    return ioReadValVec(in_file, dict);
+    dict("tag") = tag;
+    return tuReadValVec(in_file, dict);
 };
-vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict) {
+vector<double> tuReadValVec(const char* in_file, tuOptMap options, tuOptMap dict) {
     dict += options;
 
-    bool use_column = (dict["column"].str()!="all");
+    bool use_column = (dict("column").str!="all");
     int  which_column {0};
-    if  (use_column) { which_column = dict["column"]; }
-    bool use_tag {dict["tag"].str() != "none"};
-    string tag = use_tag ? dict["tag"] : "";
+    if  (use_column) { which_column = dict("column"); }
+    bool use_tag {dict("tag").str != "none"};
+    string tag = use_tag ? dict("tag") : "";
     bool in_tag { !use_tag };
-    bool strip_commas { (bool) dict["strip_commas"]() };
+    bool strip_commas { dict["strip_commas"] };
 
     // logic:
     // per line:
@@ -901,7 +778,7 @@ vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict
     ostringstream msg;
     if (!file.is_open()) {
         msg << "fatal error: could not open int map file \"" 
-            << in_file << " in ioReadIntVec" << endl;
+            << in_file << " in tuReadIntVec" << endl;
         throw std::runtime_error(msg.str());
     }
     /* int n_req { index_column > data_column ? index_column : data_column }; */
@@ -929,18 +806,18 @@ vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict
                 }
                 continue;
             } 
-            bool is_a_tag { ioIsAnyTag(word) };
+            bool is_a_tag { tuIsAnyTag(word) };
             if (!is_a_tag) break; // neither number or tag, so is a comment
             // here: is_a_tag == true
             if (!use_tag) continue;
             // use_tag == true && this is a tag
             if ( in_tag ) {
-                if (ioWordIsEndTag(word, tag)) { 
+                if (tuWordIsEndTag(word, tag)) { 
                     found_end_tag  = true;
                     break;
                 }
             } else {
-                if (ioWordIsTag(word,tag)) {
+                if (tuWordIsTag(word,tag)) {
                     found_start_tag = true;
                     in_tag = true;
                 }
@@ -960,15 +837,15 @@ vector<double> ioReadValVec(const char* in_file, ioOptMap options, ioOptMap dict
              + tag + ">\" in file \"" + in_file +"\"");
     };
              
-    if ( (bool) dict["sort"]() ) std::sort(vec.begin(), vec.end());
+    if (  dict("sort").val == 1) std::sort(vec.begin(), vec.end());
     return vec;
 };
 
-pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dict) {
+pair<int,double*> tuReadValsPtr(const char* file, tuOptMap options, tuOptMap dict) {
     dict += options;
-    auto vec = ioReadValVec(file, dict);
-    int i0 = dict["begin_index"];
-    int i1 = dict["end_index"];
+    auto vec = tuReadValVec(file, dict);
+    int i0 = dict("begin_index");
+    int i1 = dict("end_index");
     int size_data {(int) vec.size()};
     int size_req = (i1 != -1) 
         ? i1-i0
@@ -976,7 +853,7 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
     if (i0!=0 || i1!=-1) {
         if (size_req<=0 || size_req > size_data) {
             ostringstream msg;
-            msg << "ioReadValsPtr in file " << file << " requested start and end indices " 
+            msg << "tuReadValsPtr in file " << file << " requested start and end indices " 
                 << i0 << " and " << i1
                 << " for total size of " << size_req 
                 << " out of total available " << size_data << endl;
@@ -985,7 +862,7 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
     }
     if (size_data == 0) {
         throw std::runtime_error(
-        (string)"ioReadValsPtr  in file " + file + " found no data. ");
+        (string)"tuReadValsPtr  in file " + file + " found no data. ");
     }
     double* vals = new double[size_req];
     for (int i{0}; i<size_req; ++i) {
@@ -994,7 +871,7 @@ pair<int,double*> ioReadValsPtr(const char* file, ioOptMap options, ioOptMap dic
     return {size_req, vals};
 };
 
-TGraph* ioMakeTGraph(TH1D* hg, bool invert, bool skip_zeros, bool normalize) {
+TGraph* tuMakeTGraph(TH1D* hg, bool invert, bool skip_zeros, bool normalize) {
     if (normalize) hg->Scale(1./hg->Integral());
     vector<double> x, y;
     TAxis* axis = hg->GetXaxis();
@@ -1007,24 +884,24 @@ TGraph* ioMakeTGraph(TH1D* hg, bool invert, bool skip_zeros, bool normalize) {
     double lo = hg->GetXaxis()->GetBinLowEdge(1);
     double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
     if (invert) {
-        gr = ioMakeTGraph(y,x);
+        gr = tuMakeTGraph(y,x);
         // set the limits
         gr->SetMinimum(lo);
         gr->SetMaximum(hi);
     } else {
-        gr = ioMakeTGraph(x,y);
+        gr = tuMakeTGraph(x,y);
         gr->GetXaxis()->SetLimits(lo,hi);
     }
     return gr;
 };
 
-TGraph* ioMakeTGraph(TProfile* pr, bool invert, bool skip_zeros, bool normalize) {
-    TH1D* hg = (TH1D*) pr->ProjectionX(ioUniqueName());
+TGraph* tuMakeTGraph(TProfile* pr, bool invert, bool skip_zeros, bool normalize) {
+    TH1D* hg = (TH1D*) pr->ProjectionX(tuUniqueName());
     if (normalize) hg->Scale(1./hg->Integral());
-    return ioMakeTGraph(hg,invert,skip_zeros);
+    return tuMakeTGraph(hg,invert,skip_zeros);
 };
 
-TGraphErrors* ioMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool normalize ) {
+TGraphErrors* tuMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool normalize ) {
     vector<double> x, x_err, y, y_err;
     TAxis* axis = hg->GetXaxis();
     if (normalize) hg->Scale(1./hg->Integral());
@@ -1040,19 +917,19 @@ TGraphErrors* ioMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool no
     double lo = hg->GetXaxis()->GetBinLowEdge(1);
     double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
     if (invert) {
-        gr = ioMakeTGraphErrors(y,x,x_err,y_err);
+        gr = tuMakeTGraphErrors(y,x,x_err,y_err);
         gr->SetMinimum(lo);
         gr->SetMaximum(hi);
     } else {
-        gr = ioMakeTGraphErrors(x,y,y_err,x_err);
+        gr = tuMakeTGraphErrors(x,y,y_err,x_err);
         gr->GetXaxis()->SetLimits(lo,hi);
     }
     return gr;
 };
 
-/* TGraph* ioMakeTGraph(vector<double>& x, vector<double>& y) { */
+/* TGraph* tuMakeTGraph(vector<double>& x, vector<double>& y) { */
 /*     if (x.size() != y.size()) */ 
-/*         throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length"); */
+/*         throw std::runtime_error("tuMakeTGraph(vec, vec) required vectors of same length"); */
 /*     const unsigned int n = x.size(); */
 /*     double* xpts = new double[n]; */
 /*     double* ypts = new double[n]; */
@@ -1062,8 +939,8 @@ TGraphErrors* ioMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool no
 /*     } */
 /*     return new TGraph(n,xpts,ypts); */
 /* }; */
-TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err, vector<bool> use) {
-    ioMinMax nsize;
+TGraphErrors* tuMakeTGraphErrors(vector<double> x, vector<double> y, vector<double> y_err, vector<double> x_err, vector<bool> use) {
+    tuMinMax nsize;
     nsize.fill(x.size());
     nsize.fill(y.size());
     nsize.fill(y_err.size());
@@ -1071,13 +948,13 @@ TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<doub
     if (use.size() != 0)   nsize.fill(use.size());
 
     if (x.size() != y.size() || x.size() != y_err.size()) 
-        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+        cout << " Warning: tuMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
              << " Therefor using shortest vector of size " <<  nsize.max << endl;
     if (x_err.size() != 0 && x_err.size() != x.size())
-        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+        cout << " Warning: tuMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
              << " Therefor using shortest vector of size " <<  nsize.max << endl;
     if (use.size() != 0 && use.size() != x.size())
-        cout << " Warning: ioMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
+        cout << " Warning: tuMakeTGraphErrors(vec, vec, vec={}) don't have equal input sizes" << endl
              << " Therefor using shortest vector of size " <<  nsize.max << endl;
 
     if (use.size() != 0) {
@@ -1113,9 +990,9 @@ TGraphErrors* ioMakeTGraphErrors(vector<double> x, vector<double> y, vector<doub
     return new TGraphErrors(n,xpts,ypts,xerr,yerr);
 };
 
-TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
+TGraph* tuMakeTGraph(vector<double> x, vector<double> y) {
     if (x.size() != y.size()) 
-        throw std::runtime_error("ioMakeTGraph(vec, vec) required vectors of same length");
+        throw std::runtime_error("tuMakeTGraph(vec, vec) required vectors of same length");
     const unsigned int n = x.size();
     double* xpts = new double[n];
     double* ypts = new double[n];
@@ -1127,16 +1004,16 @@ TGraph* ioMakeTGraph(vector<double> x, vector<double> y) {
 };
 
 // find the bin in a vector
-int iowhichbin0(double val, vector<double>& vec) {
+int tuwhichbin0(double val, vector<double>& vec) {
     return (int)(std::upper_bound(vec.begin(), vec.end(), val) - vec.begin()-1);
 } ;
-int iowhichbin0(double val, TH1D* hg) {
+int tuwhichbin0(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val)-1);
 } ;
-int iowhichbin1(double val, vector<double>& vec) {
+int tuwhichbin1(double val, vector<double>& vec) {
     return (int)(std::upper_bound(vec.begin(), vec.end(), val) - vec.begin());
 } ;
-int iowhichbin1(double val, TH1D* hg) {
+int tuwhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));
 } ;
 
@@ -1157,24 +1034,24 @@ double* ax_doubleptr(vector<int> vals) {
     x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
     return x;
 };
-double io_D(double x0,double y0,double x1,double y1) 
+double tu_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
-double io_D2(double x0,double y0,double x1,double y1) 
+double tu_D2(double x0,double y0,double x1,double y1) 
 { return TMath::Sq(x1-x0)+TMath::Sq(y1-y0); };
-double io_R(double x0,double y0,double x1,double y1) 
-{ return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0))); };
-double io_R2(double x0,double y0,double x1,double y1) 
-{ return TMath::Sq(x1-x0)+TMath::Sq(io_dphi(y1,y0)); };
+double tu_R(double x0,double y0,double x1,double y1) 
+{ return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(tu_dphi(y1,y0))); };
+double tu_R2(double x0,double y0,double x1,double y1) 
+{ return TMath::Sq(x1-x0)+TMath::Sq(tu_dphi(y1,y0)); };
 
 
 
-/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+/* RooUnfoldResponse tuMakeRooUnfoldResponse( */
 /*      int nbins, double lo_bin, double hi_bin, */ 
 /*      const char* tag, const char* title */
 /* ) { */
 /*     const char* this_tag { */
 /*         (strcmp(tag,"")==0) */
-/*             ? ioUniqueName() */
+/*             ? tuUniqueName() */
 /*             : tag */ 
 /*     }; */
 /*     TH1D truth { */
@@ -1188,13 +1065,13 @@ double io_R2(double x0,double y0,double x1,double y1)
 /*     return {&measured, &truth, Form("%s_RooUnfR",this_tag), title}; */
 /* }; */
 
-/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+/* RooUnfoldResponse tuMakeRooUnfoldResponse( */
 /*      int nbins, double* edges, */ 
 /*      const char* tag, const char* title */
 /* ) { */
 /*     const char* this_tag { */
 /*         (strcmp(tag,"")==0) */
-/*             ? ioUniqueName() */
+/*             ? tuUniqueName() */
 /*             : tag */ 
 /*     }; */
 /*     TH1D truth { */
@@ -1209,14 +1086,14 @@ double io_R2(double x0,double y0,double x1,double y1)
 /* }; */
 
 
-/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+/* RooUnfoldResponse tuMakeRooUnfoldResponse( */
 /*      int nb_measured, double lo_measured, double hi_measured, */
 /*      int nb_truth, double lo_truth, double hi_truth, */
 /*      const char* tag, const char* title */
 /* ) { */
 /*     const char* this_tag { */
 /*         (strcmp(tag,"")==0) */
-/*             ? ioUniqueName() */
+/*             ? tuUniqueName() */
 /*             : tag */ 
 /*     }; */
 /*     TH1D truth{ */
@@ -1229,14 +1106,14 @@ double io_R2(double x0,double y0,double x1,double y1)
 /*             nb_measured, lo_measured, hi_measured }; */
 /*     return {&measured, &truth, Form("%s_RooUnfR",this_tag), title}; */
 /* }; */
-/* RooUnfoldResponse ioMakeRooUnfoldResponse( */
+/* RooUnfoldResponse tuMakeRooUnfoldResponse( */
 /*      int nb_measured, double* edges_measured, */
 /*      int nb_truth, double* edges_truth, */
 /*      const char* tag, const char* title */
 /* ) { */
 /*     const char* this_tag { */
 /*         (strcmp(tag,"")==0) */
-/*             ? ioUniqueName() */
+/*             ? tuUniqueName() */
 /*             : tag */ 
 /*     }; */
 /*     TH1D truth { */
@@ -1250,38 +1127,38 @@ double io_R2(double x0,double y0,double x1,double y1)
 /*     return {&measured, &truth, Form("%s_RooUnfR",this_tag), title}; */
 /* }; */
 // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
-/* int iowhichbin(int, double*); */
-/* int iowhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
-/* int iowhichbin(int, double*,   vector<int> remap); */
+/* int tuwhichbin(int, double*); */
+/* int tuwhichbin(vector<double>, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
+/* int tuwhichbin(int, double*,   vector<int> remap); */
 
-double ioRatCircleOverLine (double R, double d) {
+double tuRatCircleOverLine (double R, double d) {
     R = TMath::Abs(R);
     d = TMath::Abs(d);
     if (R <= d) return 0.;
-    return TMath::ACos(d/R)/IO_pi;
+    return TMath::ACos(d/R)/M_PI;
 };
-double ioRatCircleInTwoParallelLines (const double d0,const double d1,double C,double R) {
+double tuRatCircleInTwoParallelLines (const double d0,const double d1,double C,double R) {
     if (C<d0) C = d0;
     if (C>d1) C = d1;
-    return 1 - ioRatCircleOverLine(R,C-d0)
-             - ioRatCircleOverLine(R,d1-C);
+    return 1 - tuRatCircleOverLine(R,C-d0)
+             - tuRatCircleOverLine(R,d1-C);
 };
-double ioPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p){
+double tuPolyP6_a0_a1x_a2xx_a3y_a4yy_a5xy(double* x, double *p){
     return p[0]      + p[1]*x[0] + p[2]*x[0]*x[0]
                      + p[3]*x[1] + p[4]*x[1]*x[1] + p[5]*x[0]*x[1];
 };
 
-bool ioWordIsTag   (string  word, string tag)  { return (word == ("<" +tag+">")); };
-bool ioWordIsEndTag(string  word, string tag)  { return (word == ("</" +tag+">")); };
-bool ioWordIsTag   (TString word, string tag) { return (word == ("<" +tag+">")); };
-bool ioWordIsEndTag(TString word, string tag) { return (word == ("</" +tag+">")); };
-bool ioIsAnyTag    (string  word) { return ioIsAnyTag((TString)word); };
-bool ioIsAnyTag    (TString word) {
+bool tuWordIsTag   (string  word, string tag)  { return (word == ("<" +tag+">")); };
+bool tuWordIsEndTag(string  word, string tag)  { return (word == ("</" +tag+">")); };
+bool tuWordIsTag   (TString word, string tag) { return (word == ("<" +tag+">")); };
+bool tuWordIsEndTag(TString word, string tag) { return (word == ("</" +tag+">")); };
+bool tuIsAnyTag    (string  word) { return tuIsAnyTag((TString)word); };
+bool tuIsAnyTag    (TString word) {
     if (!word.BeginsWith("<")) return false;
     return word.EndsWith(">");
 };
 
-void io_normByRow(TH2D* hg, double factor, bool use_max_val) {
+void tu_normByRow(TH2D* hg, double factor, bool use_max_val) {
     int nCols = hg->GetXaxis()->GetNbins();
     int nRows   = hg->GetYaxis()->GetNbins(); 
 
@@ -1307,7 +1184,7 @@ void io_normByRow(TH2D* hg, double factor, bool use_max_val) {
     };
 };
 
-vector<double> io_print_first_blank(TH2D* hg) {
+vector<double> tu_print_first_blank(TH2D* hg) {
     vector<double> vec;
     int nY = hg->GetYaxis()->GetNbins();
     int nX = hg->GetXaxis()->GetNbins();
@@ -1329,15 +1206,15 @@ vector<double> io_print_first_blank(TH2D* hg) {
 };
 
 
-pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet, 
+pair<TF1*, tuOptMap> tuFitJESJER(TH1D* hg, double pt_jet, 
         double quant_lo, double quant_hi, 
-        const char* tag, double sigma_rat_guess) 
+        const char* tag)
 {
-    string my_tag = (strcmp(tag,"")==0) ? ioUniqueName() : tag;
+    string my_tag = (strcmp(tag,"")==0) ? tuUniqueName() : tag;
     double center = hg->GetXaxis()->GetBinCenter(hg->GetMaximumBin());
-    auto quant = ioQuantiles(hg,{quant_lo,quant_hi});
+    auto quant = tuQuantiles(hg,{quant_lo,quant_hi});
     if (quant[0] >= center || quant[1] <= center) {
-        cout << "Can't fit in ioFitJESJER : the max value bin at "
+        cout << "Can't fit in tuFitJESJER : the max value bin at "
              << Form("%f doesn't lie between quantiles (%f,%f) at (%f,%f)",
                      center, quant_lo, quant_hi, quant[0], quant[1]) << endl;
         return {nullptr, {{
@@ -1375,15 +1252,15 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
             "quant_hi", quant_hi}}};
 };
 
-/* void ioTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true) { */
+/* void tuTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true) { */
 /*     TAxis* Xaxis = hg->GetXaxis(); */
 /*     TAxis* Yaxis = hg->GetYaxis(); */
 /*     int nXbins = Xaxis->GetNbins(); */
 /*     int nYbins = Xaxis->GetNbins(); */
 /*     if (cut_underover_flow) { */
         
-/* IOS_keepcut_stats io_keepcutbin(TH1* h, int ibin, double minval, double zero_val, double zero_err) { */
-/*     IOS_keepcut_stats stats{}; */
+/* tuS_keepcut_stats tu_keepcutbin(TH1* h, int ibin, double minval, double zero_val, double zero_err) { */
+/*     tuS_keepcut_stats stats{}; */
 /*     double val = h->GetBinContent(ibin); */
 /*     if (val == 0 && h->GetBinError(ibin)==0) return {}; */
 /*     if (val < minval) { */
@@ -1407,44 +1284,44 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
 /* return stats; */
 /* }; */
 
-/* IOS_keepcut_stats io_cullsmallbins( */
+/* tuS_keepcut_stats tu_cullsmallbins( */
 /*         TH1* h, */ 
 /*         double min_val, */ 
-/*         IO area, */ 
+/*         tu area, */ 
 /*         bool remove_overunderflow) */ 
 /* { */
 /*     if (remove_overunderflow) */ 
-/*         for (auto i : io_binvec(h, IO::overunderflow)) io_setbinzero(h,i); */
+/*         for (auto i : tu_binvec(h, tu::overunderflow)) tu_setbinzero(h,i); */
 
-/*     IOS_keepcut_stats stats; */
-/*     for (auto i : io_binvec(h, area)) { */
-/*         stats += io_keepcutbin(h, i, min_val); */
+/*     tuS_keepcut_stats stats; */
+/*     for (auto i : tu_binvec(h, area)) { */
+/*         stats += tu_keepcutbin(h, i, min_val); */
 /*         /1* if (stats.was_cut) cout << stats.x << " " << stats.y << endl; *1/ */
 /*         /1* cout << " stats: " << stats.was_cut << endl; *1/ */
 /*     } */
 /*     return stats; */
 /* }; */
-/* bool io_cullsmallbins_( */
+/* bool tu_cullsmallbins_( */
 /*         TH1* h, */ 
 /*         double min_val) */
 /* { */
-/*     for (auto i : io_binvec(h, IO::in)) { */
-/*         io_keepcutbin(h, i, min_val); */
+/*     for (auto i : tu_binvec(h, tu::in)) { */
+/*         tu_keepcutbin(h, i, min_val); */
 /*     } */
 /*     return true; */
 /* }; */
 
-/* vector<int> io_binvec(TH1* h, IO loc) { */
+/* vector<int> tu_binvec(TH1* h, tu loc) { */
 /*     vector<int> vec{}; */
 /*     if (h->GetYaxis()->GetNbins() == 1) { */
 /*         switch (loc) { */
-/*             case IO::overunderflow: */
+/*             case tu::overunderflow: */
 /*                 vec = { 0, h->GetXaxis()->GetNbins()+1 }; */
 /*                 break; */
-/*             case IO::all: */
+/*             case tu::all: */
 /*                 vec = { 0, h->GetXaxis()->GetNbins()+1 }; */
 /*                 // no break -- continue to next block */
-/*             case IO::in: */
+/*             case tu::in: */
 /*                 for (int i{1}; i<=h->GetXaxis()->GetNbins(); ++i) */ 
 /*                     vec.push_back(i); */
 /*                 break; */
@@ -1454,16 +1331,16 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
 /*         int nX = h->GetXaxis()->GetNbins(); */
 /*         int nY = h->GetYaxis()->GetNbins(); */
 /*         switch (loc) { */
-/*             case IO::overunderflow: */ 
+/*             case tu::overunderflow: */ 
 /*                 for (auto x{0}; x<=nX+1; ++x) vec.push_back(h->GetBin(x,0)); */
 /*                 for (auto x{0}; x<=nX+1; ++x) vec.push_back(h->GetBin(x,nY+1)); */
 /*                 for (auto y{1}; y<=nY;   ++y) vec.push_back(h->GetBin(0,y)); */
 /*                 for (auto y{1}; y<=nY;   ++y) vec.push_back(h->GetBin(nX+1,y)); */
 /*                 break; */
-/*             case IO::all: */
-/*                 vec = io_binvec(h, IO::overunderflow); */
+/*             case tu::all: */
+/*                 vec = tu_binvec(h, tu::overunderflow); */
 /*                 // no break -- continue to next block */
-/*             case IO::in: */
+/*             case tu::in: */
 /*                 for (auto y{1}; y<nY+1; ++y) */
 /*                 for (auto x{1}; x<nX+1; ++x) */
 /*                         vec.push_back(h->GetBin(x,y)); */
@@ -1474,7 +1351,7 @@ pair<TF1*, ioOptMap> ioFitJESJER(TH1D* hg, double pt_jet,
 /*     return vec; */
 /* }; */
 
-TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
+TH2D* tu_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
     // cut all bin content above n_sigma from mean
 
     if (n_sigma==0) return hg;
@@ -1482,7 +1359,7 @@ TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
     TAxis* x_axis = hg->GetXaxis();
     double pre_sum = hg->Integral();
     for (int y=1;y<y_axis->GetNbins();++y) {
-        TH1D* proj = hg->ProjectionX(ioUniqueName(),y,y);
+        TH1D* proj = hg->ProjectionX(tuUniqueName(),y,y);
         double mu = proj->GetMean();
         double sigma = proj->GetStdDev();
         int i_bin = x_axis->FindBin(mu+n_sigma*sigma+offset);
@@ -1498,7 +1375,7 @@ TH2D* io_cut_high_sigmaX(TH2D* hg, double n_sigma, double offset, bool print) {
     if (print) cout << " percent cut: " << 100.*(pre_sum-post_sum)/pre_sum << endl;
     return hg;
 };
-TH1D* io_cut_high_sigmaX(TH1D* hg, double n_sigma, double offset, bool print) {
+TH1D* tu_cut_high_sigmaX(TH1D* hg, double n_sigma, double offset, bool print) {
     // cut all bin content above n_sigma from mean
     if (n_sigma==0) return hg;
     TAxis* x_axis = hg->GetXaxis();
@@ -1517,7 +1394,7 @@ TH1D* io_cut_high_sigmaX(TH1D* hg, double n_sigma, double offset, bool print) {
     return hg;
 };
 
-double io_setbinzero(TH1* hg, int bin, double val, double err)
+double tu_setbinzero(TH1* hg, int bin, double val, double err)
 { 
     double p_val = hg->GetBinContent(bin);
     hg->SetBinContent(bin, val);
@@ -1527,12 +1404,12 @@ double io_setbinzero(TH1* hg, int bin, double val, double err)
 };
 
 
-const char* io_cutdiff(int a, int b, const char* fmt) {
+const char* tu_cutdiff(int a, int b, const char* fmt) {
     int diff {b-a};
     return Form(fmt,b,diff,(double)diff/a);
 };
 
-TH1* ioSetCntErrors(TH1* hg) {
+TH1* tuSetCntErrors(TH1* hg) {
     for (int i{0}; i<hg->GetNcells(); ++i) {
         if (hg->GetBinContent(i) != 0) {
             hg->SetBinError(i, TMath::Sqrt(hg->GetBinContent(i)));
@@ -1540,7 +1417,7 @@ TH1* ioSetCntErrors(TH1* hg) {
     }
     return hg;
 };
-TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverflow) {
+TH1* tuAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverflow) {
     // Add all content from bin centers in hg_from to values in corresponding bins in hg_to
     if (rm_underoverflow) hg_fr->ClearUnderflowAndOverflow();
     int x0, y0, z0;
@@ -1559,11 +1436,10 @@ TH1* ioAddBinCnt(TH1* hg_to, TH1* hg_fr, bool set_cnt_errors, bool rm_underoverf
         hg_to->SetBinContent( i_to, hg_to->GetBinContent(i_to) + val );
     }
     if (rm_underoverflow) hg_to->ClearUnderflowAndOverflow();
-    if (set_cnt_errors) ioSetCntErrors(hg_to);
+    if (set_cnt_errors) tuSetCntErrors(hg_to);
     return hg_to;
 };
-
-TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
+TH1* tu_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
     // build the bins 
     //
     TAxis* ax_in = _in->GetXaxis();
@@ -1571,19 +1447,25 @@ TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
     if (last_bin==0) last_bin = ax_in->GetNbins();
     for (int i=first_bin; i<=last_bin; ++i) bins_edge.push_back(ax_in->GetBinLowEdge(i));
     bins_edge.push_back(ax_in->GetBinUpEdge(last_bin));
-    ioBinVec bins { bins_edge} ;
-    /* cout << " bins: " << bins << endl; */
-    TH1D* hg_cdf = new TH1D(ioUniqueName(), Form("%s;%s;%s",
-                _in->GetTitle(), _in->GetXaxis()->GetTitle(), _in->GetYaxis()->GetTitle()),
-            bins, bins );
     
+    int     nbins = bins_edge.size()-1;
+    double* p_edges = new double[nbins+1];
+    for (auto i=0;i<=nbins;++i) p_edges[i] = bins_edge[i];
+
+    /* tuBinVec bins { bins_edge} ; */
+    /* cout << " bins: " << bins << endl; */
+    TH1D* hg_cdf = new TH1D(tuUniqueName(), Form("%s;%s;%s",
+                _in->GetTitle(), _in->GetXaxis()->GetTitle(), _in->GetYaxis()->GetTitle()),
+            nbins, p_edges );
+    
+    delete[] p_edges;
     hg_cdf->SetMarkerStyle(_in->GetMarkerStyle());
     hg_cdf->SetMarkerColorAlpha(_in->GetMarkerColor(),alpha);
     hg_cdf->SetMarkerSize(_in->GetMarkerSize());
     hg_cdf->SetLineColorAlpha(_in->GetLineColor(),alpha);
 
     // warning: this only does 
-    /* TH1D* hg_cdf = (TH1D*) _in->Clone(ioUniqueName()); */ 
+    /* TH1D* hg_cdf = (TH1D*) _in->Clone(tuUniqueName()); */ 
     /* hg_cdf->Reset(); */
     TAxis* ax = hg_cdf->GetXaxis();
     /* if (last_bin==0) last_bin = ax->GetNbins(); */
@@ -1620,17 +1502,4 @@ TH1D* io_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
     return hg_cdf;
 };
 
-void io_print(TH1D* hg, const char* tag) {
-    cout << "  " << tag << endl;
-    cout << " Printing histogram: " << hg->GetName() 
-         << "  xTitle " << hg->GetXaxis()->GetTitle()
-         << "  yTitle " << hg->GetYaxis()->GetTitle() << endl;
-    int nbins = hg->GetXaxis()->GetNbins();
-    for (int i=1; i<=nbins; ++i) {
-        /* cout << i << endl; */
-        cout << Form(" bin (%2i)  content(%10.5g)  error(%10.5g)",
-                i, hg->GetBinContent(i), hg->GetBinError(i)) << endl;
-    }
-    cout << " end printing histogram" << endl;
-};
                                             

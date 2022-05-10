@@ -1,0 +1,22 @@
+# OptMap: used to make standard formates
+OptMap 
+# used to make standard formats
+_fmt
+# small classes, some used in functions
+MiniClass
+# simple functions for reading files, etc...
+_fnc
+# Classes
+Class
+# _IOS
+# _operators
+TowerLoc
+# JetMatcher
+# JetMatcherArray
+# JetMatcher100
+# JetMatcherGoodBins
+# _test
+# THnSparse
+# _pAu2015
+# Cfnc
+Xsec_pAu2015

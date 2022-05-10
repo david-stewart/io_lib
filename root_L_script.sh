@@ -1,35 +1,16 @@
 root -l <<EOF
-gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");
-cout << ".L src/io_fmt.cc+" << endl;
-.L src/io_fmt.cc+
-cout << ".L src/io_fnc.cc+" << endl;
-.L src/io_fnc.cc+
-cout << ".L src/ioOptMap.cc+" << endl;
-.L src/ioOptMap.cc+
-cout << ".L src/io_IOS.cc+" << endl;
-.L src/io_IOS.cc+
-cout << ".L src/io_operators.cc+" << endl;
-.L src/io_operators.cc+
-cout << ".L src/ioClass.cc+" << endl;
-.L src/ioClass.cc+
-cout << ".L src/ioCfnc.cc+" << endl;
-.L src/ioCfnc.cc+
-cout << ".L src/ioXsec_pAu2015.cc+" << endl;
-.L src/ioXsec_pAu2015.cc+
-cout << ".L src/ioTowerLoc.cc+" << endl;
-.L src/ioTowerLoc.cc+
-cout << ".L src/ioJetMatcher.cc+" << endl;
-.L src/ioJetMatcher.cc+
-cout << ".L src/ioJetMatcherArray.cc+" << endl;
-.L src/ioJetMatcherArray.cc+
-cout << ".L src/ioJetMatcher100.cc+" << endl;
-.L src/ioJetMatcher100.cc+
-cout << ".L src/ioJetMatcherGoodBins.cc+" << endl;
-.L src/ioJetMatcherGoodBins.cc+
-cout << ".L src/io_test.cc+" << endl;
-.L src/io_test.cc+
-cout << ".L src/ioTHnSparse.cc+" << endl;
-.L src/ioTHnSparse.cc+
-cout << ".L src/io_pAu2015.cc+" << endl;
-.L src/io_pAu2015.cc+
+cout << ".L src/tuOptMap.cc+" << endl;
+.L src/tuOptMap.cc+
+cout << ".L src/tu_fmt.cc+" << endl;
+.L src/tu_fmt.cc+
+cout << ".L src/tuMiniClass.cc+" << endl;
+.L src/tuMiniClass.cc+
+cout << ".L src/tu_fnc.cc+" << endl;
+.L src/tu_fnc.cc+
+cout << ".L src/tuClass.cc+" << endl;
+.L src/tuClass.cc+
+cout << ".L src/tuTowerLoc.cc+" << endl;
+.L src/tuTowerLoc.cc+
+cout << ".L src/tuXsec_pAu2015.cc+" << endl;
+.L src/tuXsec_pAu2015.cc+
 EOF

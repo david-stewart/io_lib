@@ -1,11 +1,11 @@
-# ifndef io_fmt__h
-# define io_fmt__h
+# ifndef tu_fmt__h
+# define tu_fmt__h
 // test a comment line
 
 #include "TH1D.h"
 #include "TH2D.h"
 #include "THStack.h"
-#include "ioOptMap.h"
+#include "tuOptMap.h"
 #include "TCanvas.h"
 #include "TProfile.h"
 #include "TLegend.h"
@@ -18,36 +18,35 @@
 
 // default dictionary options for formating TH1D
 
-TLine* io_fmt(TLine* line, ioOptMap options={}, ioOptMap dict={{
+TLine* tu_fmt(TLine* line, tuOptMap options={}, tuOptMap dict={{
         "LineColor",kBlack, "LineColorAlpha",1., "LineStyle",1,
         "LineWidth",1 }});
 
-ioOptMap io_fmt__hg_dict();
+tuOptMap tu_fmt__hg_dict();
 
-void io_fmt_ranges(vector<TH1D*> hgs, ioOptMap dict={});
+/* void tu_fmt_ranges(vector<TH1D*> hgs, tuOptMap dict={}); */
+/* void tu_fmt_ranges(vector<TH1D*> hgs, vector<TH1D*> hgs_2, tuOptMap dict={}); */
 
-void io_fmt_ranges(vector<TH1D*> hgs, vector<TH1D*> hgs_2, ioOptMap dict={});
+TCanvas* tu_fmt (TCanvas* canv, tuOptMap dict={});
+TPad*    tu_fmt (TPad*     pad, tuOptMap dict={});
+TLegend* tu_fmt (TLegend*  leg, tuOptMap dict={});
 
-TCanvas* io_fmt (TCanvas* canv, ioOptMap dict={});
-TPad*    io_fmt (TPad* pad, ioOptMap dict={});
-TLegend* io_fmt (TLegend* leg, ioOptMap dict={});
+TProfile* tu_fmt (TProfile* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
-TProfile* io_fmt (TProfile* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TH1D* tu_fmt (TH1D* hg,   tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TH1D* tu_fmt (TH1D* hg, TPad* pad, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
-TH1D* io_fmt (TH1D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-TH1D* io_fmt (TH1D* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TH2D* tu_fmt (TH2D* hg,   tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
-TH2D* io_fmt (TH2D* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-
-THStack* io_fmt (THStack* hg,   ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+THStack* tu_fmt (THStack* hg,   tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
 //repeat of the above, but for TGraph
-TGraph* io_fmt (TGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-TGraphErrors* io_fmt (TGraphErrors* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-TGraphAsymmErrors* io_fmt (TGraphAsymmErrors* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-TMultiGraph* io_fmt (TMultiGraph* hg, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
-TGraph* io_fmt (TGraph* hg, TPad* pad, ioOptMap _override={}, ioOptMap dict=io_fmt__hg_dict());
+TGraph* tu_fmt (TGraph* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TGraphErrors* tu_fmt (TGraphErrors* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TGraphAsymmErrors* tu_fmt (TGraphAsymmErrors* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TMultiGraph* tu_fmt (TMultiGraph* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TGraph* tu_fmt (TGraph* hg, TPad* pad, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
-TBox* io_fmt(TBox*, ioOptMap _opts);
+TBox* tu_fmt(TBox*, tuOptMap _opts);
 
 # endif
