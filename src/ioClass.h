@@ -95,8 +95,10 @@ struct ioBinVec {
     void set_val(int i, double val);
 
     /* int nbins(); // return size_ptr-1 */
-    operator int ();
-    operator double* ();
+    /* operator int (); */
+    operator int () const;
+    operator double* () const;
+    /* operator const double* (); */
     operator vector<double> ();
     double operator[](int); 
     double bin_underflow(); 

@@ -111,8 +111,9 @@ void ioBinVec::build_ptr() {
     ptr = new double[size];
     for (int i{0}; i<size; ++i) ptr[i] = vec[i];
 };
-ioBinVec::operator int () { return size-1; };
-ioBinVec::operator double* () { return ptr; };
+/* ioBinVec::operator int () { return size-1; }; */
+ioBinVec::operator int () const { return size-1; };
+ioBinVec::operator double* () const { return ptr; };
 ioBinVec::operator vector<double> () { return vec; };
 
 ioBinVec::ioBinVec(vector<double> V, bool range_setter) { 
