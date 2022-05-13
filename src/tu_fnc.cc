@@ -56,7 +56,7 @@ TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
     double norm_num {1};
     double norm_den {1};
 
-    if (dict["norm"]) {
+    if (dict("norm").val==0.) {
         norm_num = num->Integral();
         norm_den = den->Integral();
     };

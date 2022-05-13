@@ -35,7 +35,7 @@ TH1* tu_fmt (TH1* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
 
 TCanvas*  tu_fmt (TCanvas* canv, tuOptMap dict={});
 TPad*     tu_fmt (TPad* pad,     tuOptMap dict={});
-TLegend*  tu_fmt (TLegend* leg,  tuOptMap _override={}, tuOptMap dict={});
+TLegend*  tu_fmt (TLegend* leg,  tuOptMap _override={}, tuOptMap dict=tu_fmt__leg_dict());
 
 /* TH1D* tu_fmt (TH1D* hg, TPad* pad, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */
 /* THStack* tu_fmt (THStack* hg,   tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */

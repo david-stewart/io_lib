@@ -64,7 +64,7 @@ tuBinVec::operator int () { return size-1; };
 tuBinVec::operator double* () { return ptr; };
 tuBinVec::operator vector<double> () { return vec; };
 
-/* tuBinVec::tuBinVec(vector<double> V) { init(V); }; */
+tuBinVec::tuBinVec(vector<double> V) { init(V); };
 tuBinVec::tuBinVec(const char* file, tuOptMap options) {
     init( tuReadValVec(file, options) );;
 };
@@ -361,12 +361,6 @@ tuPads::tuPads( vector<tuPadDim> y_dim, vector<tuPadDim> x_dim, int c_wide, int 
     if (c_wide)   canvas_width = c_wide;
     if (c_height) canvas_height = c_height;
 };
-void tuPads::stamp(const char* msg, tuOptMap options, tuOptMap dict) {
-    dict += options;
-    canvas_pad->cd();
-    /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
-    tuDrawTLatex(msg,dict("x-loc"), dict("y-loc"), dict);
-};
 TPad* tuPads::operator()(int row, int col) {
     if (pads.size() == 0) init();
     if (row < 0) {
@@ -466,6 +460,20 @@ string tuIntList::make(const char* in_file, bool print) {
     }
     cout << msg.str();
     return msg.str();
+};
+void tuPads::stamp(const char* msg, tuOptMap options, tuOptMap dict) {
+    dict += options;
+    canvas_pad->cd();
+    /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
+    tuDrawTLatex(msg,dict("x-loc"), dict("y-loc"), dict);
+};
+void tuPads::save(const char* name) {
+    TString check {name};
+    if (!check.Contains(".")) check.Append(".pdf");
+    else if (check.EndsWith(".cc")) check.ReplaceAll(".cc",".pdf");
+    else if (check.EndsWith(".C" )) check.ReplaceAll(".C", ".pdf");
+    /* canvas->cd(); */
+    canvas->Print(check.Data());
 };
 
 /* tuIntList::tuIntList(const char* in_file, ofstream& log, bool print) { */
@@ -1330,102 +1338,102 @@ string tuIntList::make(const char* in_file, bool print) {
 /* }; */
 
 
-/* tuIntSet& tuIntSet::operator+=(const tuIntSet& rhs) { */
-/*     vector<int> new_vals; */
-/*     for (auto val : rhs.list) { */
-/*         if (!binary_search(list.begin(),list.end(),val)) { */
-/*             new_vals.push_back(val); */
-/*         } */
-/*     } */
-/*     for (auto v : new_vals) list.push_back(v); */
-/*     sort(list.begin(),list.end()); */
-/*     return *this; */
-/* }; */
-/* tuIntSet& tuIntSet::operator-=(const tuIntSet& rhs) { */
-/*     vector<int> new_list; */
-/*     for (auto val : list) { */
-/*         if (!binary_search(rhs.list.begin(),rhs.list.end(),val)) { */
-/*             new_list.push_back(val); */
-/*         } */
-/*     } */
-/*     /1* for (auto v : new_vals) list.push_back(v); *1/ */
-/*     list = new_list; */
-/*     return *this; */
-/* }; */
-/* tuIntSet& tuIntSet::operator*=(const tuIntSet& sec) { */
-/*     vector<int> new_list; */
-/*     for (auto val : sec.list) */
-/*         if (binary_search(list.begin(),list.end(),val)) */ 
-/*             new_list.push_back(val); */
-/*     list = new_list; */
-/*     return *this; */
-/* }; */
+tuIntSet& tuIntSet::operator+=(const tuIntSet& rhs) {
+    vector<int> new_vals;
+    for (auto val : rhs.list) {
+        if (!binary_search(list.begin(),list.end(),val)) {
+            new_vals.push_back(val);
+        }
+    }
+    for (auto v : new_vals) list.push_back(v);
+    sort(list.begin(),list.end());
+    return *this;
+};
+tuIntSet& tuIntSet::operator-=(const tuIntSet& rhs) {
+    vector<int> new_list;
+    for (auto val : list) {
+        if (!binary_search(rhs.list.begin(),rhs.list.end(),val)) {
+            new_list.push_back(val);
+        }
+    }
+    /* for (auto v : new_vals) list.push_back(v); */
+    list = new_list;
+    return *this;
+};
+tuIntSet& tuIntSet::operator*=(const tuIntSet& sec) {
+    vector<int> new_list;
+    for (auto val : sec.list)
+        if (binary_search(list.begin(),list.end(),val)) 
+            new_list.push_back(val);
+    list = new_list;
+    return *this;
+};
 
-/* void tuIntSet::write_to_file(const char* file_name, vector<string> comments) { */
-/*     ofstream fout; */
-/*     fout.open(file_name); */
-/*     for (auto& comment : comments) fout << "// " << comment << endl; */
-/*     for (auto v : list) fout << v << endl; */
-/*     fout.close(); */
-/* }; */
+void tuIntSet::write_to_file(const char* file_name, vector<string> comments) {
+    ofstream fout;
+    fout.open(file_name);
+    for (auto& comment : comments) fout << "// " << comment << endl;
+    for (auto v : list) fout << v << endl;
+    fout.close();
+};
 
 
-/* int tuIntSet::size() { return list.size(); }; */
-/* void tuIntSet::clear() { list.clear(); }; */
-/* ostringstream tuIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) { */
-/*     ostringstream msg; */
-/*     if (!strcmp(in_file,"")) return msg; */
-/*     if (print) { */
-/*         msg << " Reading following values from col " << col << " from " << in_file << endl; */
-/*     } */
-/*     try { */
-/*         auto new_data = tuReadIntVec(in_file, col, true, strip_commas); */
-/*         if (list.size()>0) { */
-/*             vector<int> add_vals{}; */
-/*             for (int i{0}; i<(int)new_data.size(); ++i) { */
-/*                 if (i>0 && new_data[i] == new_data[i-1]) continue; */
-/*                 if (has(new_data[i])) continue; */
-/*                 if (print) msg << " set add " << new_data[i] << endl; */
-/*                 add_vals.push_back(new_data[i]); */
-/*             } */
-/*             for (auto v : add_vals) list.push_back(v); */
-/*         } else { */
-/*             for (int i{0}; i<(int)new_data.size(); ++i) { */
-/*                 if (i>0 && new_data[i] == new_data[i-1]) continue; */
-/*                 list.push_back(new_data[i]); */
-/*             } */
-/*         } */
-/*         sort(list.begin(), list.end()); */
-/*         if (print) cout << " Done reading col " << col << " from " << in_file << endl; */
-/*     } */
-/*     catch (std::runtime_error err) { */
-/*         cerr << " fatal error in tuIntSet::read_file " << endl; */
-/*         cerr << err.what() << endl; */
-/*         /1* cout << err << endl; *1/ */
-/*     } */
-/*     return msg; */
-/* }; */
-/* /1* tuIntSet::tuIntSet() {}; *1/ */
-/* ostream& operator<<(ostream& os, tuIntSet& dt) { */ 
-/*     for (auto& v : dt.list) cout << v << endl; */
-/*     return os; */
-/* }; */
-/* tuIntSet::tuIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) { */
-/*     log << read_file(in_file, col, print, strip_commas).str() << endl; */
-/* }; */
-/* tuIntSet::tuIntSet(const char* in_file, int col, bool print, bool strip_commas) { */
-/*     read_file(in_file, col, print, strip_commas); */
-/* }; */
-/* tuIntSet::tuIntSet(const char* file, const char* tag) { */
-/*     for (auto val : tuReadValVec(file,tag,{{"sort",true}})) { */
-/*         list.push_back((int)val); */
-/*     } */
-/* }; */
-/* bool tuIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); }; */
-/* bool tuIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); }; */
-/* int tuIntSet::operator[](int val) { */
-/*     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin()); */
-/* }; */
+int tuIntSet::size() { return list.size(); };
+void tuIntSet::clear() { list.clear(); };
+ostringstream tuIntSet::read_file(const char* in_file, int col, bool print, bool strip_commas) {
+    ostringstream msg;
+    if (!strcmp(in_file,"")) return msg;
+    if (print) {
+        msg << " Reading following values from col " << col << " from " << in_file << endl;
+    }
+    try {
+        auto new_data = tuReadIntVec(in_file, col, true, strip_commas);
+        if (list.size()>0) {
+            vector<int> add_vals{};
+            for (int i{0}; i<(int)new_data.size(); ++i) {
+                if (i>0 && new_data[i] == new_data[i-1]) continue;
+                if (has(new_data[i])) continue;
+                if (print) msg << " set add " << new_data[i] << endl;
+                add_vals.push_back(new_data[i]);
+            }
+            for (auto v : add_vals) list.push_back(v);
+        } else {
+            for (int i{0}; i<(int)new_data.size(); ++i) {
+                if (i>0 && new_data[i] == new_data[i-1]) continue;
+                list.push_back(new_data[i]);
+            }
+        }
+        sort(list.begin(), list.end());
+        if (print) cout << " Done reading col " << col << " from " << in_file << endl;
+    }
+    catch (std::runtime_error err) {
+        cerr << " fatal error in tuIntSet::read_file " << endl;
+        cerr << err.what() << endl;
+        /* cout << err << endl; */
+    }
+    return msg;
+};
+/* tuIntSet::tuIntSet() {}; */
+ostream& operator<<(ostream& os, tuIntSet& dt) { 
+    for (auto& v : dt.list) cout << v << endl;
+    return os;
+};
+tuIntSet::tuIntSet(const char* in_file, ofstream& log, int col, bool print, bool strip_commas) {
+    log << read_file(in_file, col, print, strip_commas).str() << endl;
+};
+tuIntSet::tuIntSet(const char* in_file, int col, bool print, bool strip_commas) {
+    read_file(in_file, col, print, strip_commas);
+};
+tuIntSet::tuIntSet(const char* file, const char* tag) {
+    for (auto val : tuReadValVec(file,tag,{{"sort",true}})) {
+        list.push_back((int)val);
+    }
+};
+bool tuIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); };
+bool tuIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };
+int tuIntSet::operator[](int val) {
+    return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
+};
 
 /* tuIntBinCnt::tuIntBinCnt(const char* name, vector<int> x_dim, const char* title) : */
 /*     tuIntBinCnt{name, x_dim, {}, title} {}; */

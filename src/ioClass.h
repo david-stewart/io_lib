@@ -739,30 +739,30 @@ class ioGetter{
 // 
 // bool operator>(const ioJetMatcher_float& L, const ioJetMatcher_float R) ;
 // 
-// struct io_TF1fitter {
-//     string name;
-//     string fn_str;
-//     TF1* fn;
-//     unsigned int n_par;
-//     double lo, hi;
-// 
-//     void fix_match_params(io_TF1fitter& f1_to_match, std::set<int> which_pars);
-//     // fix parameters to the values found in f1_to_match, set others free
-//     
-//     vector<double> fval;
-//     vector<double> ferr;
-//     vector<double>& fit(TH1D*, double lo=0, double hi=0);
-// 
-//     vector<double>&     operator()(TH1D*, double lo=0, double hi=0);
-//     vector<double>&     operator()();
-//     pair<double,double> operator()(int i); // return <fval, ferr> of parameter i
-//     double              operator[](int i); // return fval of parameter i
-// 
-//     io_TF1fitter(const char* fnc_str, const char* name="",TH1D* hg=nullptr, 
-//             double lo=0, double hi=0);
-//     void set_presets(vector<double>);
-//     friend ostream& operator<<(ostream& os, io_TF1fitter& ft);
-// };
+ struct io_TF1fitter {
+     string name;
+     string fn_str;
+     TF1* fn;
+     unsigned int n_par;
+     double lo, hi;
+ 
+     void fix_match_params(io_TF1fitter& f1_to_match, std::set<int> which_pars);
+     // fix parameters to the values found in f1_to_match, set others free
+     
+     vector<double> fval;
+     vector<double> ferr;
+     vector<double>& fit(TH1D*, double lo=0, double hi=0);
+ 
+     vector<double>&     operator()(TH1D*, double lo=0, double hi=0);
+     vector<double>&     operator()();
+     pair<double,double> operator()(int i); // return <fval, ferr> of parameter i
+     double              operator[](int i); // return fval of parameter i
+ 
+     io_TF1fitter(const char* fnc_str, const char* name="",TH1D* hg=nullptr, 
+             double lo=0, double hi=0);
+     void set_presets(vector<double>);
+     friend ostream& operator<<(ostream& os, io_TF1fitter& ft);
+ };
 // 
 // struct ioParticleThrower {
 //     TRandom3 r3;

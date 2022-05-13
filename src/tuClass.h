@@ -227,32 +227,34 @@ struct tuPads {
         "TextSize", 12,
         "x-loc", .05,
         "y-loc", .05}} );
+    // save the output; check for *cc or *C ending and save as .pdf if required
+    void save(const char* outname); // 
 
     // To do here:
 
 };
 // 
-// struct tuIntSet {
-//     /* tuIntSet(); */
-//     /* void sort(); */
-//     vector<int> list {};
-//     bool operator()(int); // check if argument is in the list
-//     /* bool add_data(const tuIntSet&); // untun with a second set */
-//     bool has(int);
-//     tuIntSet(const char* in_file, const char* tag);
-//     tuIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
-//     tuIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);
-//     std::ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
-//     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
-//                           // warning: may not be meaningful with sort, and existence
-//     tuIntSet& operator+=(const tuIntSet& rhs);
-//     tuIntSet& operator-=(const tuIntSet& rhs); // remove union
-//     tuIntSet& operator*=(const tuIntSet& rhs); // get the union
-//     friend ostream& operator<<(ostream& os, tuIntSet& dt);
-//     int size();
-//     void clear();
-//     void write_to_file(const char* file_name, vector<string> comments={});
-// };
+ struct tuIntSet {
+     /* tuIntSet(); */
+     /* void sort(); */
+     vector<int> list {};
+     bool operator()(int); // check if argument is in the list
+     /* bool add_data(const tuIntSet&); // untun with a second set */
+     bool has(int);
+     tuIntSet(const char* in_file, const char* tag);
+     tuIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
+     tuIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);
+     std::ostringstream read_file(const char* in_file, int col=0, bool print=true, bool strip_commas=true);
+     int  operator[](int); // return location of arg in list (!Warning: does not check for existence)
+                           // warning: may not be meaningful with sort, and existence
+     tuIntSet& operator+=(const tuIntSet& rhs);
+     tuIntSet& operator-=(const tuIntSet& rhs); // remove union
+     tuIntSet& operator*=(const tuIntSet& rhs); // get the union
+     friend ostream& operator<<(ostream& os, tuIntSet& dt);
+     int size();
+     void clear();
+     void write_to_file(const char* file_name, vector<string> comments={});
+ };
 // 
 struct tuIntList {
      vector<int> list;
