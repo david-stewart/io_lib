@@ -60,8 +60,8 @@ void tuBinVec::build_ptr() {
     ptr = new double[size];
     for (int i{0}; i<size; ++i) ptr[i] = vec[i];
 };
-tuBinVec::operator int () { return size-1; };
-tuBinVec::operator double* () { return ptr; };
+tuBinVec::operator int () const { return size-1; };
+tuBinVec::operator double* () const { return ptr; };
 tuBinVec::operator vector<double> () { return vec; };
 
 tuBinVec::tuBinVec(vector<double> V) { init(V); };
@@ -100,8 +100,8 @@ tuBinVec::~tuBinVec() {
     delete[] ptr;
 };
 /* int tuBinVec::nbins() { return (int) size-1; }; */
-vector<double>::iterator tuBinVec::begin() { return vec.begin(); };
-vector<double>::iterator tuBinVec::end()   { return vec.end(); };
+vector<double>::const_iterator tuBinVec::begin() const { return vec.begin(); };
+vector<double>::const_iterator tuBinVec::end()   const { return vec.end(); };
 double tuBinVec::operator[](int i) { return vec[i]; };
 double tuBinVec::bin_underflow() { 
     if (vec.size()<2)  return 0.;
@@ -467,12 +467,11 @@ void tuPads::stamp(const char* msg, tuOptMap options, tuOptMap dict) {
     /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
     tuDrawTLatex(msg,dict("x-loc"), dict("y-loc"), dict);
 };
-void tuPads::save(const char* name) {
+void tuPads::save(const char* name, const char* tag) {
     TString check {name};
-    if (!check.Contains(".")) check.Append(".pdf");
-    else if (check.EndsWith(".cc")) check.ReplaceAll(".cc",".pdf");
-    else if (check.EndsWith(".C" )) check.ReplaceAll(".C", ".pdf");
-    /* canvas->cd(); */
+    if (!check.Contains(".")) check.Append(Form("%s.pdf",tag));
+    else if (check.EndsWith(".cc")) check.ReplaceAll(".cc",Form("%s.pdf",tag));
+    else if (check.EndsWith(".C" )) check.ReplaceAll(".C", Form("%s.pdf",tag));
     canvas->Print(check.Data());
 };
 
@@ -1336,7 +1335,10 @@ void tuPads::save(const char* name) {
 /*     cout << " Write table to file: " << which_file << endl; */
 /*     f_out.close(); */
 /* }; */
-
+tuIntSet::tuIntSet(vector<int>in_data) {
+    list = in_data;
+    sort(list.begin(), list.end());
+};
 
 tuIntSet& tuIntSet::operator+=(const tuIntSet& rhs) {
     vector<int> new_vals;
@@ -1430,7 +1432,7 @@ tuIntSet::tuIntSet(const char* file, const char* tag) {
     }
 };
 bool tuIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); };
-bool tuIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };
+bool tuIntSet::has(int i) const { return binary_search(list.begin(),list.end(),i); };
 int tuIntSet::operator[](int val) {
     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
 };

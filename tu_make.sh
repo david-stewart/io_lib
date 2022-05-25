@@ -26,7 +26,7 @@ cd ..
 # compile files
 temp_script=root_L_script.sh
 echo 'root -l <<EOF' > ${temp_script}
-# echo 'gSystem->Load("${ROOUNFOLD}/libRooUnfold.dylib");' >> ${temp_script}
+echo 'gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");' >> ${temp_script}
 while read line; do
     if [[ $line = \#* ]] ; then continue; fi
     cline=${line%$'\r'}

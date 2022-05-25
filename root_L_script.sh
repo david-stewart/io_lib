@@ -1,4 +1,5 @@
 root -l <<EOF
+gSystem->Load("${ROOUNFOLD}/libRooUnfold.so");
 cout << ".L src/tuOptMap.cc+" << endl;
 .L src/tuOptMap.cc+
 cout << ".L src/tu_fmt.cc+" << endl;

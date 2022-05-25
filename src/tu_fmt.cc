@@ -680,8 +680,7 @@ tuOptMap tu_fmt__leg_dict() {
     "LineColor", kWhite,
     "LineColorAlpha",0.,
     "FillColor",kWhite,
-    "FillColorAlpha",0.,
-    "FillStyle",4000
+    "FillColorAlpha",0.
     }};
 };
 

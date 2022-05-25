@@ -66,16 +66,16 @@ class tuGetter{
      int            size;
      vector<double> vec;
 
-     operator int ();
-     operator double* ();
+     operator int () const;
+     operator double* () const;
      operator vector<double> ();
      double operator[](int); 
      double bin_underflow(); 
      double bin_overflow();
      friend ostream& operator<<(ostream& os, tuBinVec& val);
  
-     vector<double>::iterator begin();
-     vector<double>::iterator end();
+     vector<double>::const_iterator begin() const;
+     vector<double>::const_iterator end() const;
  };
  // small class used to see if things are in bounds
  struct tuInBounds {
@@ -228,7 +228,7 @@ struct tuPads {
         "x-loc", .05,
         "y-loc", .05}} );
     // save the output; check for *cc or *C ending and save as .pdf if required
-    void save(const char* outname); // 
+    void save(const char* outname, const char* tag=""); // 
 
     // To do here:
 
@@ -239,8 +239,9 @@ struct tuPads {
      /* void sort(); */
      vector<int> list {};
      bool operator()(int); // check if argument is in the list
+     tuIntSet(vector<int> list); // added for the sake of consts
      /* bool add_data(const tuIntSet&); // untun with a second set */
-     bool has(int);
+     bool has(int) const;
      tuIntSet(const char* in_file, const char* tag);
      tuIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
      tuIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);

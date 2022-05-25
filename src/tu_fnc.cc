@@ -56,13 +56,14 @@ TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
     double norm_num {1};
     double norm_den {1};
 
-    if (dict("norm").val==0.) {
+    if (dict["norm"]) {
         norm_num = num->Integral();
         norm_den = den->Integral();
     };
+    cout << " norms: " << norm_num << " and " << norm_den << endl;
 
     TH1D* ret;
-    if (dict("style-den").val==1) {
+    if (dict["style-den"]) {
         ret = (TH1D*) den->Clone(tuUniqueName());
     } else {
         ret = (TH1D*) num->Clone(tuUniqueName());
@@ -80,6 +81,43 @@ TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
         double n_err = num->GetBinError(j) / norm_num;
         double d_err = den->GetBinError(j) / norm_den;
         double val = n / d;
+        double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
+        ret->SetBinContent(j,val);
+        ret->SetBinError(j,err);
+    }
+    return ret;
+};
+TH1* tuMultiply(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
+    dict += opt;
+
+    double norm_num {1};
+    double norm_den {1};
+
+    if (dict["norm"]) {
+        norm_num = num->Integral();
+        norm_den = den->Integral();
+    };
+    cout << " norms: " << norm_num << " and " << norm_den << endl;
+
+    TH1D* ret;
+    if (dict["style-den"]) {
+        ret = (TH1D*) den->Clone(tuUniqueName());
+    } else {
+        ret = (TH1D*) num->Clone(tuUniqueName());
+    }
+
+    for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
+        double n = num->GetBinContent(j) / norm_num;
+        double d = den->GetBinContent(j) / norm_den;
+        if (n == 0 || d == 0) {
+            ret->SetBinContent(j,0);
+            ret->SetBinError(j,0);
+            /* if (i==0) cout << "Jin: " << j << " val: " << den->GetBinContent(j) << endl; */
+            continue;
+        }
+        double n_err = num->GetBinError(j) / norm_num;
+        double d_err = den->GetBinError(j) / norm_den;
+        double val = n * d;
         double err = val * pow( pow(n_err/n,2)+pow(d_err/d,2),0.5);
         ret->SetBinContent(j,val);
         ret->SetBinError(j,err);

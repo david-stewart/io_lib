@@ -36,7 +36,8 @@ using std::pair;
 void        tuPause       (int i=0);
 const char* tuUniqueName  (int i=0); // return a unique name to the directory
 vector<int> tuColorVec    (int n_colors=2, int palette=kCMYK, bool print=false);
-TH1*        tuDivide      (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={{"norm",0,"style-den",0}});
+TH1*        tuDivide      (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={}); // possible numbers: norm, and style-den 
+TH1*        tuMultiply    (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={}); // possible numbers: norm, and style-den 
 void        tuDrawTLatex  (
                             const char* msg, double x, double y, 
                             tuOptMap options={}, tuOptMap dict= {{
