@@ -18,6 +18,8 @@
 /* #include "tu_fmt.h" */
 /* #include "tu_operators.h" */
 /* #include "TF1.h" */ // FIXME :: compiler doesn't like the TF1.h on the imac
+#include "TGraphAsymmErrors.h"
+#include "TH1D.h"
 #include <set>
 #include "TRandom3.h"
 #include "TAxis.h"
@@ -571,114 +573,114 @@ struct tuIntList {
 // /*         bool skip_zeros=true); */
 // /* /1* TGraph* tuMakeTGraph(vector<double> x, vector<double> y); *1/ */
 // 
-// struct tuPtrDbl {
-//     tuPtrDbl(TAxis* ax, double bin_loc=0.5, bool get_widths=false);  //<-
-//     tuPtrDbl(vector<double>); // <-
-//     tuPtrDbl(TH1*, bool get_errors=false); // also Errors // <-
-//     tuPtrDbl(const tuPtrDbl&); // <-
-//     /* tuPtrDbl(tuPtrDbl); // <- */
-//     tuPtrDbl(const char* file, const char* tag); // <-
-//     tuPtrDbl(int i); // <-
-//     tuPtrDbl(){};
-// 
-//     // internal
-//     vector<double> vec{};
-//     double*        ptr{nullptr};
-//     int            size{0};
-// 
-//     /* void init(vector<double>, bool range_double=true); */
-//     void build_ptr();
-//     tuPtrDbl& update();
-//     // read the vec from a file with tuReadValVec
-//     ~tuPtrDbl();
-//     /* void set_val(int i, double val); */
-// 
-//     /* int nbins(); // return size_ptr-1 */
-//     operator int ();
-//     operator double* ();
-//     operator vector<double> ();
-//     double& operator[](int); 
-//     friend ostream& operator<<(ostream& os, tuPtrDbl& val);
-//     int throw_error(const char* msg="");
-// 
-//     tuPtrDbl& operator +=(const tuPtrDbl& rhs);
-//     tuPtrDbl& operator -=(const tuPtrDbl& rhs);
-//     tuPtrDbl& operator *=(const tuPtrDbl& rhs);
-//     tuPtrDbl& operator /=(const tuPtrDbl& rhs);
-//     tuPtrDbl& operator /=(const double rhs);
-//     tuPtrDbl& operator *=(const double rhs);
-//     tuPtrDbl& operator +=(const double rhs);
-//     tuPtrDbl& operator -=(const double rhs);
-// 
-//     tuPtrDbl& make_min(const tuPtrDbl& rhs); // adjust to have just the min values
-//     tuPtrDbl& make_max(const tuPtrDbl& rhs); // adjust to have just the max values
-//     tuPtrDbl& abs_diff(const tuPtrDbl& rhs); // adjust to have just the max values
-//     tuPtrDbl& square_diff(const tuPtrDbl& rhs); // adjust to have just the max values
-//     tuPtrDbl& abs();
-//     tuPtrDbl& zero_negatives();
-//     tuPtrDbl& sqrt();
-// 
-//     vector<double>::iterator begin();
-//     vector<double>::iterator end();
-//     tuPtrDbl& operator=(const tuPtrDbl&);
-// 
-// };
-// tuPtrDbl  operator+(const tuPtrDbl& lhs, const tuPtrDbl& rhs);
-// tuPtrDbl  operator-(const tuPtrDbl& lhs, const tuPtrDbl& rhs);
-// tuPtrDbl  tu_calc_quadrature(vector<tuPtrDbl>);
-// tuPtrDbl  tu_calc_quadrature(vector<tuPtrDbl>, tuPtrDbl);
-// tuPtrDbl  tu_calc_mean      (vector<tuPtrDbl>);
-// tuPtrDbl  tu_calc_max_bound (vector<tuPtrDbl>);
-// tuPtrDbl  tu_calc_min_bound (vector<tuPtrDbl>);
-// tuPtrDbl  tu_calc_max_berr  (vector<tuPtrDbl>, tuPtrDbl);
-// tuPtrDbl  tu_calc_min_berr  (vector<tuPtrDbl>, tuPtrDbl);
-// pair<tuPtrDbl,tuPtrDbl>  tu_calc_bounds    (vector<tuPtrDbl>);
-// 
-// // some drawing options
-// TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, tuPtrDbl, tuOptMap opts, 
-//         array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
-// TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2>, 
-//         tuOptMap opts, array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
-// 
-// struct tuSysErrors {
-//     /* tuSysErrors(); */
-//     tuSysErrors(const tuSysErrors&);
-//     tuSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5}, array<tuPtrDbl,2>_err={});
-//     tuSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
-//     tuSysErrors& set_x_range(double, double);
-//     tuSysErrors& swap_xy ();
-// 
-//     tuSysErrors& setYlow(tuPtrDbl&);
-//     tuSysErrors& setYhigh(tuPtrDbl&);
-//     tuSysErrors& setYhilo(tuPtrDbl&); // set Y symmetric
-// 
-//     /* void draw_boxes(tuOptMap dict={}); */
-// 
-//     /* tuSysErrors divide(const tuSysErrors& other); */
-// 
-//     /* tuSysErrors& set (TH1*); // sets x,y, and errors */
-//     /* tuSysErrors& set (TGraphAsymmErrors*); // sets x,y, and errors */
-// 
-//     int size{0};
-//     TGraphAsymmErrors* tgase {nullptr};
-//     tuPtrDbl getY();
-//     tuPtrDbl getYlow();
-//     tuPtrDbl getYhigh();
-// 
-//     /* vector<tuPtrDbl> vec_data   {}; // to add in quadrature */
-//     /* tuSysErrors& add_data   (tuPtrDbl); */
-//     /* tuSysErrors& add_data   (vector<tuPtrDbl>); */
-// 
-//     /* tuSysErrors& calc_mean(vector<tuPtrDbl> data={}); */
-//     /* tuSysErrors& calc_quadrature(vector<tuPtrDbl> data ={}); // calculate quadratue relative to the mean */
-//     /* tuSysErrors& calc_bounds(vector<tuPtrDbl> data ={});     // calculate bounds relative to mean */
-//     /* tuSysErrors& calc_symmetric_bounds(vector<tuPtrDbl> data ={}); */
-// 
-//     tuSysErrors& set_rat_xbins(array<double,4> rat_rel);
-//     /* tuSysErrors& set_center_xbins(double rat_center); */
-//     operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
-//     TGraphAsymmErrors* operator-> ();
-// };
+struct tuPtrDbl {
+    tuPtrDbl(TAxis* ax, double bin_loc=0.5, bool get_widths=false);  //<-
+    tuPtrDbl(vector<double>); // <-
+    tuPtrDbl(TH1*, bool get_errors=false); // also Errors // <-
+    tuPtrDbl(const tuPtrDbl&); // <-
+    /* tuPtrDbl(tuPtrDbl); // <- */
+    tuPtrDbl(const char* file, const char* tag); // <-
+    tuPtrDbl(int i); // <-
+    tuPtrDbl(){};
+
+    // internal
+    vector<double> vec{};
+    double*        ptr{nullptr};
+    int            size{0};
+
+    /* void init(vector<double>, bool range_double=true); */
+    void build_ptr();
+    tuPtrDbl& update();
+    // read the vec from a file with tuReadValVec
+    ~tuPtrDbl();
+    /* void set_val(int i, double val); */
+
+    /* int nbins(); // return size_ptr-1 */
+    operator int ();
+    operator double* ();
+    operator vector<double> ();
+    double& operator[](int); 
+    friend ostream& operator<<(ostream& os, tuPtrDbl& val);
+    int throw_error(const char* msg="");
+
+    tuPtrDbl& operator +=(const tuPtrDbl& rhs);
+    tuPtrDbl& operator -=(const tuPtrDbl& rhs);
+    tuPtrDbl& operator *=(const tuPtrDbl& rhs);
+    tuPtrDbl& operator /=(const tuPtrDbl& rhs);
+    tuPtrDbl& operator /=(const double rhs);
+    tuPtrDbl& operator *=(const double rhs);
+    tuPtrDbl& operator +=(const double rhs);
+    tuPtrDbl& operator -=(const double rhs);
+
+    tuPtrDbl& make_min(const tuPtrDbl& rhs); // adjust to have just the min values
+    tuPtrDbl& make_max(const tuPtrDbl& rhs); // adjust to have just the max values
+    tuPtrDbl& abs_diff(const tuPtrDbl& rhs); // adjust to have just the max values
+    tuPtrDbl& square_diff(const tuPtrDbl& rhs); // adjust to have just the max values
+    tuPtrDbl& abs();
+    tuPtrDbl& zero_negatives();
+    tuPtrDbl& sqrt();
+
+    vector<double>::iterator begin();
+    vector<double>::iterator end();
+    tuPtrDbl& operator=(const tuPtrDbl&);
+
+};
+tuPtrDbl  operator+(const tuPtrDbl& lhs, const tuPtrDbl& rhs);
+tuPtrDbl  operator-(const tuPtrDbl& lhs, const tuPtrDbl& rhs);
+tuPtrDbl  tu_calc_quadrature(vector<tuPtrDbl>);
+tuPtrDbl  tu_calc_quadrature(vector<tuPtrDbl>, tuPtrDbl);
+tuPtrDbl  tu_calc_mean      (vector<tuPtrDbl>);
+tuPtrDbl  tu_calc_max_bound (vector<tuPtrDbl>);
+tuPtrDbl  tu_calc_min_bound (vector<tuPtrDbl>);
+tuPtrDbl  tu_calc_max_berr  (vector<tuPtrDbl>, tuPtrDbl);
+tuPtrDbl  tu_calc_min_berr  (vector<tuPtrDbl>, tuPtrDbl);
+pair<tuPtrDbl,tuPtrDbl>  tu_calc_bounds    (vector<tuPtrDbl>);
+
+// some drawing options
+TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, tuPtrDbl, tuOptMap opts, 
+        array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
+TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2>, 
+        tuOptMap opts, array<double,4> = {-1,-1}, double x_range_lo=0., double x_range_hi=0.);
+
+struct tuSysErrors {
+    /* tuSysErrors(); */
+    tuSysErrors(const tuSysErrors&);
+    tuSysErrors(TH1*, array<double,4> x_rat={-1,-1,0.5}, array<tuPtrDbl,2>_err={});
+    tuSysErrors(TGraphAsymmErrors*, array<double,4> x_rat={-1,-1,0.5});
+    tuSysErrors& set_x_range(double, double);
+    tuSysErrors& swap_xy ();
+
+    tuSysErrors& setYlow(tuPtrDbl&);
+    tuSysErrors& setYhigh(tuPtrDbl&);
+    tuSysErrors& setYhilo(tuPtrDbl&); // set Y symmetric
+
+    /* void draw_boxes(tuOptMap dict={}); */
+
+    /* tuSysErrors divide(const tuSysErrors& other); */
+
+    /* tuSysErrors& set (TH1*); // sets x,y, and errors */
+    /* tuSysErrors& set (TGraphAsymmErrors*); // sets x,y, and errors */
+
+    int size{0};
+    TGraphAsymmErrors* tgase {nullptr};
+    tuPtrDbl getY();
+    tuPtrDbl getYlow();
+    tuPtrDbl getYhigh();
+
+    /* vector<tuPtrDbl> vec_data   {}; // to add in quadrature */
+    /* tuSysErrors& add_data   (tuPtrDbl); */
+    /* tuSysErrors& add_data   (vector<tuPtrDbl>); */
+
+    /* tuSysErrors& calc_mean(vector<tuPtrDbl> data={}); */
+    /* tuSysErrors& calc_quadrature(vector<tuPtrDbl> data ={}); // calculate quadratue relative to the mean */
+    /* tuSysErrors& calc_bounds(vector<tuPtrDbl> data ={});     // calculate bounds relative to mean */
+    /* tuSysErrors& calc_symmetric_bounds(vector<tuPtrDbl> data ={}); */
+
+    tuSysErrors& set_rat_xbins(array<double,4> rat_rel);
+    /* tuSysErrors& set_center_xbins(double rat_center); */
+    operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
+    TGraphAsymmErrors* operator-> ();
+};
 // 
 // struct tuJetMatcher_float {
 //     // For filling vectors for Raghav matching algorithm 

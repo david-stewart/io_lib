@@ -1687,418 +1687,418 @@ int tuIntSet::operator[](int val) {
 
 
 
-/* tuPtrDbl::tuPtrDbl(TAxis* ax, double bin_loc, bool get_widths) { */
-/*     int n_bins = ax->GetNbins(); */
-/*     if (get_widths) { */
-/*         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinWidth(i)*bin_loc); */
-/*     } else if (bin_loc == 0.5) { */
-/*         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinCenter(i)); */
-/*     } else if (bin_loc == 0.) { */
-/*         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinLowEdge(i)); */
-/*     } else if (bin_loc == 1.) { */
-/*         for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinUpEdge(i)); */
-/*     } else { */
-/*         for (int i{1}; i<=n_bins; ++i) { */
-/*             double W = ax->GetBinWidth(i); */
-/*             double L  = ax->GetBinLowEdge(i); */
-/*             vec.push_back(L+W*bin_loc); */
-/*         } */
-/*     } */
-/*     build_ptr(); */
-/* }; */ 
+tuPtrDbl::tuPtrDbl(TAxis* ax, double bin_loc, bool get_widths) {
+    int n_bins = ax->GetNbins();
+    if (get_widths) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinWidth(i)*bin_loc);
+    } else if (bin_loc == 0.5) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinCenter(i));
+    } else if (bin_loc == 0.) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinLowEdge(i));
+    } else if (bin_loc == 1.) {
+        for (int i{1}; i<=n_bins; ++i) vec.push_back(ax->GetBinUpEdge(i));
+    } else {
+        for (int i{1}; i<=n_bins; ++i) {
+            double W = ax->GetBinWidth(i);
+            double L  = ax->GetBinLowEdge(i);
+            vec.push_back(L+W*bin_loc);
+        }
+    }
+    build_ptr();
+}; 
 
-/* tuPtrDbl::tuPtrDbl(vector<double> V){ */
-/*     for (auto v : V) vec.push_back(v); */
-/*     build_ptr(); */
-/* }; */
-/* tuPtrDbl::tuPtrDbl(TH1* hg, bool get_errors) { */
-/*     if (get_errors) { */
-/*         for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) { */
-/*             vec.push_back(hg->GetBinError(i)); */
-/*         } */
-/*     } else { */
-/*         for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) { */
-/*             vec.push_back(hg->GetBinContent(i)); */
-/*         } */
-/*     } */
-/*     build_ptr(); */
-/* }; */
+tuPtrDbl::tuPtrDbl(vector<double> V){
+    for (auto v : V) vec.push_back(v);
+    build_ptr();
+};
+tuPtrDbl::tuPtrDbl(TH1* hg, bool get_errors) {
+    if (get_errors) {
+        for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) {
+            vec.push_back(hg->GetBinError(i));
+        }
+    } else {
+        for (auto i{1}; i<= hg->GetXaxis()->GetNbins(); ++i) {
+            vec.push_back(hg->GetBinContent(i));
+        }
+    }
+    build_ptr();
+};
 
-/* tuPtrDbl::tuPtrDbl(const tuPtrDbl& ihs) { */
+tuPtrDbl::tuPtrDbl(const tuPtrDbl& ihs) {
+    for (auto v : ihs.vec) vec.push_back(v);
+    build_ptr();
+};
+
+tuPtrDbl& tuPtrDbl::operator=(const tuPtrDbl& rhs) {
+    vec.clear();
+    if (ptr) delete ptr;
+    for (auto v : rhs.vec) vec.push_back(v);
+    build_ptr();
+    return *this;
+};
+
+/* tuPtrDbl::tuPtrDbl(tuPtrDbl ihs) { */
 /*     for (auto v : ihs.vec) vec.push_back(v); */
 /*     build_ptr(); */
 /* }; */
 
-/* tuPtrDbl& tuPtrDbl::operator=(const tuPtrDbl& rhs) { */
-/*     vec.clear(); */
-/*     if (ptr) delete ptr; */
-/*     for (auto v : rhs.vec) vec.push_back(v); */
-/*     build_ptr(); */
-/*     return *this; */
-/* }; */
+void tuPtrDbl::build_ptr() {
+    size = vec.size();
+    ptr = new double[size];
+    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+};
 
-/* /1* tuPtrDbl::tuPtrDbl(tuPtrDbl ihs) { *1/ */
-/* /1*     for (auto v : ihs.vec) vec.push_back(v); *1/ */
-/* /1*     build_ptr(); *1/ */
-/* /1* }; *1/ */
+tuPtrDbl& tuPtrDbl::update() {
+    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+    return *this;
+};
 
-/* void tuPtrDbl::build_ptr() { */
-/*     size = vec.size(); */
-/*     ptr = new double[size]; */
-/*     for (int i{0}; i<size; ++i) ptr[i] = vec[i]; */
-/* }; */
+tuPtrDbl::operator int () { return size; };
+tuPtrDbl::operator double* () { return ptr; };
+tuPtrDbl::operator vector<double> () { return vec; };
 
-/* tuPtrDbl& tuPtrDbl::update() { */
-/*     for (int i{0}; i<size; ++i) ptr[i] = vec[i]; */
-/*     return *this; */
-/* }; */
+tuPtrDbl::tuPtrDbl(const char* file, const char* tag) {
+    auto read_vec = tuReadValVec(file,tag);
+    for (auto v: read_vec) vec.push_back(v);
+    build_ptr();
+};
+tuPtrDbl::tuPtrDbl(int n) {
+    for (auto i{0}; i<n; ++i) vec.push_back(0);
+    build_ptr();
+};
 
-/* tuPtrDbl::operator int () { return size; }; */
-/* tuPtrDbl::operator double* () { return ptr; }; */
-/* tuPtrDbl::operator vector<double> () { return vec; }; */
+tuPtrDbl::~tuPtrDbl() {
+    delete[] ptr;
+};
+vector<double>::iterator tuPtrDbl::begin() { return vec.begin(); };
+vector<double>::iterator tuPtrDbl::end()   { return vec.end(); };
 
-/* tuPtrDbl::tuPtrDbl(const char* file, const char* tag) { */
-/*     auto read_vec = tuReadValVec(file,tag); */
-/*     for (auto v: read_vec) vec.push_back(v); */
-/*     build_ptr(); */
-/* }; */
-/* tuPtrDbl::tuPtrDbl(int n) { */
-/*     for (auto i{0}; i<n; ++i) vec.push_back(0); */
-/*     build_ptr(); */
-/* }; */
+double& tuPtrDbl::operator[](int i) { return vec[i]; };
+ostream& operator<<(ostream& os, tuPtrDbl& tu) {
+    for (auto v : tu) cout << " " << v;
+    return os;
+};
+int tuPtrDbl::throw_error(const char* msg) {
+        throw std::runtime_error(Form(" fatal in tuPtrDbl::%s, sizes don't match",msg));
+        return -1;
+};
 
-/* tuPtrDbl::~tuPtrDbl() { */
-/*     delete[] ptr; */
-/* }; */
-/* vector<double>::iterator tuPtrDbl::begin() { return vec.begin(); }; */
-/* vector<double>::iterator tuPtrDbl::end()   { return vec.end(); }; */
+tuPtrDbl& tuPtrDbl::operator+=(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("operator+=");
+    for (auto i{0}; i<size; ++i) vec[i] += rhs.vec[i];
+    update();
+    return *this;
+};
+tuPtrDbl& tuPtrDbl::operator-=(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("operator-=");
+    for (auto i{0}; i<size; ++i) vec[i] -= rhs.vec[i];
+    update();
+    return *this;
+};
+tuPtrDbl& tuPtrDbl::operator*=(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("operator-=");
+    for (auto i{0}; i<size; ++i) vec[i] *= rhs.vec[i];
+    return update();
+};
+tuPtrDbl& tuPtrDbl::abs() {
+    for (auto& v : vec) if (v<0.) v = -v;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::sqrt() {
+    for (auto& v : vec) v = TMath::Sqrt(v);
+    return update();
+};
+tuPtrDbl& tuPtrDbl::zero_negatives() {
+    for (auto& v : vec) if (v<0.) v = 0;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::abs_diff(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("abs_diff");
+    *this -= rhs;
+    this->abs();
+    return update();
+};
+tuPtrDbl& tuPtrDbl::square_diff(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("abs_diff");
+    *this -= rhs;
+    *this *= *this;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::make_min(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("make_min");
+    for (auto i{0}; i<size; ++i) {
+        if (rhs.vec[i] < vec[i]) vec[i] = rhs.vec[i];
+    }
+    return update();
+};
+tuPtrDbl& tuPtrDbl::make_max(const tuPtrDbl& rhs) {
+    if (size != rhs.size) throw_error("make_max");
+    for (auto i{0}; i<size; ++i) {
+        if (rhs.vec[i] > vec[i]) vec[i] = rhs.vec[i];
+    }
+    return update();
+};
+tuPtrDbl& tuPtrDbl::operator/=(const tuPtrDbl& rhs) {
+    /* cout << " z3 " << size << " " << rhs.size << endl; */
+    if (size != rhs.size) throw_error("operator/=");
+    for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i];
+    return update();
+};
+tuPtrDbl& tuPtrDbl::operator/=(const double rhs) {
+    for (auto& v : vec) v /= rhs;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::operator*=(const double rhs) {
+    for (auto& v : vec) v *= rhs;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::operator+=(const double rhs) {
+    for (auto& v : vec) v += rhs;
+    return update();
+};
+tuPtrDbl& tuPtrDbl::operator-=(const double rhs) {
+    for (auto& v : vec) v -= rhs;
+    return update();
+};
 
-/* double& tuPtrDbl::operator[](int i) { return vec[i]; }; */
-/* ostream& operator<<(ostream& os, tuPtrDbl& tu) { */
-/*     for (auto v : tu) cout << " " << v; */
-/*     return os; */
-/* }; */
-/* int tuPtrDbl::throw_error(const char* msg) { */
-/*         throw std::runtime_error(Form(" fatal in tuPtrDbl::%s, sizes don't match",msg)); */
-/*         return -1; */
-/* }; */
+tuPtrDbl  operator+(const tuPtrDbl& lhs, const tuPtrDbl& rhs) {
+    if (lhs.size != rhs.size) {
+        throw std::runtime_error(" fatal in tuPtrDbl+tuPtrDbl, sizes don't match");
+    }
+    tuPtrDbl r_val{lhs};
+    r_val += rhs;
+    return r_val.update();
+};
+tuPtrDbl  operator-(const tuPtrDbl& lhs, const tuPtrDbl& rhs) {
+    if (lhs.size != rhs.size) {
+        throw std::runtime_error(" fatal in tuPtrDbl-tuPtrDbl, sizes don't match");
+    }
+    tuPtrDbl r_val{lhs};
+    r_val-=rhs;
+    return r_val.update();
+};
+tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data) {
+        if (data.size() == 0) return tuPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        data[0] *= data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0] += (data[i] *= data[i]);
+        }
+        return data[0].sqrt();
+};
+tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data, tuPtrDbl mean) {
+        if (data.size() == 0) return mean;
+        for (auto& dat : data) dat -= mean;
+        return tu_calc_quadrature(data);
+};
+tuPtrDbl tu_calc_mean(vector<tuPtrDbl> data) {
+        if (data.size() == 0) return tuPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0] += data[i];
+        }
+        data[0] /= data.size();
+        return data[0];
+};
+tuPtrDbl tu_calc_max_bound(vector<tuPtrDbl> data) {
+        if (data.size() == 0) return tuPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0].make_max(data[i]);
+        }
+        return data[0];
+};
+tuPtrDbl tu_calc_max_berr(vector<tuPtrDbl> data, tuPtrDbl mean) {
+        auto max_bound = tu_calc_max_bound(data);
+        return max_bound.abs_diff(mean);
+};
+tuPtrDbl tu_calc_min_bound(vector<tuPtrDbl> data) {
+        if (data.size() == 0) return tuPtrDbl{vector<double>{}};
+        if (data.size() == 1) return data[0];
+        for (unsigned int i=1; i<data.size(); ++i) {
+            data[0].make_min(data[i]);
+        }
+        return data[0];
+};
+tuPtrDbl tu_calc_min_berr(vector<tuPtrDbl> data, tuPtrDbl mean) {
+        return mean.abs_diff(tu_calc_min_bound(data));
+};
+pair<tuPtrDbl,tuPtrDbl> tu_calc_bounds(vector<tuPtrDbl> data) {
+    return { tu_calc_min_bound(data), tu_calc_max_bound(data) };
+};
 
-/* tuPtrDbl& tuPtrDbl::operator+=(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("operator+="); */
-/*     for (auto i{0}; i<size; ++i) vec[i] += rhs.vec[i]; */
-/*     update(); */
-/*     return *this; */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator-=(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("operator-="); */
-/*     for (auto i{0}; i<size; ++i) vec[i] -= rhs.vec[i]; */
-/*     update(); */
-/*     return *this; */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator*=(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("operator-="); */
-/*     for (auto i{0}; i<size; ++i) vec[i] *= rhs.vec[i]; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::abs() { */
-/*     for (auto& v : vec) if (v<0.) v = -v; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::sqrt() { */
-/*     for (auto& v : vec) v = TMath::Sqrt(v); */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::zero_negatives() { */
-/*     for (auto& v : vec) if (v<0.) v = 0; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::abs_diff(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("abs_diff"); */
-/*     *this -= rhs; */
-/*     this->abs(); */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::square_diff(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("abs_diff"); */
-/*     *this -= rhs; */
-/*     *this *= *this; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::make_min(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("make_min"); */
-/*     for (auto i{0}; i<size; ++i) { */
-/*         if (rhs.vec[i] < vec[i]) vec[i] = rhs.vec[i]; */
-/*     } */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::make_max(const tuPtrDbl& rhs) { */
-/*     if (size != rhs.size) throw_error("make_max"); */
-/*     for (auto i{0}; i<size; ++i) { */
-/*         if (rhs.vec[i] > vec[i]) vec[i] = rhs.vec[i]; */
-/*     } */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator/=(const tuPtrDbl& rhs) { */
-/*     /1* cout << " z3 " << size << " " << rhs.size << endl; *1/ */
-/*     if (size != rhs.size) throw_error("operator/="); */
-/*     for (auto i{0}; i<size; ++i) vec[i] /= rhs.vec[i]; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator/=(const double rhs) { */
-/*     for (auto& v : vec) v /= rhs; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator*=(const double rhs) { */
-/*     for (auto& v : vec) v *= rhs; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator+=(const double rhs) { */
-/*     for (auto& v : vec) v += rhs; */
-/*     return update(); */
-/* }; */
-/* tuPtrDbl& tuPtrDbl::operator-=(const double rhs) { */
-/*     for (auto& v : vec) v -= rhs; */
-/*     return update(); */
-/* }; */
+TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, tuPtrDbl err, tuOptMap opts, array<double,4>x_set,
+        double range_lo, double range_hi) {
+    return tu_draw_error_boxes(mean, {err,err}, opts, x_set, range_lo, range_hi);
+};
+TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2> err, 
+        tuOptMap dict, array<double,4>x_set,
+        double range_lo, double range_hi) 
+{
+    tuSysErrors pts { mean, x_set, err };
+    /* cout << " range_lo: " << range_lo << " " << range_hi << endl; */
+    if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); };
+    auto tgase = pts.tgase;
+    tu_fmt(tgase,dict);
+    /* tgase->SetFillColor(kBlue); */
+    if ( dict["FillColor"] ) {
+        tgase->Draw("E2");
+    };
+    if ( dict["LineColor"] ) tuDrawBoxErrors(tgase, dict);
+    return tgase;
+};
 
-/* tuPtrDbl  operator+(const tuPtrDbl& lhs, const tuPtrDbl& rhs) { */
-/*     if (lhs.size != rhs.size) { */
-/*         throw std::runtime_error(" fatal in tuPtrDbl+tuPtrDbl, sizes don't match"); */
-/*     } */
-/*     tuPtrDbl r_val{lhs}; */
-/*     r_val += rhs; */
-/*     return r_val.update(); */
-/* }; */
-/* tuPtrDbl  operator-(const tuPtrDbl& lhs, const tuPtrDbl& rhs) { */
-/*     if (lhs.size != rhs.size) { */
-/*         throw std::runtime_error(" fatal in tuPtrDbl-tuPtrDbl, sizes don't match"); */
-/*     } */
-/*     tuPtrDbl r_val{lhs}; */
-/*     r_val-=rhs; */
-/*     return r_val.update(); */
-/* }; */
-/* tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data) { */
-/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
-/*         if (data.size() == 1) return data[0]; */
-/*         data[0] *= data[0]; */
-/*         for (unsigned int i=1; i<data.size(); ++i) { */
-/*             data[0] += (data[i] *= data[i]); */
-/*         } */
-/*         return data[0].sqrt(); */
-/* }; */
-/* tuPtrDbl tu_calc_quadrature(vector<tuPtrDbl> data, tuPtrDbl mean) { */
-/*         if (data.size() == 0) return mean; */
-/*         for (auto& dat : data) dat -= mean; */
-/*         return tu_calc_quadrature(data); */
-/* }; */
-/* tuPtrDbl tu_calc_mean(vector<tuPtrDbl> data) { */
-/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
-/*         if (data.size() == 1) return data[0]; */
-/*         for (unsigned int i=1; i<data.size(); ++i) { */
-/*             data[0] += data[i]; */
-/*         } */
-/*         data[0] /= data.size(); */
-/*         return data[0]; */
-/* }; */
-/* tuPtrDbl tu_calc_max_bound(vector<tuPtrDbl> data) { */
-/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
-/*         if (data.size() == 1) return data[0]; */
-/*         for (unsigned int i=1; i<data.size(); ++i) { */
-/*             data[0].make_max(data[i]); */
-/*         } */
-/*         return data[0]; */
-/* }; */
-/* tuPtrDbl tu_calc_max_berr(vector<tuPtrDbl> data, tuPtrDbl mean) { */
-/*         auto max_bound = tu_calc_max_bound(data); */
-/*         return max_bound.abs_diff(mean); */
-/* }; */
-/* tuPtrDbl tu_calc_min_bound(vector<tuPtrDbl> data) { */
-/*         if (data.size() == 0) return tuPtrDbl{vector<double>{}}; */
-/*         if (data.size() == 1) return data[0]; */
-/*         for (unsigned int i=1; i<data.size(); ++i) { */
-/*             data[0].make_min(data[i]); */
-/*         } */
-/*         return data[0]; */
-/* }; */
-/* tuPtrDbl tu_calc_min_berr(vector<tuPtrDbl> data, tuPtrDbl mean) { */
-/*         return mean.abs_diff(tu_calc_min_bound(data)); */
-/* }; */
-/* pair<tuPtrDbl,tuPtrDbl> tu_calc_bounds(vector<tuPtrDbl> data) { */
-/*     return { tu_calc_min_bound(data), tu_calc_max_bound(data) }; */
-/* }; */
+tuSysErrors::tuSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase}
+{
+    size = tgase->GetN(); 
+    if (x_rat[0]>=0) set_rat_xbins(x_rat);
+};
 
-/* TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, tuPtrDbl err, tuOptMap opts, array<double,4>x_set, */
-/*         double range_lo, double range_hi) { */
-/*     return tu_draw_error_boxes(mean, {err,err}, opts, x_set, range_lo, range_hi); */
-/* }; */
-/* TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2> err, */ 
-/*         tuOptMap dict, array<double,4>x_set, */
-/*         double range_lo, double range_hi) */ 
-/* { */
-/*     tuSysErrors pts { mean, x_set, err }; */
-/*     /1* cout << " range_lo: " << range_lo << " " << range_hi << endl; *1/ */
-/*     if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); }; */
-/*     auto tgase = pts.tgase; */
-/*     tu_fmt(tgase,dict); */
-/*     /1* tgase->SetFillColor(kBlue); *1/ */
-/*     if ( dict("FillColor") ) { */
-/*         tgase->Draw("E2"); */
-/*     }; */
-/*     if ( dict("LineColor") ) tuDrawBoxErrors(tgase, dict); */
-/*     return tgase; */
-/* }; */
+tuSysErrors::tuSysErrors(TH1* hg, array<double,4> x_rat, array<tuPtrDbl,2> _err) {
+    tuPtrDbl x     {hg->GetXaxis()};
+    tuPtrDbl err_x {hg->GetXaxis(), 0.5, true};
 
-/* tuSysErrors::tuSysErrors(TGraphAsymmErrors* _tgase, array<double,4> x_rat) : tgase{_tgase} */
-/* { */
-/*     size = tgase->GetN(); */ 
-/*     if (x_rat[0]>=0) set_rat_xbins(x_rat); */
-/* }; */
+    tuPtrDbl y     {hg};
+    tuPtrDbl err_y {hg,true};
 
-/* tuSysErrors::tuSysErrors(TH1* hg, array<double,4> x_rat, array<tuPtrDbl,2> _err) { */
-/*     tuPtrDbl x     {hg->GetXaxis()}; */
-/*     tuPtrDbl err_x {hg->GetXaxis(), 0.5, true}; */
-
-/*     tuPtrDbl y     {hg}; */
-/*     tuPtrDbl err_y {hg,true}; */
-
-/*     tuPtrDbl err_y_lo = _err[0].size==0 ? err_y : _err[0]; */
-/*     tuPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1]; */
+    tuPtrDbl err_y_lo = _err[0].size==0 ? err_y : _err[0];
+    tuPtrDbl err_y_hi = _err[1].size==0 ? err_y : _err[1];
     
-/*     tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y_lo,err_y_hi); */
-/*     tgase->SetMarkerColor(hg->GetMarkerColor()); */
-/*     tgase->SetMarkerSize(hg->GetMarkerSize()); */
-/*     tgase->SetMarkerStyle(hg->GetMarkerStyle()); */
-/*     tgase->SetLineColor(hg->GetLineColor()); */
-/*     tgase->SetLineStyle(hg->GetLineStyle()); */
-/*     size = x.size; */
+    tgase = new TGraphAsymmErrors (x.size,x,y,err_x,err_x,err_y_lo,err_y_hi);
+    tgase->SetMarkerColor(hg->GetMarkerColor());
+    tgase->SetMarkerSize(hg->GetMarkerSize());
+    tgase->SetMarkerStyle(hg->GetMarkerStyle());
+    tgase->SetLineColor(hg->GetLineColor());
+    tgase->SetLineStyle(hg->GetLineStyle());
+    size = x.size;
 
-/*     if (x_rat[0]>=0) set_rat_xbins(x_rat); */
-/* }; */
+    if (x_rat[0]>=0) set_rat_xbins(x_rat);
+};
 
-/* /1* tuSysErrors& tuSysErrors::add_data(tuPtrDbl data) { vec_data.push_back(data); return *this;}; *1/ */
-/* /1* tuSysErrors& tuSysErrors::add_data(vector<tuPtrDbl> data) { *1/ */ 
-/*     /1* for (auto& dat : data) vec_data.push_back(dat); *1/ */
-/*     /1* return *this; *1/ */
-/* /1* }; *1/ */
-/* tuSysErrors& tuSysErrors::set_x_range (double x_lo, double x_hi) { */
-/*     int i_left  = 0; */
-/*     int i_right = size-1; */
-/*     double* x_old = tgase->GetX(); */
-/*     double* y_old = tgase->GetY(); */
-/*     for (int i{0}; i<size; ++i) { */
-/*         if (x_old[i] < x_lo) i_left = x_old[i]; */
-/*         else break; */
-/*     } */
-/*     for (int i{size-1}; i>=0; --i) { */
-/*         if (x_old[i_right] > x_hi) i_right = i; */
-/*         else break; */
-/*     } */
-/*     if (i_left != 0 || i_right != (size-1)) { */
-/*         int new_size = i_right-i_left+1; */
-/*         double *x = new double[new_size]; */
-/*         double *y = new double[new_size]; */
-/*         std::copy(&(x_old[i_left]), &(x_old[i_right+1]), x); */
-/*         std::copy(&(y_old[i_left]), &(y_old[i_right+1]), y); */
-/*         auto tgase_new = new TGraphAsymmErrors(new_size,x,y); */
-/*         size = new_size; */
-/*         for (int i{0}; i<new_size; ++i) { */
-/*             tgase_new->SetPointError( i, */
-/*                  tgase->GetErrorXlow(i_left+i), tgase->GetErrorXhigh(i_left+i), */
-/*                  tgase->GetErrorYlow(i_left+i), tgase->GetErrorYhigh(i_left+i)); */
-/*         } */
-/*         delete tgase; */
-/*         tgase = tgase_new; */
-/*     } */
-/*     return *this; */
+/* tuSysErrors& tuSysErrors::add_data(tuPtrDbl data) { vec_data.push_back(data); return *this;}; */
+/* tuSysErrors& tuSysErrors::add_data(vector<tuPtrDbl> data) { */ 
+    /* for (auto& dat : data) vec_data.push_back(dat); */
+    /* return *this; */
 /* }; */
+tuSysErrors& tuSysErrors::set_x_range (double x_lo, double x_hi) {
+    int i_left  = 0;
+    int i_right = size-1;
+    double* x_old = tgase->GetX();
+    double* y_old = tgase->GetY();
+    for (int i{0}; i<size; ++i) {
+        if (x_old[i] < x_lo) i_left = x_old[i];
+        else break;
+    }
+    for (int i{size-1}; i>=0; --i) {
+        if (x_old[i_right] > x_hi) i_right = i;
+        else break;
+    }
+    if (i_left != 0 || i_right != (size-1)) {
+        int new_size = i_right-i_left+1;
+        double *x = new double[new_size];
+        double *y = new double[new_size];
+        std::copy(&(x_old[i_left]), &(x_old[i_right+1]), x);
+        std::copy(&(y_old[i_left]), &(y_old[i_right+1]), y);
+        auto tgase_new = new TGraphAsymmErrors(new_size,x,y);
+        size = new_size;
+        for (int i{0}; i<new_size; ++i) {
+            tgase_new->SetPointError( i,
+                 tgase->GetErrorXlow(i_left+i), tgase->GetErrorXhigh(i_left+i),
+                 tgase->GetErrorYlow(i_left+i), tgase->GetErrorYhigh(i_left+i));
+        }
+        delete tgase;
+        tgase = tgase_new;
+    }
+    return *this;
+};
 
-/* tuSysErrors& tuSysErrors::swap_xy () { */
-/*     double* x = new double[size]; */
-/*     double* y = new double[size]; */
+tuSysErrors& tuSysErrors::swap_xy () {
+    double* x = new double[size];
+    double* y = new double[size];
 
-/*     double* x_old = tgase->GetX(); */
-/*     double* y_old = tgase->GetY(); */
+    double* x_old = tgase->GetX();
+    double* y_old = tgase->GetY();
 
-/*     std::copy(x_old, &(x_old[size]), y); */
-/*     std::copy(y_old, &(y_old[size]), x); */
-/*     auto tgase_new = new TGraphAsymmErrors(size,x,y); */
+    std::copy(x_old, &(x_old[size]), y);
+    std::copy(y_old, &(y_old[size]), x);
+    auto tgase_new = new TGraphAsymmErrors(size,x,y);
 
-/*     for (int i{0}; i<size; ++i) { */
-/*         tgase_new->SetPointError( i, */
-/*                 tgase->GetErrorYlow(i), tgase->GetErrorYhigh(i), */
-/*                 tgase->GetErrorXlow(i), tgase->GetErrorXhigh(i)); */
-/*     } */
-/*     delete tgase; */
-/*     tgase = tgase_new; */
-/*     return *this; */
-/* }; */
-/* tuSysErrors& tuSysErrors::setYhigh(tuPtrDbl& data) { */
-/*     for (int i{0}; i<data.size; ++i) { */
-/*         tgase->SetPointEYhigh(i,data[i]); */
-/*     } */
-/*     return *this; */
-/* }; */
-/* tuSysErrors& tuSysErrors::setYlow(tuPtrDbl& data) { */
-/*     for (int i{0}; i<data.size; ++i) { */
-/*         tgase->SetPointEYlow(i,data[i]); */
-/*     } */
-/*     return *this; */
-/* }; */
-/* tuSysErrors& tuSysErrors::setYhilo(tuPtrDbl& data) { */
-/*     for (int i{0}; i<data.size; ++i) { */
-/*         tgase->SetPointEYlow(i,data[i]); */
-/*         tgase->SetPointEYhigh(i,data[i]); */
-/*     } */
-/*     return *this; */
-/* }; */
+    for (int i{0}; i<size; ++i) {
+        tgase_new->SetPointError( i,
+                tgase->GetErrorYlow(i), tgase->GetErrorYhigh(i),
+                tgase->GetErrorXlow(i), tgase->GetErrorXhigh(i));
+    }
+    delete tgase;
+    tgase = tgase_new;
+    return *this;
+};
+tuSysErrors& tuSysErrors::setYhigh(tuPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYhigh(i,data[i]);
+    }
+    return *this;
+};
+tuSysErrors& tuSysErrors::setYlow(tuPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYlow(i,data[i]);
+    }
+    return *this;
+};
+tuSysErrors& tuSysErrors::setYhilo(tuPtrDbl& data) {
+    for (int i{0}; i<data.size; ++i) {
+        tgase->SetPointEYlow(i,data[i]);
+        tgase->SetPointEYhigh(i,data[i]);
+    }
+    return *this;
+};
 
-/* tuSysErrors::tuSysErrors(const tuSysErrors& rhs) { */
-/*     tgase = (TGraphAsymmErrors*) rhs.tgase->Clone(); */
-/*     size = tgase->GetN(); */
-/* }; */
+tuSysErrors::tuSysErrors(const tuSysErrors& rhs) {
+    tgase = (TGraphAsymmErrors*) rhs.tgase->Clone();
+    size = tgase->GetN();
+};
 
-/* tuPtrDbl tuSysErrors::getY() { */
-/*     tuPtrDbl y {size}; */
-/*     double* y_dat = tgase->GetY(); */
-/*     for (int i{0}; i<size; ++i) y[i] = y_dat[i]; */
-/*     y.update(); */
-/*     return y; */
-/* }; */
-/* tuPtrDbl tuSysErrors::getYlow() { */
-/*     tuPtrDbl y {size}; */
-/*     for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i); */
-/*     y.update(); */
-/*     return y; */
-/* }; */
-/* tuPtrDbl tuSysErrors::getYhigh() { */
-/*     tuPtrDbl y {size}; */
-/*     for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYhigh(i); */
-/*     y.update(); */
-/*     return y; */
-/* }; */
+tuPtrDbl tuSysErrors::getY() {
+    tuPtrDbl y {size};
+    double* y_dat = tgase->GetY();
+    for (int i{0}; i<size; ++i) y[i] = y_dat[i];
+    y.update();
+    return y;
+};
+tuPtrDbl tuSysErrors::getYlow() {
+    tuPtrDbl y {size};
+    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYlow(i);
+    y.update();
+    return y;
+};
+tuPtrDbl tuSysErrors::getYhigh() {
+    tuPtrDbl y {size};
+    for (int i{0}; i<size; ++i) y[i] = tgase->GetErrorYhigh(i);
+    y.update();
+    return y;
+};
 
-/* tuSysErrors& tuSysErrors::set_rat_xbins(array<double,4> rat_rel) { */
-/*     double r_left   { rat_rel[0] }; */
-/*     double r_right  { rat_rel[1] }; */
-/*     double r_center { rat_rel[2] }; // relative position between left and right */
-/*     double offset_c { rat_rel[3] }; */
+tuSysErrors& tuSysErrors::set_rat_xbins(array<double,4> rat_rel) {
+    double r_left   { rat_rel[0] };
+    double r_right  { rat_rel[1] };
+    double r_center { rat_rel[2] }; // relative position between left and right
+    double offset_c { rat_rel[3] };
     
-/*     double* x = tgase->GetX(); */
-/*     for (int i{0}; i<size; ++i) { */
-/*         double deltaX = tgase->GetErrorXlow(i) + tgase->GetErrorXhigh(i); */
-/*         double anchor  = x[i]-tgase->GetErrorXlow(i); */
-/*         double p_left  = anchor + r_left  * deltaX; */
-/*         double p_right = anchor + r_right * deltaX; */
-/*         double p_center = anchor + r_center * deltaX + offset_c; */
-/*         tgase->SetPointEXlow (i,  p_center-p_left); */
-/*         tgase->SetPointEXhigh(i,  p_right-p_center); */
-/*         tgase->SetPoint(i,p_center,tgase->GetY()[i]); */
-/*     } */
-/*     return *this; */
-/* }; */
+    double* x = tgase->GetX();
+    for (int i{0}; i<size; ++i) {
+        double deltaX = tgase->GetErrorXlow(i) + tgase->GetErrorXhigh(i);
+        double anchor  = x[i]-tgase->GetErrorXlow(i);
+        double p_left  = anchor + r_left  * deltaX;
+        double p_right = anchor + r_right * deltaX;
+        double p_center = anchor + r_center * deltaX + offset_c;
+        tgase->SetPointEXlow (i,  p_center-p_left);
+        tgase->SetPointEXhigh(i,  p_right-p_center);
+        tgase->SetPoint(i,p_center,tgase->GetY()[i]);
+    }
+    return *this;
+};
 
-/* TGraphAsymmErrors* tuSysErrors::operator-> () { return tgase; }; */
-/* tuSysErrors::operator TGraphAsymmErrors* () { return tgase; }; */
+TGraphAsymmErrors* tuSysErrors::operator-> () { return tgase; };
+tuSysErrors::operator TGraphAsymmErrors* () { return tgase; };
 
 /* tu_TF1fitter::tu_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) : */
 /*     name { strcmp(_name,"")==0 ? tuUniqueName() : _name } , */
