@@ -1,30 +1,33 @@
-#include "ioTHnSparse.h"
-#include "io_fnc.h"
-#include "ioClass.h"
+#include "tuTHnSparse.h"
+#include "tu_fnc.h"
+#include "tuClass.h"
 // BEAR0
-ioTrackSparse::ioTrackSparse(
+tuTrackSparse::tuTrackSparse(
         THnSparseD* _data_track, THnSparseD* _data_trig, bool _dbprint
 ) :
     data_trig { _data_trig }, data_track { _data_track }, debug_print{_dbprint} 
 {};
 
-ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
+tuTrackSparse::tuTrackSparse(
+        const char* bin_file, const char* tag, bool _dbprint) :
     debug_print{_dbprint} 
 {
-    ioBinVec bin_TrigEt {{ 0.,4.,8.,12.,30.}};
-    ioBinVec bin_ZDCx   {{ 4000., 10000., 16000., 22000. }};
-    ioBinVec bin_vz    {{ -10., -10., 20, 20. }};
-    ioBinVec bin_abs_dhpi {{ -0.5, -0.5, 3, 2.5 }};
-    ioBinVec bin_eta  {{ -1.0., -0.3, 0.3, 1. }};
+    if (debug_print) cout << " bin_file: " << bin_file << endl;
+    /* tuBinVec bin_bbc { bin_file, "EAbbc_10" }; */
+    tuBinVec bin_TrigEt {{ 0.,4.,8.,12.,30.}};
+    tuBinVec bin_ZDCx   {{ 4000., 10000., 16000., 22000. }};
+    tuBinVec bin_vz    {{ -10., -10., 20, 20. }};
+    tuBinVec bin_abs_dhpi {{ -0.5, -0.5, 3, 2.5 }};
+    tuBinVec bin_eta  {{ -1.0., -0.3, 0.3, 1. }};
 
-    const ioBinVec bin_trpt {{ // track pT bins
+    const tuBinVec bin_trpt {{ // track pT bins
      0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
      1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,  2.4,  2.5,  2.6,  2.7,  2.8,  2.9,
      3.0,  3.1,  3.2,  3.3,  3.4,  3.5,  3.6,  3.7,  3.8,  3.9,  4.0,  4.1,  4.2,  4.3,  4.4,
      4.6,  4.8,  5.0,  5.2,  5.4,  5.6,  5.8,  6.0,  6.2,  6.4,  6.6,  6.8,  7.1,  7.4,  7.7,
      8.0,  8.3,  8.6,  9.0,  9.4,  9.8, 10.3, 10.8, 11.3, 11.9, 12.5, 13.2, 14.0, 15.0
     }};
-    const ioBinVec bin_EAbbc10 {{ 0, 2767.15, 5397.98, 8333.35, 11610.5,
+    const tuBinVec bin_EAbbc10 {{ 0, 2767.15, 5397.98, 8333.35, 11610.5,
         15280.9, 19440.2, 24219.7, 29959, 37534.5, 64000 }};
 
     // get the ZDCx bins:
@@ -78,7 +81,7 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
 
     data_track->Sumw2();
 };
-void ioTrackSparse::write() { 
+void tuTrackSparse::write() { 
     if (debug_print) {
         cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
             data_trig->GetEntries() << " jet-entries: " << data_track->GetEntries() << endl;
@@ -95,7 +98,7 @@ void ioTrackSparse::write() {
     data_trig->Write();
     data_track->Write();
 };
-void ioTrackSparse::fill_trig(
+void tuTrackSparse::fill_trig(
         double EAbbc, double TrigEt, double ZDCx, double Vz){
     hopper[0] = EAbbc;
     hopper[1] = TrigEt;
@@ -103,15 +106,15 @@ void ioTrackSparse::fill_trig(
     hopper[3] = Vz;
     data_trig->Fill(hopper,weight);
 };
-void ioTrackSparse::fill_jetpt_absDphi(double jetpt, double absDphi, double eta) {
+void tuTrackSparse::fill_jetpt_absDphi(double jetpt, double absDphi, double eta) {
     hopper[4] = jetpt;
     hopper[5] = absDphi;
     hopper[6] = eta;
     data_track->Fill(hopper,weight);
 };
-void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
+void tuTrackSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 6) throw std::runtime_error(
-        Form("fatal: error in ioTrackSparse, axis(%i) not valid, but by <7",
+        Form("fatal: error in tuTrackSparse, axis(%i) not valid, but by <7",
         i_axis)
     );
 
@@ -120,16 +123,16 @@ void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis < 4) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
 };
 
-TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
+TH1D* tuTrackSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
     TH1D* hg;
     TH1D* _hg = (TH1D*) (use_jet_data ? data_track : data_trig)->Projection(i_axis,"E");
     if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
         delete _hg;
-        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
     } else {
         hg = _hg;
-        hg->SetName(ioUniqueName());
+        hg->SetName(tuUniqueName());
     }
     if (norm == 0.) {
         hg->Scale(1./get_n_triggers());
@@ -138,7 +141,7 @@ TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
     }
     return hg;
 };
-double ioTrackSparse::get_n_triggers() { 
+double tuTrackSparse::get_n_triggers() { 
     if (n_triggers != -1.) return n_triggers;
     auto hg = (TH1D*) data_trig->Projection(0);
     n_triggers = hg->Integral();
@@ -149,32 +152,32 @@ double ioTrackSparse::get_n_triggers() {
 
 // BEAR1
 
-ioJetSpectraSparse::ioJetSpectraSparse(
+tuJetSpectraSparse::tuJetSpectraSparse(
         THnSparseD* _data_jet, THnSparseD* _data_trig,
         bool _dbprint
 ) :
     data_trig { _data_trig }, data_jet { _data_jet }, debug_print{_dbprint} 
 {};
 
-ioJetSpectraSparse::ioJetSpectraSparse(
+tuJetSpectraSparse::tuJetSpectraSparse(
         const char* bin_file, const char* tag, bool _dbprint) :
     debug_print{_dbprint} 
 {
     if (debug_print) cout << " bin_file: " << bin_file << endl;
     TString s_tag = tag;
     int i_bins = (s_tag.Contains("_10")) ? 10 : 3;
-    ioBinVec bin_EAbbc { bin_file, Form("EAbbc_%ibin",i_bins) };
-    ioBinVec bin_EAtpc { bin_file, Form("EAtpc_%ibin",i_bins) }; //"EAtpc_3bin" };
-    ioBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
+    tuBinVec bin_EAbbc { bin_file, Form("EAbbc_%ibin",i_bins) };
+    tuBinVec bin_EAtpc { bin_file, Form("EAtpc_%ibin",i_bins) }; //"EAtpc_3bin" };
+    tuBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
 
-    ioBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
-    ioBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
+    tuBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
+    tuBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
 
-    ioBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
-    ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
+    tuBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
+    tuBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
-    ioBinVec bin_JetPt {{ 0., 0., 70, 70.}};
-    ioBinVec bin_absDphi {{ 0., 0., 64., IO_pi }};
+    tuBinVec bin_JetPt {{ 0., 0., 70, 70.}};
+    tuBinVec bin_absDphi {{ 0., 0., 64., M_PI }};
 
     // get the ZDCx bins:
 
@@ -226,7 +229,7 @@ ioJetSpectraSparse::ioJetSpectraSparse(
 
     data_jet->Sumw2();
 };
-void ioJetSpectraSparse::write() { 
+void tuJetSpectraSparse::write() { 
     if (debug_print) {
         cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
             data_trig->GetEntries() << " jet-entries: " << data_jet->GetEntries() << endl;
@@ -243,7 +246,7 @@ void ioJetSpectraSparse::write() {
     data_trig->Write();
     data_jet->Write();
 };
-void ioJetSpectraSparse::fill_trig(
+void tuJetSpectraSparse::fill_trig(
         double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz){
     hopper[0] = EAbbc;
     hopper[1] = EAtpc;
@@ -252,14 +255,14 @@ void ioJetSpectraSparse::fill_trig(
     hopper[4] = Vz;
     data_trig->Fill(hopper,weight);
 };
-void ioJetSpectraSparse::fill_jetpt_absDphi(double jetpt, double absDphi) {
+void tuJetSpectraSparse::fill_jetpt_absDphi(double jetpt, double absDphi) {
     hopper[5] = jetpt;
     hopper[6] = absDphi;
     data_jet->Fill(hopper,weight);
 };
-void ioJetSpectraSparse::range_axes (int i_axis, int i0, int i1) {
+void tuJetSpectraSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 6) throw std::runtime_error(
-        Form("fatal: error in ioJetSpectraSparse, axis(%i) not valid, but by <7",
+        Form("fatal: error in tuJetSpectraSparse, axis(%i) not valid, but by <7",
         i_axis)
     );
 
@@ -268,16 +271,16 @@ void ioJetSpectraSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis < 5) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
 };
 
-TH1D* ioJetSpectraSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
+TH1D* tuJetSpectraSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
     TH1D* hg;
     TH1D* _hg = (TH1D*) (use_jet_data ? data_jet : data_trig)->Projection(i_axis,"E");
     if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
         delete _hg;
-        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
     } else {
         hg = _hg;
-        hg->SetName(ioUniqueName());
+        hg->SetName(tuUniqueName());
     }
     if (norm == 0.) {
         hg->Scale(1./get_n_triggers());
@@ -286,15 +289,15 @@ TH1D* ioJetSpectraSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
     }
     return hg;
 };
-TH1D* ioJetSpectraSparse::hg_JetPt64 (int i0, int i1, double norm){
+TH1D* tuJetSpectraSparse::hg_JetPt64 (int i0, int i1, double norm){
     range_absDphi(i0,i1); 
     return hg_axis(5,norm);
 };
-TH1D* ioJetSpectraSparse::hg_JetPt8 (int i, double norm) {
+TH1D* tuJetSpectraSparse::hg_JetPt8 (int i, double norm) {
     range8_absDphi(i); 
     return hg_axis(5,norm);
 };
-double ioJetSpectraSparse::get_n_triggers() { 
+double tuJetSpectraSparse::get_n_triggers() { 
     if (n_triggers != -1.) return n_triggers;
     auto hg = (TH1D*) data_trig->Projection(0);
     n_triggers = hg->Integral();
@@ -304,26 +307,26 @@ double ioJetSpectraSparse::get_n_triggers() {
 
 
 
-ioAjSparse::ioAjSparse(THnSparseD* _data ) : data { _data } {};
-ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match) :
+tuAjSparse::tuAjSparse(THnSparseD* _data ) : data { _data } {};
+tuAjSparse::tuAjSparse(const char* bin_file, const char* tag, double _rec_match) :
     recoil_match {_rec_match} {
-    dphi_min = IO_pi-recoil_match;
+    dphi_min = M_PI-recoil_match;
 
     TString s_tag = tag;
     /* int i_bins = (s_tag.Contains("_10")) ? 10 : 3; */
-    ioBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
-    ioBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
-    ioBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
+    tuBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
+    tuBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
+    tuBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
 
-    ioBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
-    ioBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
+    tuBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
+    tuBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
 
-    ioBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
-    ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
+    tuBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
+    tuBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
-    ioBinVec bin_leadPt  {{ 0., 0., 70, 70.  }};
-    ioBinVec bin_matchPt {{ 0., 0., 70, 70.  }};
-    ioBinVec bin_AJ      {{ 0., 0., 200., 1. }};
+    tuBinVec bin_leadPt  {{ 0., 0., 70, 70.  }};
+    tuBinVec bin_matchPt {{ 0., 0., 70, 70.  }};
+    tuBinVec bin_AJ      {{ 0., 0., 200., 1. }};
 
     // get the ZDCx bins:
     nbins[0] = bin_EAbbc;
@@ -347,22 +350,22 @@ ioAjSparse::ioAjSparse(const char* bin_file, const char* tag, double _rec_match)
     data->SetBinEdges(7,bin_AJ);
     data->Sumw2();
 };
-void ioAjSparse::write() { 
+void tuAjSparse::write() { 
     cout << " entries for " << data->GetName() << ": " << data->GetEntries() << endl;
     data->Write();
 };
 
-void ioAjSparse::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
+void tuAjSparse::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
     mean_pTCorr = _mean_pTCorr;
     sig_pTCorr = _sig_pTCorr;
     flag_pTCorr = true;
     pTrand = new TRandom3();
 };
 
-double ioAjSparse::Aj() {
+double tuAjSparse::Aj() {
     return hopper[7];
 };
-bool ioAjSparse::fill(
+bool tuAjSparse::fill(
         double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz, double leadPt, double matchPt){
     hopper[0] = EAbbc;
     hopper[1] = EAtpc;
@@ -375,13 +378,13 @@ bool ioAjSparse::fill(
     data->Fill(hopper,weight);
     return (leadPt >= 20 && matchPt >= 10);
 };
-bool ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
+bool tuAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
     if (jets.size() < 2) return false;
     double lead_phi = jets[0].phi();
     double matchPt = -1.;
     for (unsigned int i{1}; i<jets.size(); ++i) {
         auto& jet = jets[i];
-        if (io_absDphi(lead_phi,jet.phi())>dphi_min) {
+        if (tu_absDphi(lead_phi,jet.phi())>dphi_min) {
             for (int k=0; k<5; ++k) hopper[k] = _in[k];
             hopper[5] = jets[0].perp();
             hopper[6] = jet.perp();
@@ -402,24 +405,24 @@ bool ioAjSparse::fill(double* _in, vector<PseudoJet>& jets) {
     return false;
 };
 
-void ioAjSparse::range_axes (int i_axis, int i0, int i1) {
+void tuAjSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 7) throw std::runtime_error(
-        Form("fatal: error in ioAjSparse, axis(%i) not valid, but by <7",
+        Form("fatal: error in tuAjSparse, axis(%i) not valid, but by <7",
         i_axis)
     );
     data ->GetAxis(i_axis)->SetRange(i0, i1);
 };
 
-TH1D* ioAjSparse::hg_axis (int i_axis, double norm){
+TH1D* tuAjSparse::hg_axis (int i_axis, double norm){
     TH1D* hg;
     TH1D* _hg = (TH1D*) data->Projection(i_axis,"E");
     if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
         delete _hg;
-        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
     } else {
         hg = _hg;
-        hg->SetName(ioUniqueName());
+        hg->SetName(tuUniqueName());
     }
     if (norm != 0.) {
         hg->Scale(1./norm);
@@ -430,23 +433,23 @@ TH1D* ioAjSparse::hg_axis (int i_axis, double norm){
 
 
 
-ioTrackSparse::ioTrackSparse(THnSparseD* _data_track, THnSparseD* _data_trig) :
+tuTrackSparse::tuTrackSparse(THnSparseD* _data_track, THnSparseD* _data_trig) :
     data_trig { _data_trig }, data_track { _data_track } {};
-ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
+tuTrackSparse::tuTrackSparse(const char* bin_file, const char* tag) {
     TString s_tag = tag;
     int i_bins = (s_tag.Contains("_10")) ? 10 : 3;
-    ioBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
-    ioBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
-    ioBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
+    tuBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
+    tuBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
+    tuBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
 
-    ioBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
-    ioBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
+    tuBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
+    tuBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
 
-    ioBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
-    ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
+    tuBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
+    tuBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
-    ioBinVec bin_trackPt { bin_file, "trackpt_resolution" };
-    ioBinVec bin_absDphi {{ 0., 0., 64., IO_pi }};
+    tuBinVec bin_trackPt { bin_file, "trackpt_resolution" };
+    tuBinVec bin_absDphi {{ 0., 0., 64., M_PI }};
 
     // get the ZDCx bins:
 
@@ -481,13 +484,13 @@ ioTrackSparse::ioTrackSparse(const char* bin_file, const char* tag) {
 
     data_track->Sumw2();
 };
-void ioTrackSparse::ioTrackSparse::write() { 
+void tuTrackSparse::tuTrackSparse::write() { 
     cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
         data_trig->GetEntries() << " track-entries: " << data_track->GetEntries() << endl;
     data_trig->Write();
     data_track->Write();
 };
-void ioTrackSparse::fill_trig(
+void tuTrackSparse::fill_trig(
         double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz){
     hopper[0] = EAbbc;
     hopper[1] = EAtpc;
@@ -496,14 +499,14 @@ void ioTrackSparse::fill_trig(
     hopper[4] = Vz;
     data_trig->Fill(hopper,weight);
 };
-void ioTrackSparse::fill_trackpt_absDphi(double trackpt, double absDphi) {
+void tuTrackSparse::fill_trackpt_absDphi(double trackpt, double absDphi) {
     hopper[5] = trackpt;
     hopper[6] = absDphi;
     data_track->Fill(hopper,weight);
 };
-void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
+void tuTrackSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 6) throw std::runtime_error(
-        Form("fatal: error in ioTrackSparse, axis(%i) not valid, but by <7",
+        Form("fatal: error in tuTrackSparse, axis(%i) not valid, but by <7",
         i_axis)
     );
 
@@ -512,16 +515,16 @@ void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
     if (i_axis < 5) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
 };
 
-TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_track_data){
+TH1D* tuTrackSparse::hg_axis (int i_axis, double norm, bool use_track_data){
     TH1D* hg;
     TH1D* _hg = (TH1D*) (use_track_data ? data_track : data_trig)->Projection(i_axis,"E");
     if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
         delete _hg;
-        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
     } else {
         hg = _hg;
-        hg->SetName(ioUniqueName());
+        hg->SetName(tuUniqueName());
     }
     if (norm == 0.) {
         hg->Scale(1./get_n_triggers());
@@ -530,7 +533,7 @@ TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_track_data){
     }
     return hg;
 };
-double ioTrackSparse::get_n_triggers() { 
+double tuTrackSparse::get_n_triggers() { 
     if (n_triggers != -1.) return n_triggers;
     auto hg = (TH1D*) data_trig->Projection(0);
     n_triggers = hg->Integral();
@@ -538,27 +541,27 @@ double ioTrackSparse::get_n_triggers() {
     return n_triggers;
 };
 
-ioAjSparse_dPhi::ioAjSparse_dPhi(THnSparseD* _data ) : data { _data } {};
-ioAjSparse_dPhi::ioAjSparse_dPhi(const char* bin_file, const char* tag, double _rec_match) :
+tuAjSparse_dPhi::tuAjSparse_dPhi(THnSparseD* _data ) : data { _data } {};
+tuAjSparse_dPhi::tuAjSparse_dPhi(const char* bin_file, const char* tag, double _rec_match) :
     recoil_match {_rec_match} {
-    dphi_min = IO_pi-recoil_match;
+    dphi_min = M_PI-recoil_match;
 
     TString s_tag = tag;
     /* int i_bins = (s_tag.Contains("_10")) ? 10 : 3; */
-    ioBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
-    ioBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
-    ioBinVec bin_TrigEt    {{ 0.,0.,30, 30.}};
+    tuBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
+    tuBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
+    tuBinVec bin_TrigEt    {{ 0.,0.,30, 30.}};
 
-    ioBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
-    ioBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
+    tuBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
+    tuBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
 
-    ioBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
-    ioBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
+    tuBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
+    tuBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
 
-    ioBinVec bin_leadPt  {{ 0., 0., 70, 70.  }};
-    ioBinVec bin_matchPt {{ 0., 0., 70, 70.  }};
-    ioBinVec bin_AJ      {{ 0., 0., 200., 1. }};
-    ioBinVec bin_dPhi    {{ 0., 0., 100., IO_twopi }};
+    tuBinVec bin_leadPt  {{ 0., 0., 70, 70.  }};
+    tuBinVec bin_matchPt {{ 0., 0., 70, 70.  }};
+    tuBinVec bin_AJ      {{ 0., 0., 200., 1. }};
+    tuBinVec bin_dPhi    {{ 0., 0., 100., 2*M_PI }};
 
     // get the ZDCx bins:
     nbins[0] = bin_EAbbc;
@@ -585,22 +588,22 @@ ioAjSparse_dPhi::ioAjSparse_dPhi(const char* bin_file, const char* tag, double _
     data->SetBinEdges(8,bin_dPhi);
     data->Sumw2();
 };
-void ioAjSparse_dPhi::write() { 
+void tuAjSparse_dPhi::write() { 
     cout << " entries for " << data->GetName() << ": " << data->GetEntries() << endl;
     data->Write();
 };
 
-void ioAjSparse_dPhi::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
+void tuAjSparse_dPhi::set_pTCorr ( double _mean_pTCorr, double _sig_pTCorr ) {
     mean_pTCorr = _mean_pTCorr;
     sig_pTCorr = _sig_pTCorr;
     flag_pTCorr = true;
     pTrand = new TRandom3();
 };
 
-double ioAjSparse_dPhi::Aj() {
+double tuAjSparse_dPhi::Aj() {
     return hopper[7];
 };
-bool ioAjSparse_dPhi::fill(
+bool tuAjSparse_dPhi::fill(
         double EAbbc, double EAtpc, double TrigEt, 
         double ZDCx, double Vz, double leadPt, double matchPt,
         double dPhi){
@@ -616,13 +619,13 @@ bool ioAjSparse_dPhi::fill(
     data->Fill(hopper,weight);
     return (leadPt >= 20 && matchPt >= 10);
 };
-bool ioAjSparse_dPhi::fill(double* _in, vector<PseudoJet>& jets) {
+bool tuAjSparse_dPhi::fill(double* _in, vector<PseudoJet>& jets) {
     if (jets.size() < 2) return false;
     double lead_phi = jets[0].phi();
     double matchPt = -1.;
     for (unsigned int i{1}; i<jets.size(); ++i) {
         auto& jet = jets[i];
-        double dPhi {io_dphi(lead_phi,jet.phi())};
+        double dPhi {tu_dphi(lead_phi,jet.phi())};
         if (TMath::Abs(dPhi)>dphi_min) {
             for (int k=0; k<5; ++k) hopper[k] = _in[k];
             hopper[5] = jets[0].perp();
@@ -634,7 +637,7 @@ bool ioAjSparse_dPhi::fill(double* _in, vector<PseudoJet>& jets) {
                 pT_1 -= _in[1] * jet_area * (pTrand->Gaus(mean_pTCorr, sig_pTCorr));
             }
             hopper[7] = (pT_0-pT_1)/(pT_0+pT_1);
-            if (dPhi<0) dPhi += IO_twopi;
+            if (dPhi<0) dPhi += tu_twopi;
             hopper[8] = dPhi;
             data->Fill(hopper,weight);
             return (hopper[5] >= 10 && hopper[6] >= 10);
@@ -643,24 +646,24 @@ bool ioAjSparse_dPhi::fill(double* _in, vector<PseudoJet>& jets) {
     return false;
 };
 
-void ioAjSparse_dPhi::range_axes (int i_axis, int i0, int i1) {
+void tuAjSparse_dPhi::range_axes (int i_axis, int i0, int i1) {
     if (i_axis > 7) throw std::runtime_error(
-        Form("fatal: error in ioAjSparse_dPhi, axis(%i) not valid, but by <7",
+        Form("fatal: error in tuAjSparse_dPhi, axis(%i) not valid, but by <7",
         i_axis)
     );
     data ->GetAxis(i_axis)->SetRange(i0, i1);
 };
 
-TH1D* ioAjSparse_dPhi::hg_axis (int i_axis, double norm){
+TH1D* tuAjSparse_dPhi::hg_axis (int i_axis, double norm){
     TH1D* hg;
     TH1D* _hg = (TH1D*) data->Projection(i_axis,"E");
     if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
         delete _hg;
-        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
     } else {
         hg = _hg;
-        hg->SetName(ioUniqueName());
+        hg->SetName(tuUniqueName());
     }
     if (norm != 0.) {
         hg->Scale(1./norm);
@@ -668,7 +671,7 @@ TH1D* ioAjSparse_dPhi::hg_axis (int i_axis, double norm){
     return hg;
 };
 
-TH2D* ioAjSparse_dPhi::hg2_axis (int xAxis, int yAxis, double norm){
+TH2D* tuAjSparse_dPhi::hg2_axis (int xAxis, int yAxis, double norm){
     TH2D* hg = (TH2D*) data->Projection(yAxis, xAxis);
     if (norm) hg->Scale(norm);
     return hg;
