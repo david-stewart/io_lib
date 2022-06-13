@@ -1,6 +1,153 @@
 #include "ioTHnSparse.h"
 #include "io_fnc.h"
 #include "ioClass.h"
+// BEAR0
+ioTrackSparse::ioTrackSparse(
+        THnSparseD* _data_track, THnSparseD* _data_trig, bool _dbprint
+) :
+    data_trig { _data_trig }, data_track { _data_track }, debug_print{_dbprint} 
+{};
+
+ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
+    debug_print{_dbprint} 
+{
+    ioBinVec bin_TrigEt {{ 0.,4.,8.,12.,30.}};
+    ioBinVec bin_ZDCx   {{ 4000., 10000., 16000., 22000. }};
+    ioBinVec bin_vz    {{ -10., -10., 20, 20. }};
+    ioBinVec bin_abs_dhpi {{ -0.5, -0.5, 3, 2.5 }};
+    ioBinVec bin_eta  {{ -1.0., -0.3, 0.3, 1. }};
+
+    const ioBinVec bin_trpt {{ // track pT bins
+     0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
+     1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,  2.4,  2.5,  2.6,  2.7,  2.8,  2.9,
+     3.0,  3.1,  3.2,  3.3,  3.4,  3.5,  3.6,  3.7,  3.8,  3.9,  4.0,  4.1,  4.2,  4.3,  4.4,
+     4.6,  4.8,  5.0,  5.2,  5.4,  5.6,  5.8,  6.0,  6.2,  6.4,  6.6,  6.8,  7.1,  7.4,  7.7,
+     8.0,  8.3,  8.6,  9.0,  9.4,  9.8, 10.3, 10.8, 11.3, 11.9, 12.5, 13.2, 14.0, 15.0
+    }};
+    const ioBinVec bin_EAbbc10 {{ 0, 2767.15, 5397.98, 8333.35, 11610.5,
+        15280.9, 19440.2, 24219.7, 29959, 37534.5, 64000 }};
+
+    // get the ZDCx bins:
+
+    // trigger 
+    nbins[0] = bin_EAbbc10;
+    nbins[1] = bin_TrigEt;
+    nbins[2] = bin_ZDCx;
+    nbins[3] = bin_vz;
+
+    // track
+    nbins[4] = bin_trpt;
+    nbins[5] = bin_abs_dphi;
+    nbins[6] = bin_eta;
+
+    if (debug_print) {
+        cout << " debug_print, nbins: " << endl;
+        for (int i{0}; i<7; ++i) cout << " nbins["<<i<<"] " << nbins[i] << endl;
+    }
+
+    data_trig = new THnSparseD(Form("data_trig%s",tag),
+            "triggers;EAbbc;TrigEt;ZDCx;Vz;",
+            4, nbins, NULL, NULL);
+    data_trig->SetBinEdges(0,bin_EAbbc10);
+    data_trig->SetBinEdges(1,bin_TrigEt);
+    data_trig->SetBinEdges(2,bin_ZDCx);
+    data_trig->SetBinEdges(3,bin_vz);
+
+    if (debug_print) {
+        for (int k = 0; k<4; ++k) {
+            TAxis* x = data_trig->GetAxis(k);
+            cout << k << " debug print: THnSparse Axis: " << x->GetTitle() 
+                 << " axis:  " << x->GetTitle() << " nbins: " << x->GetNbins() << endl;
+            for (int j = 1; j<=x->GetNbins()+1; ++j) 
+                cout << "bin["<<j<<"] " << x->GetBinLowEdge(j) << " ";
+            cout << endl;
+            cout << k << " ------------- " << endl;
+        }
+    }
+
+    data_track = new THnSparseD(Form("data_track%s",tag),
+            "jets;EAbbcTrigEt;ZDCx;Vz;track pT;|#Delta#phi|;#eta",
+            7, nbins, NULL, NULL);
+    data_track->SetBinEdges(0,bin_EAbbc10);
+    data_track->SetBinEdges(1,bin_TrigEt);
+    data_track->SetBinEdges(2,bin_ZDCx);
+    data_track->SetBinEdges(4,bin_vz);
+    data_track->SetBinEdges(4,bin_trpt);
+    data_track->SetBinEdges(5,bin_abs_dphi);
+    data_track->SetBinEdges(6,bin_eta);
+
+    data_track->Sumw2();
+};
+void ioTrackSparse::write() { 
+    if (debug_print) {
+        cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
+            data_trig->GetEntries() << " jet-entries: " << data_track->GetEntries() << endl;
+        auto t_proj = data_trig->Projection(0);
+        t_proj->SetName("p_trip");
+        cout << " First axes: (mean) trig " << t_proj->GetMean() << endl;
+        delete t_proj;
+
+        auto j_proj = data_track->Projection(0);
+        j_proj->SetName("j_trip");
+        cout << " First axes: (mean) jet  " << j_proj->GetMean() << endl;
+        delete j_proj;
+    }
+    data_trig->Write();
+    data_track->Write();
+};
+void ioTrackSparse::fill_trig(
+        double EAbbc, double TrigEt, double ZDCx, double Vz){
+    hopper[0] = EAbbc;
+    hopper[1] = TrigEt;
+    hopper[2] = ZDCx;
+    hopper[3] = Vz;
+    data_trig->Fill(hopper,weight);
+};
+void ioTrackSparse::fill_jetpt_absDphi(double jetpt, double absDphi, double eta) {
+    hopper[4] = jetpt;
+    hopper[5] = absDphi;
+    hopper[6] = eta;
+    data_track->Fill(hopper,weight);
+};
+void ioTrackSparse::range_axes (int i_axis, int i0, int i1) {
+    if (i_axis > 6) throw std::runtime_error(
+        Form("fatal: error in ioTrackSparse, axis(%i) not valid, but by <7",
+        i_axis)
+    );
+
+    n_triggers = -1.;
+    data_track ->GetAxis(i_axis)->SetRange(i0, i1);
+    if (i_axis < 4) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
+};
+
+TH1D* ioTrackSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
+    TH1D* hg;
+    TH1D* _hg = (TH1D*) (use_jet_data ? data_track : data_trig)->Projection(i_axis,"E");
+    if (bins != nullptr) {
+        hg = (TH1D*) _hg->Rebin(*bins, ioUniqueName(), *bins);
+        delete _hg;
+        if (scaleByBinWidth) io_scaleByBinWidth(hg);
+    } else {
+        hg = _hg;
+        hg->SetName(ioUniqueName());
+    }
+    if (norm == 0.) {
+        hg->Scale(1./get_n_triggers());
+    } else {
+        hg->Scale(1./norm);
+    }
+    return hg;
+};
+double ioTrackSparse::get_n_triggers() { 
+    if (n_triggers != -1.) return n_triggers;
+    auto hg = (TH1D*) data_trig->Projection(0);
+    n_triggers = hg->Integral();
+    delete hg;
+    return n_triggers;
+};
+
+
+// BEAR1
 
 ioJetSpectraSparse::ioJetSpectraSparse(
         THnSparseD* _data_jet, THnSparseD* _data_trig,

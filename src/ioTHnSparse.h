@@ -7,6 +7,60 @@
 
 using fastjet::PseudoJet;
 
+class ioTrackSparse {
+    // axes:
+    // EVENT:
+    // 0 : bbc     - 3 bins
+    // 1 : TrigEt  - 3 bins
+    // 2 : ZDCx    - 3 bins -- 4-10, 10-16, 16-22 kHz
+    // 3 : Vz      - 10 bins (because, why not?)
+    // TRACK:
+    // 4 : pt 
+    // 5 : abs_dphi - 3 bins -- 0 - trans, 1, same-size, 2, recoil 
+    // 6 : eta      - 3 bins -- east, mid, west
+    private:
+    int nbins[7];
+    double n_triggers{-1};
+
+    public:
+    double weight{1.};
+    double hopper[7];
+    ioBinVec* bins {nullptr};
+    ioTrackSparse(const char* bin_file, const char* tag="", 
+            bool debug_print=false);
+    ioTrackSparse(THnSparseD* _data_jet, THnSparseD* data_trig, 
+            bool debug_print=false);
+    void write();
+
+    THnSparseD* data_trig;
+    THnSparseD* data_track;
+    bool debug_print {false};
+    
+    void fill_trig(double EAbbc, double TrigEt, double ZDCx, double Vz);
+    void fill_jetpt_eta_absDphi(double pt, double eta, double absdeltaphi); 
+    // note: will fill with last values in hopper from fill_trig;
+
+    void range_axes    (int i_axis, int i0, int i1);
+    void range_bbc     (int i0, int i1) { range_axes(0,i0,i1); };
+    void range_TrigEt  (int i0, int i1) { range_axes(1,i0,i1); };
+    void range_ZDCx    (int i0, int i1) { range_axes(2,i0,i1); };
+    void range_vz      (int i0, int i1) { range_axes(3,i0,i1); };
+    void range_pt      (int i0, int i1) { range_axes(4,i0,i1); };
+    void range_abs_dphi (int i0, int i1) { range_axes(5,i0,i1); };
+    void range_eta     (int i0, int i1) { range_axes(6,i0,i1); };
+
+    TH1D* hg_axis  (int i_axis, double norm=0., bool use_jet_data=true);
+    TH1D* hg_bbc (double norm=0., bool isjets=true) { return hg_axis(0, norm,isjets); }; // if norm = 0, then use triggers
+    TH1D* hg_TrigEt   (double norm=0., bool isjets=true) { return hg_axis(1, norm,isjets); };
+    TH1D* hg_ZDCx     (double norm=0., bool isjets=true) { return hg_axis(2, norm,isjets); };
+    TH1D* hg_vz       (double norm=0., bool isjets=true) { return hg_axis(3, norm,isjets); };
+    TH1D* hg_pt       (double norm=0.) { return hg_axis(4, norm); };
+    TH1D* hg_abs_dphi (double norm=0.) { return hg_axis(5, norm); };
+    TH1D* hg_pt       (double norm=0.) { return hg_axis(6, norm); };
+    double get_n_triggers();
+};
+
+
 class ioJetSpectraSparse {
     private:
     int nbins[7];
