@@ -111,8 +111,9 @@ void ioBinVec::build_ptr() {
     ptr = new double[size];
     for (int i{0}; i<size; ++i) ptr[i] = vec[i];
 };
-ioBinVec::operator int () { return size-1; };
-ioBinVec::operator double* () { return ptr; };
+/* ioBinVec::operator int () { return size-1; }; */
+ioBinVec::operator int () const { return size-1; };
+ioBinVec::operator double* () const { return ptr; };
 ioBinVec::operator vector<double> () { return vec; };
 
 ioBinVec::ioBinVec(vector<double> V, bool range_setter) { 
@@ -206,8 +207,8 @@ ioBinVec::~ioBinVec() {
     delete[] ptr;
 };
 /* int ioBinVec::nbins() { return (int) size-1; }; */
-vector<double>::iterator ioBinVec::begin() { return vec.begin(); };
-vector<double>::iterator ioBinVec::end()   { return vec.end(); };
+vector<double>::const_iterator ioBinVec::begin() const { return vec.begin(); };
+vector<double>::const_iterator ioBinVec::end()   const { return vec.end(); };
 double ioBinVec::operator[](int i) { return vec[i]; };
 double ioBinVec::bin_underflow() { 
     if (vec.size()<2)  return 0.;
@@ -662,19 +663,19 @@ string ioIntMap::ioIntMap_constructor (
     return msg.str();
 };
 
-bool ioIntMap::has(int key) {
+bool ioIntMap::has(int key) const {
     return (bool) data_map.count(key);
 };
 
 int& ioIntMap::operator[](int key) { return data_map[key]; };
 
-vector<int> ioIntMap::keys() {
+vector<int> ioIntMap::keys() const {
     vector<int> vec;
     for (auto m : data_map) vec.push_back(m.first);
     sort(vec.begin(), vec.end());
     return vec;
 };
-int ioIntMap::size() { return data_map.size(); };
+int ioIntMap::size() const { return data_map.size(); };
 
 
 // ioHgStats
@@ -1498,7 +1499,6 @@ ostream& operator<<(ostream& os, ioMinMax& self) {
     os << self.min << " " << self.max;
     return os;
 };
-
 ioIntSet& ioIntSet::operator+=(const ioIntSet& rhs) {
     vector<int> new_vals;
     for (auto val : rhs.list) {
@@ -1575,7 +1575,7 @@ ostringstream ioIntSet::read_file(const char* in_file, int col, bool print, bool
     return msg;
 };
 /* ioIntSet::ioIntSet() {}; */
-ostream& operator<<(ostream& os, ioIntSet& dt) { 
+ostream& operator<<(ostream& os, const ioIntSet& dt) { 
     for (auto& v : dt.list) cout << v << endl;
     return os;
 };
@@ -1590,8 +1590,12 @@ ioIntSet::ioIntSet(const char* file, const char* tag) {
         list.push_back((int)val);
     }
 };
+ioIntSet::ioIntSet(vector<int>in_data) { 
+    list = in_data;
+    sort(list.begin(), list.end());
+};
 bool ioIntSet::operator()(int val) { return std::binary_search(list.begin(), list.end(), val); };
-bool ioIntSet::has(int i) { return binary_search(list.begin(),list.end(),i); };
+bool ioIntSet::has(int i) const { return binary_search(list.begin(),list.end(),i); };
 int ioIntSet::operator[](int val) {
     return (int)(std::lower_bound(list.begin(), list.end(), val) - list.begin());
 };

@@ -95,16 +95,18 @@ struct ioBinVec {
     void set_val(int i, double val);
 
     /* int nbins(); // return size_ptr-1 */
-    operator int ();
-    operator double* ();
+    /* operator int (); */
+    operator int () const;
+    operator double* () const;
+    /* operator const double* (); */
     operator vector<double> ();
     double operator[](int); 
     double bin_underflow(); 
     double bin_overflow();
     friend ostream& operator<<(ostream& os, ioBinVec& val);
 
-    vector<double>::iterator begin();
-    vector<double>::iterator end();
+    vector<double>::const_iterator begin() const;
+    vector<double>::const_iterator end() const;
 };
 // small class used to see if things are in bounds
 struct ioInBounds {
@@ -250,7 +252,8 @@ struct ioIntSet {
     vector<int> list {};
     bool operator()(int); // check if argument is in the list
     /* bool add_data(const ioIntSet&); // union with a second set */
-    bool has(int);
+    bool has(int) const;
+    ioIntSet(vector<int> list); // added for the sake of consts
     ioIntSet(const char* in_file, const char* tag);
     ioIntSet(const char* in_file="", int col=0, bool print=true, bool strip_commas=true);
     ioIntSet(const char* in_file, std::ofstream& log, int col=0, bool print=true, bool strip_commas=true);
@@ -260,7 +263,7 @@ struct ioIntSet {
     ioIntSet& operator+=(const ioIntSet& rhs);
     ioIntSet& operator-=(const ioIntSet& rhs); // remove union
     ioIntSet& operator*=(const ioIntSet& rhs); // get the union
-    friend ostream& operator<<(ostream& os, ioIntSet& dt);
+    friend ostream& operator<<(ostream& os, const ioIntSet& dt);
     int size();
     void clear();
     void write_to_file(const char* file_name, vector<string> comments={});
@@ -306,10 +309,10 @@ struct ioIntMap {
     );
     public:
     map<int,int> data_map; // runid -> duration
-    bool         has(int);
-    vector<int>  keys(); // returns a sorted vector of the keys present
+    bool         has(int) const;
+    vector<int>  keys() const; // returns a sorted vector of the keys present
     int&         operator[](int key); // get data_map[key]; if false, returns 0. as default
-    int          size();   // size of map
+    int          size() const;   // size of map
 };
 
 

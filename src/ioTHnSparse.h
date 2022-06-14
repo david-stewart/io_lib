@@ -7,6 +7,65 @@
 
 using fastjet::PseudoJet;
 
+class ioTrackSparse {
+    // axes:
+    // EVENT:
+    // 0 : bbc     - 3 bins
+    // 1 : TrigEt  - 3 bins
+    // 2 : TrigEta - 3 bins
+    // 3 : ZDCx    - 3 bins -- 4-10, 10-16, 16-22 kHz
+    // 4 : Vz      - 10 bins (because, why not?)
+    // TRACK:
+    // 5 : pt 
+    // 6 : abs_dphi - 3 bins -- 0 - trans, 1, same-size, 2, recoil 
+    // 7 : eta      - 3 bins -- east, mid, west
+    private:
+    int nbins[8];
+    double n_triggers{-1};
+    bool scaleByBinWidth=true;
+
+    public:
+    double weight{1.};
+    double hopper[8];
+    ioBinVec* bins {nullptr};
+    ioTrackSparse(const char* tag="", bool debug_print=false);
+    ioTrackSparse(THnSparseD* _data_jet, THnSparseD* data_trig, THnSparseD* data_PU, bool debug_print=false);
+    void write();
+
+    THnSparseD* data_trig;
+    THnSparseD* data_PU;
+    THnSparseD* data_track;
+
+    bool debug_print {false};
+    
+    void fill_trig(double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double rhoPU, 
+            double rhoPU_east=0., double rhoPU_mid=0., double rhoPU_west=0.);
+    void fill_pt_eta_dphi(double pt, double eta, double dphi=0.); 
+    // note: will fill with last values in hopper from fill_trig;
+
+    void range_axes     (int i_axis, int i0, int i1);
+    void range_bbc      (int i0, int i1) { range_axes(0,i0,i1); };
+    void range_TrigEt   (int i0, int i1) { range_axes(1,i0,i1); };
+    void range_TrigEta  (int i0, int i1) { range_axes(2,i0,i1); };
+    void range_ZDCx     (int i0, int i1) { range_axes(3,i0,i1); };
+    void range_vz       (int i0, int i1) { range_axes(4,i0,i1); };
+    void range_pt       (int i0, int i1) { range_axes(5,i0,i1); };
+    void range_abs_dphi (int i0, int i1) { range_axes(6,i0,i1); };
+    void range_eta      (int i0, int i1) { range_axes(7,i0,i1); };
+
+    TH1D* hg_axis  (int i_axis, double norm=0., bool use_jet_data=true);
+    TH1D* hg_bbc      (double norm=0., bool isjets=true) { return hg_axis(0, norm,isjets); }; // if norm = 0, then use triggers
+    TH1D* hg_TrigEt   (double norm=0., bool isjets=true) { return hg_axis(1, norm,isjets); };
+    TH1D* hg_TrigEta  (double norm=0., bool isjets=true) { return hg_axis(2, norm,isjets); };
+    TH1D* hg_ZDCx     (double norm=0., bool isjets=true) { return hg_axis(3, norm,isjets); };
+    TH1D* hg_vz       (double norm=0., bool isjets=true) { return hg_axis(4, norm,isjets); };
+    TH1D* hg_pt       (double norm=0.)                   { return hg_axis(5, norm); };
+    TH1D* hg_abs_dphi (double norm=0.)                   { return hg_axis(6, norm); };
+    TH1D* hg_eta      (double norm=0.)                   { return hg_axis(7, norm); };
+    double get_n_triggers();
+};
+
+
 class ioJetSpectraSparse {
     private:
     int nbins[7];
@@ -122,54 +181,6 @@ class ioAjSparse {
     TH1D* hg_leadPt (double norm=0.) { return hg_axis(5, norm); };
     TH1D* hg_matchPt(double norm=0.) { return hg_axis(6, norm); };
     TH1D* hg_AJ     (double norm=0.) { return hg_axis(7, norm); };
-};
-
-class ioTrackSparse {
-    private:
-    int nbins[7];
-    double n_triggers{-1};
-
-    public:
-    bool scaleByBinWidth=true;
-    double weight{1.};
-    double hopper[7];
-    ioBinVec* bins {nullptr};
-    ioTrackSparse(const char* bin_file, const char* tag="");
-    ioTrackSparse(THnSparseD* _data_track, THnSparseD* data_trig);
-    void write();
-
-    THnSparseD* data_trig;
-    THnSparseD* data_track;
-    // axes:
-    // 0 : EAbbc  - 3 bins
-    // 1 : EAtpc  - 3 bins
-    // 2 : TrigEt - 30 bins
-    // 3 : ZDCx   - 3 bins
-    // 4 : Vz     - 3 bins
-    // 5 : trackPt- local bins (1-15 GeV) // for data_track only -- triggers have one less axis
-    // 6 : track - 64 bins
-    
-    void fill_trig(double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz);
-    void fill_trackpt_absDphi(double pt, double absdeltaphi); // note: will fill with last values in hopper from fill_trig;
-
-    void range_axes    (int i_axis, int i0, int i1);
-    void range_EAbbc   (int i0, int i1) { range_axes(0,i0,i1); };
-    void range_EAtpc   (int i0, int i1) { range_axes(1,i0,i1); };
-    void range_TrigEt  (int i0, int i1) { range_axes(2,i0,i1); };
-    void range_ZDCx    (int i0, int i1) { range_axes(3,i0,i1); };
-    void range_Vz      (int i0, int i1) { range_axes(4,i0,i1); };
-    void range_trackPt (int i0, int i1) { range_axes(5,i0,i1); };
-    void range_absDphi (int i0, int i1) { range_axes(6,i0,i1); };
-
-    TH1D* hg_axis  (int i_axis, double norm=0., bool use_track_data=true);
-    TH1D* hg_EAbbc (double norm=0., bool istracks=true) { return hg_axis(0, norm,istracks); }; // if norm = 0, then use triggers
-    TH1D* hg_EAtpc (double norm=0., bool istracks=true) { return hg_axis(1, norm,istracks); };
-    TH1D* hg_TrigEt(double norm=0., bool istracks=true) { return hg_axis(2, norm,istracks); };
-    TH1D* hg_ZDCx  (double norm=0., bool istracks=true) { return hg_axis(3, norm,istracks); };
-    TH1D* hg_Vz    (double norm=0., bool istracks=true) { return hg_axis(4, norm,istracks); };
-    TH1D* hg_trackPt (double norm=0.) { return hg_axis(5, norm); };
-    TH1D* hg_absDphi (double norm=0.) { return hg_axis(6, norm); };
-    double get_n_triggers();
 };
 
 class ioAjSparse_dPhi {
