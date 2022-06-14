@@ -11,6 +11,8 @@ cout << ".L src/tuClass.cc+" << endl;
 .L src/tuClass.cc+
 cout << ".L src/tuTowerLoc.cc+" << endl;
 .L src/tuTowerLoc.cc+
+cout << ".L src/tuTHnSparse.cc+" << endl;
+.L src/tuTHnSparse.cc+
 cout << ".L src/tuXsec_pAu2015.cc+" << endl;
 .L src/tuXsec_pAu2015.cc+
 EOF
