@@ -38,7 +38,8 @@ class ioTrackSparse {
 
     bool debug_print {false};
     
-    void fill_trig(double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double rhoPU);
+    void fill_trig(double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double rhoPU, 
+            double rhoPU_east=0., double rhoPU_mid=0., double rhoPU_west=0.);
     void fill_pt_eta_dphi(double pt, double eta, double dphi=0.); 
     // note: will fill with last values in hopper from fill_trig;
 
