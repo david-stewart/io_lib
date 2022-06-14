@@ -50,6 +50,14 @@ vector<double> tuBinVec::bin_centers() {
     for (int i{0}; i<(int)vec.size()-1; ++i) V.push_back(0.5*(vec[i]+vec[i+1]));
     return V;
 };
+tuBinVec::tuBinVec(TH1* hg, const char xyz) {
+    TAxis *ax = (xyz == 'x' ? hg->GetXaxis() :
+                 xyz == 'y' ? hg->GetYaxis() :
+                              hg->GetZaxis());
+    vector<double> build_vec;
+    for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
+    init(build_vec);
+};
 tuBinVec::tuBinVec(TAxis* ax) {
     vector<double> build_vec;
     for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
@@ -71,6 +79,14 @@ tuBinVec::tuBinVec(const char* file, tuOptMap options) {
 tuBinVec::tuBinVec(const char* file, const char* tag, tuOptMap options){
     options("tag") = tag;
     init( tuReadValVec(file, options) ) ;
+};
+
+int tuBinVec::bin_from_0(double val) {
+    auto loc = upper_bound(vec.begin(), vec.end(), val);
+    return loc-vec.begin()-1;
+};
+int tuBinVec::bin_from_1(double val) {
+    return bin_from_0(val) + 1;
 };
 // copy constructor
 tuBinVec::tuBinVec(const tuBinVec& cp) { init(cp.vec); };
@@ -1609,20 +1625,35 @@ int tuIntSet::operator[](int val) {
 /*     return false; */
 /* }; */
 
-/* tuCycleTrue::tuCycleTrue(int period_in) : */
-/*     period { period_in }, cnt{0} */
-/* {}; */
-/* bool tuCycleTrue::operator()() { */
-/*     ++ cnt; */
-/*     if (cnt == period) { */
-/*         cnt = 0; */
-/*         return true; */
-/*     } else { */
-/*         return false; */
-/*     } */
-/* }; */
-/* tuCycleTrue::operator bool() { return this->operator()(); }; */
-/* void tuCycleTrue::reset() { cnt = 0; }; */
+tuCycleTrue::tuCycleTrue(int period_in) :
+    period { period_in }, cnt{1}
+{};
+bool tuCycleTrue::operator()() {
+    ++ cnt;
+    if (cnt == period) {
+        cnt = 0;
+        return true;
+    } else {
+        return false;
+    }
+};
+tuCycleTrue::operator bool() { return this->operator()(); };
+void tuCycleTrue::reset() { cnt = 0; };
+
+tuCycleSpacer::tuCycleSpacer(int period, int _n_width, const char* _spacer, const char* _newline_spacer) :
+    cycle{period}, spacer{_spacer}, n_width{_n_width}, newline_spacer{_newline_spacer}
+{
+    cycle.cnt=0;
+};
+
+ostream& operator<<(ostream& os, tuCycleSpacer& cs) {
+    os << cs.spacer;
+    if (cs.cycle) os << endl << cs.newline_spacer;
+    if (cs.n_width) os << setw(cs.n_width);
+    return os;
+};
+
+void tuCycleSpacer::reset() { cycle.cnt=0; };
 
 /* tuXYbounder::tuXYbounder(vector<double> x, vector <double> y, tuOptMap opt) : */
 /*     X{x}, Y{y}, */
@@ -1670,20 +1701,6 @@ int tuIntSet::operator[](int val) {
 /*     else return Y[bin]; */
 /* }; */
 
-/* tuCycleSpacer::tuCycleSpacer(int period, int _n_width, const char* _spacer) : */
-/*     cycle{period}, spacer{_spacer}, n_width{_n_width} */ 
-/* { */
-/*     cycle.cnt=-1; */
-/* }; */
-
-/* ostream& operator<<(ostream& os, tuCycleSpacer& cs) { */
-/*     if (cs.cycle) os << endl; */
-/*     os << cs.spacer; */
-/*     if (cs.n_width) os << setw(cs.n_width); */
-/*     return os; */
-/* }; */
-
-/* void tuCycleSpacer::reset() { cycle.cnt=-1; }; */
 
 
 

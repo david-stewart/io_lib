@@ -1,4 +1,5 @@
 #include "io_fnc.h"
+#include "io_fmt.h"
 #include "ioClass.h"
 /* #include "RooUnfoldBayes.h" */
 /* #include "RooUnfoldResponse.h" */

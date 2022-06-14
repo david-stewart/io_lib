@@ -33,9 +33,17 @@
 
 using std::pair;
 
+int         tuOpenShape  (int i, int cycle=5); //5 is rotate after kOpenStar
+int         tuFullShape  (int i, int cycle=5); //5 is rotate after kFullStar
+
+TH1D*       tuHgBlank     (TH1* hg, tuOptMap opt={}, tuOptMap dict={});
+TH1D*       tuHgBlank     (int nbins, double* edges, tuOptMap opt={}, tuOptMap dict={{"MarkerStyle",kDot,"MarkerColor",kWhite,"MarkerAlpha",0.,"LineAlpha",0.}});
+void        tu_fmt_ax     (TH1* to, TH1* from);
+
 void        tuPause       (int i=0);
 const char* tuUniqueName  (int i=0); // return a unique name to the directory
 vector<int> tuColorVec    (int n_colors=2, int palette=kCMYK, bool print=false);
+array<double,3> tuPercentAround(TH1*, double);
 TH1*        tuDivide      (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={}); // possible numbers: norm, and style-den 
 TH1*        tuMultiply    (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={}); // possible numbers: norm, and style-den 
 void        tuDrawTLatex  (

@@ -1,4 +1,5 @@
 #include "tu_fnc.h"
+#include "tuOptMap.h"
 /* #include "tuClass.h" */
 /* #include "RooUnfoldBayes.h" */
 /* #include "RooUnfoldResponse.h" */
@@ -8,7 +9,41 @@
 #include <fstream>
 #include "tuMiniClass.h"
 
+int tuOpenShape (int i, int cycle) {
+    array<int, 10> shapes { kOpenCircle, kOpenSquare, kOpenTriangleUp, kOpenTriangleDown, kOpenStar, kOpenDiamond, kOpenCross, kOpenDoubleDiamond };
+    return shapes[i%cycle];
+};
+int tuFullShape (int i, int cycle) {
+    array<int, 10> shapes { kFullCircle, kFullSquare, kFullTriangleUp, kFullTriangleDown, kFullStar, kFullDiamond, kFullCross, kFullDoubleDiamond };
+    return shapes[i%cycle];
+};
+
 //*
+TH1D*       tuHgBlank     (TH1* _, tuOptMap opt, tuOptMap dict) {
+    opt("xAxisTitle") = _->GetXaxis()->GetTitle();
+    opt("yAxisTitle") = _->GetYaxis()->GetTitle();
+    opt += dict;
+    TAxis* ax = _->GetXaxis();
+    int nbins = ax->GetNbins();
+    double *edges = new double[nbins+1];
+    for (int i=1;i<=nbins;++i) edges[i-1] = ax->GetBinLowEdge(i);
+    edges[nbins] = ax->GetBinUpEdge(nbins);
+    return tuHgBlank(nbins, edges, opt);
+};
+
+TH1D*       tuHgBlank     (int nbins, double* edges, tuOptMap opt, tuOptMap dict) {
+    TH1D* hg = new TH1D(tuUniqueName(), ";;", nbins, edges);
+    opt += dict;
+    tu_fmt(hg,opt);
+    cout << "dict: " << opt << endl;
+    return hg;
+};
+
+void tu_fmt_ax (TH1* tu, TH1* from) {
+    tu->GetXaxis()->SetTitle(from->GetXaxis()->GetTitle());
+    tu->GetYaxis()->SetTitle(from->GetYaxis()->GetTitle());
+};
+
 void tuPause(int i)  {
     TCanvas* c = new TCanvas( tuUniqueName(i+100), tuUniqueName(i+100), 100,100);
     c->SetFillColor(kCyan);
@@ -45,9 +80,25 @@ vector<int> tuColorVec(int n_colors, int palette, bool print) {
         if (print) cout << " name " << hg[i]->GetName() << "  color " << hg[i]->GetMarkerColor() <<
             " " << hg[i]->GetLineColor() << endl;
     }
-    if (print) for (auto i : colors)  cout << " color: " << i << endl;
+    /* if (print) for (auto i : colors)  cout << " color: " << i << endl; */
+    cout << " // colors generated: " << endl;
+    cout << " vector<int> colors { " << colors[0];
+    for (int i{1}; i<n_colors;++i) cout << ", " << colors[i];
+    cout << " };" << endl;
     delete junk_canvas;
     return colors;
+};
+
+array<double,3> tuPercentAround(TH1* hg, double val) {
+    TAxis* ax = hg->GetXaxis();
+    int i = ax->FindBin(val);
+    double lo = ax->GetBinLowEdge(i);
+    double hi = ax->GetBinUpEdge(i);
+    double total = hg->Integral();
+    array<double,3> r_vals { hg->Integral(1,i-1)/total, hg->GetBinContent(i)/total, hg->Integral(i+1,ax->GetNbins())/total };
+    cout << Form(" val: %f in histogram %s:  in bin (%i); location in bin: (%f:%f:%f), perc: (%f:%f:%f) or w/bin (%f,%f)",
+            val, hg->GetName(), i, lo,val,hi, r_vals[0], r_vals[1], r_vals[2], r_vals[0]+r_vals[1],r_vals[1]+r_vals[2]) << endl;
+    return r_vals;
 };
 //*
 TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
@@ -60,7 +111,7 @@ TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
         norm_num = num->Integral();
         norm_den = den->Integral();
     };
-    cout << " norms: " << norm_num << " and " << norm_den << endl;
+    if (dict["print"]) cout << " norms: " << norm_num << " and " << norm_den << endl;
 
     TH1D* ret;
     if (dict["style-den"]) {

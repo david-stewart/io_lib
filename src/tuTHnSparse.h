@@ -31,7 +31,7 @@ class tuTrackSparse {
     double hopper[8];
     tuBinVec* bins {nullptr};
     tuTrackSparse(const char* tag="", bool debug_print=false);
-    tuTrackSparse(THnSparseD* _data_jet, THnSparseD* data_trig, THnSparseD* data_PU, bool debug_print=false);
+    tuTrackSparse(THnSparseD* _data_track, THnSparseD* _data_trig, THnSparseD* _data_PU, bool debug_print=false);
     void write();
 
     THnSparseD* data_trig;
@@ -54,7 +54,7 @@ class tuTrackSparse {
     void range_abs_dphi (int i0, int i1) { range_axes(6,i0,i1); };
     void range_eta      (int i0, int i1) { range_axes(7,i0,i1); };
 
-    TH1D* hg_axis     (int i_axis, double norm=0., bool use_jet_data=true);
+    TH1D* hg_axis     (int i_axis, double norm=0., bool use_data_track=true);
     TH1D* hg_bbc      (double norm=0., bool isjets=true) { return hg_axis(0, norm,isjets); }; // if norm = 0, then use triggers
     TH1D* hg_TrigEt   (double norm=0., bool isjets=true) { return hg_axis(1, norm,isjets); };
     TH1D* hg_TrigEta  (double norm=0., bool isjets=true) { return hg_axis(2, norm,isjets); };

@@ -40,7 +40,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     // track
     nbins[5] = bin_trpt;
     nbins[6] = bin_abs_dphi;
-    nbins[7] = bin_eta_2;
+    nbins[7] = bin_eta;
 
     if (debug_print) {
         cout << " debug_print, nbins: " << endl;
@@ -89,7 +89,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     data_track->SetBinEdges(4,bin_vz);
     data_track->SetBinEdges(5,bin_trpt);
     data_track->SetBinEdges(6,bin_abs_dphi);
-    data_track->SetBinEdges(7,bin_eta_2);
+    data_track->SetBinEdges(7,bin_eta);
     data_track->Sumw2();
 };
 void tuTrackSparse::write() { 
