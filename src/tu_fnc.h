@@ -10,7 +10,7 @@
 #include "TPaveText.h"
 #include "TH2D.h"
 #include "TPRegexp.h"
-#include "TF1.h"
+/* #include "TF1.h" */
 #include "TProfile2D.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
@@ -76,11 +76,6 @@ TLegend*    tuNewTLegend();
 int         tu_geant05               (int geantid);
 const char* tu_geant05_ascii         (int geantid);
 const char* tu_geant05_greek         (int geantid);
-TF1*        tu_TsallisFit            (double m0, double A, double T, double n,  double x_min=0.1, double x_max=10.);
-TF1*        tu_dAu_200GeV_TsallisFit (const char* name, double x_min=0.1, double x_max=10.);
-TF1*        tu_pp_200GeV_TsallisFit  (const char* name, double x_min=0.1, double x_max=10.);
-void        tu_apply_prior           (TF1*, TH1D*); // weight TH1D* by intergral of TF1*
-void        tu_apply_prior           (TF1*, TH2D*, TH1D*, bool weight_both=false); 
 /* TH1D*       tu_BayesUnfold           (TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr); */
 TH1D*       tuNorm                   (TH1D*, const char which='o'); // 0 for no, 1 for yes, 2 for variable bin-width
 // xTH2*  tuDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols=true); //
@@ -242,9 +237,6 @@ void tu_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
 
 vector<double> tu_print_first_blank(TH2D*);
 
-pair<TF1*, tuOptMap> tuFitJESJER(TH1D* hg, double pt_jet, 
-        double quant_lo=0.3, double quant_hi=0.99, 
-        const char* tag="");
 
 const char* tu_cutdiff(int a, int b, const char* fmt = "%6i(%6i,%5.2f)");
 // return the fit, along with a dictionary of:
