@@ -231,6 +231,7 @@ struct tuPads {
         "y-loc", .05}} );
     // save the output; check for *cc or *C ending and save as .pdf if required
     void save(const char* outname, const char* tag=""); // 
+    void print(string);
 
     // To do here:
 

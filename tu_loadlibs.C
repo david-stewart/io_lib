@@ -1,6 +1,7 @@
 #include "TSystem.h"
 extern TSystem* gSystem;
 void tu_loadlibs() {
+    gSystem->Load("$ROOUNFOLD/libRooUnfold.so");
     string line;
     ifstream f_in;
     f_in.open(Form("%s/tu_lib_list",gSystem->Getenv("IO_LIB")));

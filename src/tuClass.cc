@@ -474,6 +474,29 @@ void tuPads::save(const char* name, const char* tag) {
     else if (check.EndsWith(".C" )) check.ReplaceAll(".C", Form("%s.pdf",tag));
     canvas->Print(check.Data());
 };
+void tuPads::print(string name) {
+    // concatenate each word, and strip any non-leading '.' from them
+    string out="";
+    unsigned long i0 = 0;
+    int i = 0;
+    while (true) {
+        bool last_word = false;
+        unsigned long i1 = name.find(" ",i0);
+        string word;
+        if (i1 == string::npos) {
+            word = name.substr(i0,name.length());
+            last_word = true;
+        } else {
+            word = name.substr(i0,i1-i0);
+            i0 = i1+1;
+        }
+        if (word.find(".",1) != string::npos) word = word.substr(0,word.find(".",1));
+        out += word;
+        if (last_word) break;
+        if (i++ > 100) break; // in case of unforseen bug
+    }
+    canvas->Print(out.c_str());
+};
 
 /* tuIntList::tuIntList(const char* in_file, ofstream& log, bool print) { */
 /*     log << make(in_file, print); */
