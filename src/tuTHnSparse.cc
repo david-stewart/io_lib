@@ -1,6 +1,6 @@
 #include "tuTHnSparse.h"
-#include "tu_fnc.h"
 #include "tuClass.h"
+#include "tu_fnc.h"
 // BEAR0
 tuTrackSparse::tuTrackSparse(
         THnSparseD* _data_track, THnSparseD* _data_trig, THnSparseD* _data_rhoPU, bool _dbprint
@@ -16,7 +16,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     tuBinVec bin_vz       {{ -10., -10., 20, 10. }};
     tuBinVec bin_abs_dphi {{ 0., M_PI/3., 2*M_PI/3., M_PI+0.00001 }};
     tuBinVec bin_eta      {{ -1.0, -0.3, 0.3, 1. }};
-    tuBinVec bin_eta_2    {{ -1.0, -0.3, 0.3, 1. }};
+    tuBinVec bin_eta_PU    {{ -1.0, -0.3, 0.3, 1., 2.}};
 
     const tuBinVec bin_trpt {{ // track pT bins
      0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
@@ -40,7 +40,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     // track
     nbins[5] = bin_trpt;
     nbins[6] = bin_abs_dphi;
-    nbins[7] = bin_eta_2;
+    nbins[7] = bin_eta;
 
     if (debug_print) {
         cout << " debug_print, nbins: " << endl;
@@ -57,14 +57,16 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     data_trig->SetBinEdges(4,bin_vz);
     data_trig->Sumw2();
 
+    nbins[5] = bin_eta_PU;
     data_PU = new THnSparseD(Form("data_PU%s",tag),
-            "triggers;EAbbc;TrigEt;TrigEta;ZDCx;Vz;",
-            5, nbins, NULL, NULL);
+            "triggers;EAbbc;TrigEt;TrigEta;ZDCx;Vz;eta_PU",
+            6, nbins, NULL, NULL);
     data_PU->SetBinEdges(0,bin_EAbbc10);
     data_PU->SetBinEdges(1,bin_TrigEt);
     data_PU->SetBinEdges(2,bin_eta);
     data_PU->SetBinEdges(3,bin_ZDCx);
     data_PU->SetBinEdges(4,bin_vz);
+    data_PU->SetBinEdges(5,bin_eta_PU); // this is the PU eta, and will get filled in each bins once per event
     data_PU->Sumw2();
 
     if (debug_print) {
@@ -79,6 +81,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
         }
     }
 
+    nbins[5] = bin_trpt;
     data_track = new THnSparseD(Form("data_track%s",tag),
             "jets;EAbbc;TrigEt;TrigEta;ZDCx;Vz;track pT;|#Delta#phi|;#eta",
             8, nbins, NULL, NULL);
@@ -89,7 +92,7 @@ tuTrackSparse::tuTrackSparse( const char* tag, bool _dbprint) :
     data_track->SetBinEdges(4,bin_vz);
     data_track->SetBinEdges(5,bin_trpt);
     data_track->SetBinEdges(6,bin_abs_dphi);
-    data_track->SetBinEdges(7,bin_eta_2);
+    data_track->SetBinEdges(7,bin_eta);
     data_track->Sumw2();
 };
 void tuTrackSparse::write() { 
@@ -111,14 +114,29 @@ void tuTrackSparse::write() {
     data_track->Write();
 };
 void tuTrackSparse::fill_trig(
-        double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double PU){
+        double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, 
+        double PU, double east, double mid, double west){
     hopper[0] = EAbbc;
     hopper[1] = TrigEt;
     hopper[2] = TrigEta;
     hopper[3] = ZDCx;
     hopper[4] = Vz;
     data_trig->Fill(hopper,weight);
+
+    hopper[5] = 1.5; // will fill in PU overall bin (bin 3)
     data_PU->Fill(hopper,weight*PU);
+    if (east != 0) {
+        hopper[5] = -0.9;
+        data_PU->Fill(hopper,weight*east);
+    }
+    if (mid != 0) {
+        hopper[5] = 0.;
+        data_PU->Fill(hopper,weight*mid);
+    }
+    if (west != 0) {
+        hopper[5] = 0.9;
+        data_PU->Fill(hopper,weight*west);
+    }
 };
 void tuTrackSparse::fill_pt_eta_dphi(double pt, double eta, double dphi) {
     hopper[5] = pt;
@@ -133,24 +151,18 @@ void tuTrackSparse::range_axes (int i_axis, int i0, int i1) {
     );
 
     n_triggers = -1.;
-    sum_PU = -1.;
-
     data_track ->GetAxis(i_axis)->SetRange(i0, i1);
-    if (i_axis < 5) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
-    if (i_axis < 5) data_PU  ->GetAxis(i_axis)->SetRange(i0, i1);
+    if (i_axis < 5) {
+        data_trig->GetAxis(i_axis)->SetRange(i0, i1);
+        data_PU  ->GetAxis(i_axis)->SetRange(i0, i1);
+    }
 };
 
-TH1D* tuTrackSparse::hg_axis (int i_axis, double norm, bool use_track_data){
-    TH1D* hg;
-    TH1D* _hg = (TH1D*) (use_track_data ? data_track : data_trig)->Projection(i_axis,"E");
-    if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
-        delete _hg;
-        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
-    } else {
-        hg = _hg;
-        hg->SetName(tuUniqueName());
-    }
+TH1D* tuTrackSparse::hg_axis (int i_axis, double norm, bool use_jet_data){
+    TH1D* hg = (TH1D*) (use_jet_data ? data_track : data_trig)->Projection(i_axis,"E");
+    int i = 0;
+    while (gDirectory->FindObjectAny(Form("THnSparse_unique_name__%i",i))!=nullptr) ++i;
+    hg->SetName(Form("THnSparse_unique_name__%i",i));
     if (norm == 0.) {
         hg->Scale(1./get_n_triggers());
     } else {
@@ -165,12 +177,12 @@ double tuTrackSparse::get_n_triggers() {
     delete hg;
     return n_triggers;
 };
-double tuTrackSparse::get_sum_PU() { 
-    if (sum_PU != -1.) return sum_PU;
-    auto hg = (TH1D*) data_PU->Projection(0);
-    sum_PU = hg->Integral();
+double tuTrackSparse::get_sum_PU(int i_bin) { // bins 1 thorugh 4
+    data_PU->GetAxis(5)->SetRange(i_bin,i_bin);
+    auto hg = (TH1D*) data_PU->Projection(5);
+    double val = hg->Integral();
     delete hg;
-    return sum_PU;
+    return val;
 };
 // BEAR1
 
@@ -588,4 +600,29 @@ TH2D* tuAjSparse_dPhi::hg2_axis (int xAxis, int yAxis, double norm){
     return hg;
 };
 
+TH1D* tuTrackSparse_leg::hg_axis (int i_axis, double norm, bool use_track_data){
+    TH1D* hg;
+    TH1D* _hg = (TH1D*) (use_track_data ? data_track : data_trig)->Projection(i_axis,"E");
+    if (bins != nullptr) {
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
+        delete _hg;
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
+    } else {
+        hg = _hg;
+        hg->SetName(tuUniqueName());
+    }
+    if (norm == 0.) {
+        hg->Scale(1./get_n_triggers());
+    } else {
+        hg->Scale(1./norm);
+    }
+    return hg;
+};
+double tuTrackSparse_leg::get_n_triggers() { 
+    if (n_triggers != -1.) return n_triggers;
+    auto hg = (TH1D*) data_trig->Projection(0);
+    n_triggers = hg->Integral();
+    delete hg;
+    return n_triggers;
+};
 

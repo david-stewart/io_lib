@@ -56,6 +56,7 @@ class tuGetter{
      tuBinVec(vector<double>);
      vector<double> bin_centers();
      tuBinVec(TAxis* ax);
+     /* tuBinVec(TH1* ax); */
      tuBinVec(const char* file, tuOptMap options={});
      tuBinVec(const char* file, const char* tag, tuOptMap options={});
      tuBinVec(TH1*, const char axis='x');
@@ -64,6 +65,8 @@ class tuGetter{
      void init(vector<double>);
      void build_ptr();
      ~tuBinVec();
+     int bin_from_0(double); // location of bin <= lower and < upper, indexed from 0
+     int bin_from_1(double); // location of bin <= lower and < upper, indexed from 1 
      double*        ptr;
      int            size;
      vector<double> vec;
@@ -193,6 +196,7 @@ struct tuPads {
     vector<pair<tuPadDim,tuPadDim>> pad_dimensions;
     vector<TPad*> pads; // all the generated smaller pads
     TPad* canvas_pad;   // a single big pad the size of the canvas
+    void pause();
 
     //FIXME
     /* tuPads ( vector<tuPadDim>, int canvas_width, int canv_heigth ); */
@@ -359,22 +363,22 @@ struct tuIntList {
 //     vector<int> bin_indices();
 // };
 // 
-// // tuMsgTree:
-// // Used to write messages to a MsgTree in the local file, and read from it
-// class tuMsgTree {
-//     private:
-//         string b_msg;
-//         TTree tree;
-//     public:
-//         tuMsgTree(bool set_echo=true);
-//         static void read_messages(const char* f_name);
-//         void msg(string msg);                  // write a message
-//         void msg(vector<string> messages);     // *ditto*
-//         void write(); // write to tree
-//         void dash();  // write dashes to tree
-//         bool echo_to_cout {false};
-//         void slurp_file(const char* which_file); // write a given file to input
-// };
+// tuMsgTree:
+// Used to write messages to a MsgTree in the local file, and read from it
+class tuMsgTree {
+    private:
+        string b_msg;
+        TTree tree;
+    public:
+        tuMsgTree(bool set_echo=true);
+        static void read_messages(const char* f_name);
+        void msg(string msg);                  // write a message
+        void msg(vector<string> messages);     // *ditto*
+        void write(); // write to tree
+        void dash();  // write dashes to tree
+        bool echo_to_cout {false};
+        void slurp_file(const char* which_file); // write a given file to input
+};
 // 
 // struct tuIntVec {
 //     // A class that has at it's heart a vector<vector<int>> of data
@@ -499,23 +503,24 @@ struct tuIntList {
 //     bool operator()();
 // };
 // 
-// struct tuCycleTrue {
-//     int period;
-//     int cnt;
-//     tuCycleTrue(int period_in);
-//     bool operator()();
-//     operator bool();
-//     void reset();
-// };
-// 
-// struct tuCycleSpacer {
-//     tuCycleTrue cycle;
-//     string spacer;
-//     int n_width;
-//     void reset();
-//     tuCycleSpacer(int period, int n_width=0, const char* def_spacer=" ");
-//     friend ostream& operator<<(ostream& os, tuCycleSpacer& self);
-// };
+struct tuCycleTrue {
+    int period;
+    int cnt;
+    tuCycleTrue(int period_in);
+    bool operator()();
+    operator bool();
+    void reset();
+};
+
+struct tuCycleSpacer {
+    tuCycleTrue cycle;
+    string spacer;
+    string newline_spacer;
+    int n_width;
+    void reset();
+    tuCycleSpacer(int period, int n_width=0, const char* def_spacer=" ", const char* def_newline_spacer="");
+    friend ostream& operator<<(ostream& os, tuCycleSpacer& self);
+};
 // 
 // struct tuXYbounder {
 //     // put in two vectors: (sorted) X & (not-sorted) Y

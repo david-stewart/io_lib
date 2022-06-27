@@ -16,7 +16,7 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
     ioBinVec bin_vz       {{ -10., -10., 20, 10. }};
     ioBinVec bin_abs_dphi {{ 0., M_PI/3., 2*M_PI/3., M_PI+0.00001 }};
     ioBinVec bin_eta      {{ -1.0, -0.3, 0.3, 1. }};
-    ioBinVec bin_eta_2    {{ -1.0, -0.3, 0.3, 1. }};
+    ioBinVec bin_eta_PU    {{ -1.0, -0.3, 0.3, 1., 2.}};// the eta bin is for overall PU density
 
     const ioBinVec bin_trpt {{ // track pT bins
      0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
@@ -40,7 +40,7 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
     // track
     nbins[5] = bin_trpt;
     nbins[6] = bin_abs_dphi;
-    nbins[7] = bin_eta_2;
+    nbins[7] = bin_eta;
 
     if (debug_print) {
         cout << " debug_print, nbins: " << endl;
@@ -57,18 +57,20 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
     data_trig->SetBinEdges(4,bin_vz);
     data_trig->Sumw2();
 
+    nbins[5] = bin_eta_PU;
     data_PU = new THnSparseD(Form("data_PU%s",tag),
-            "triggers;EAbbc;TrigEt;TrigEta;ZDCx;Vz;",
-            5, nbins, NULL, NULL);
+            "triggers;EAbbc;TrigEt;TrigEta;ZDCx;Vz;#eta(PU)",
+            6, nbins, NULL, NULL);
     data_PU->SetBinEdges(0,bin_EAbbc10);
     data_PU->SetBinEdges(1,bin_TrigEt);
     data_PU->SetBinEdges(2,bin_eta);
     data_PU->SetBinEdges(3,bin_ZDCx);
     data_PU->SetBinEdges(4,bin_vz);
-    data_PU->Sumw2();
+    data_PU->SetBinEdges(5,bin_eta_PU); // this is the PU eta, and will get filled in each bins once per event
+    data_PU->Sumw2(); 
 
     if (debug_print) {
-        for (int k = 0; k<5; ++k) {
+        for (int k = 0; k<6; ++k) {
             TAxis* x = data_PU->GetAxis(k);
             cout << k << " debug print: THnSparse Axis: " << x->GetTitle() 
                  << " axis:  " << x->GetTitle() << " nbins: " << x->GetNbins() << endl;
@@ -79,6 +81,7 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
         }
     }
 
+    nbins[5] = bin_trpt;
     data_track = new THnSparseD(Form("data_track%s",tag),
             "jets;EAbbc;TrigEt;TrigEta;ZDCx;Vz;track pT;|#Delta#phi|;#eta",
             8, nbins, NULL, NULL);
@@ -89,7 +92,7 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
     data_track->SetBinEdges(4,bin_vz);
     data_track->SetBinEdges(5,bin_trpt);
     data_track->SetBinEdges(6,bin_abs_dphi);
-    data_track->SetBinEdges(7,bin_eta_2);
+    data_track->SetBinEdges(7,bin_eta);
     data_track->Sumw2();
 };
 void ioTrackSparse::write() { 
@@ -111,14 +114,29 @@ void ioTrackSparse::write() {
     data_track->Write();
 };
 void ioTrackSparse::fill_trig(
-        double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double PU){
+        double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, 
+        double PU, double east, double mid, double west){
     hopper[0] = EAbbc;
     hopper[1] = TrigEt;
     hopper[2] = TrigEta;
     hopper[3] = ZDCx;
     hopper[4] = Vz;
     data_trig->Fill(hopper,weight);
+
+    hopper[5] = 1.5; // will fill in PU overall bin (bin 3)
     data_PU->Fill(hopper,weight*PU);
+    if (east != 0) {
+        hopper[5] = -0.9;
+        data_PU->Fill(hopper,weight*east);
+    }
+    if (mid != 0) {
+        hopper[5] = 0.;
+        data_PU->Fill(hopper,weight*mid);
+    }
+    if (west != 0) {
+        hopper[5] = 0.9;
+        data_PU->Fill(hopper,weight*west);
+    }
 };
 void ioTrackSparse::fill_pt_eta_dphi(double pt, double eta, double dphi) {
     hopper[5] = pt;

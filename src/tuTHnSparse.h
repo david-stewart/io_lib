@@ -22,7 +22,6 @@ class tuTrackSparse {
     private:
     int nbins[8];
     double n_triggers{-1};
-    double sum_PU    {-1};
 
     public:
     bool scaleByBinWidth=true;
@@ -31,7 +30,7 @@ class tuTrackSparse {
     double hopper[8];
     tuBinVec* bins {nullptr};
     tuTrackSparse(const char* tag="", bool debug_print=false);
-    tuTrackSparse(THnSparseD* _data_jet, THnSparseD* data_trig, THnSparseD* data_PU, bool debug_print=false);
+    tuTrackSparse(THnSparseD* _data_track, THnSparseD* _data_trig, THnSparseD* _data_PU, bool debug_print=false);
     void write();
 
     THnSparseD* data_trig;
@@ -40,7 +39,8 @@ class tuTrackSparse {
 
     bool debug_print {false};
     
-    void fill_trig(double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double rhoPU);
+    void fill_trig(double EAbbc, double TrigEt, double TrigEta, double ZDCx, double Vz, double rhoPU, 
+            double rhoPU_east=0., double rhoPU_mid=0., double rhoPU_west=0.);
     void fill_pt_eta_dphi(double pt, double eta, double dphi=0.); 
     // note: will fill with last values in hopper from fill_trig;
 
@@ -54,17 +54,17 @@ class tuTrackSparse {
     void range_abs_dphi (int i0, int i1) { range_axes(6,i0,i1); };
     void range_eta      (int i0, int i1) { range_axes(7,i0,i1); };
 
-    TH1D* hg_axis     (int i_axis, double norm=0., bool use_jet_data=true);
-    TH1D* hg_bbc      (double norm=0., bool isjets=true) { return hg_axis(0, norm,isjets); }; // if norm = 0, then use triggers
-    TH1D* hg_TrigEt   (double norm=0., bool isjets=true) { return hg_axis(1, norm,isjets); };
-    TH1D* hg_TrigEta  (double norm=0., bool isjets=true) { return hg_axis(2, norm,isjets); };
-    TH1D* hg_ZDCx     (double norm=0., bool isjets=true) { return hg_axis(3, norm,isjets); };
-    TH1D* hg_vz       (double norm=0., bool isjets=true) { return hg_axis(4, norm,isjets); };
-    TH1D* hg_pt       (double norm=0.)                   { return hg_axis(5, norm); };
-    TH1D* hg_abs_dphi (double norm=0.)                   { return hg_axis(6, norm); };
-    TH1D* hg_eta      (double norm=0.)                   { return hg_axis(7, norm); };
+    TH1D* hg_axis     (int i_axis, double norm=1., bool use_data_track=true);
+    TH1D* hg_bbc      (double norm=1., bool isjets=true) { return hg_axis(0, norm,isjets); }; // if norm = 0, then use triggers
+    TH1D* hg_TrigEt   (double norm=1., bool isjets=true) { return hg_axis(1, norm,isjets); };
+    TH1D* hg_TrigEta  (double norm=1., bool isjets=true) { return hg_axis(2, norm,isjets); };
+    TH1D* hg_ZDCx     (double norm=1., bool isjets=true) { return hg_axis(3, norm,isjets); };
+    TH1D* hg_vz       (double norm=1., bool isjets=true) { return hg_axis(4, norm,isjets); };
+    TH1D* hg_pt       (double norm=1.)                   { return hg_axis(5, norm); };
+    TH1D* hg_abs_dphi (double norm=1.)                   { return hg_axis(6, norm); };
+    TH1D* hg_eta      (double norm=1.)                   { return hg_axis(7, norm); };
     double get_n_triggers();
-    double get_sum_PU();
+    double get_sum_PU(int i_bin=4);
 };
 //OTHER
 

@@ -50,6 +50,14 @@ vector<double> tuBinVec::bin_centers() {
     for (int i{0}; i<(int)vec.size()-1; ++i) V.push_back(0.5*(vec[i]+vec[i+1]));
     return V;
 };
+tuBinVec::tuBinVec(TH1* hg, const char xyz) {
+    TAxis *ax = (xyz == 'x' ? hg->GetXaxis() :
+                 xyz == 'y' ? hg->GetYaxis() :
+                              hg->GetZaxis());
+    vector<double> build_vec;
+    for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
+    init(build_vec);
+};
 tuBinVec::tuBinVec(TAxis* ax) {
     vector<double> build_vec;
     for (int i{1}; i<=ax->GetNbins()+1; ++i) build_vec.push_back(ax->GetBinLowEdge(i));
@@ -71,6 +79,14 @@ tuBinVec::tuBinVec(const char* file, tuOptMap options) {
 tuBinVec::tuBinVec(const char* file, const char* tag, tuOptMap options){
     options("tag") = tag;
     init( tuReadValVec(file, options) ) ;
+};
+
+int tuBinVec::bin_from_0(double val) {
+    auto loc = upper_bound(vec.begin(), vec.end(), val);
+    return loc-vec.begin()-1;
+};
+int tuBinVec::bin_from_1(double val) {
+    return bin_from_0(val) + 1;
 };
 // copy constructor
 tuBinVec::tuBinVec(const tuBinVec& cp) { init(cp.vec); };
@@ -258,6 +274,11 @@ vector<tuPadDim> tuPadDimSet::calc_pads() {
     }
     pads[flip_direction ? 0 : npads-1] = make_pad(left, inner_left, pad_width, last_right);
     return pads;
+};
+
+void tuPads::pause() {
+    canvas_pad->cd();
+    canvas_pad->WaitPrimitive();
 };
 
 tuPads::tuPads ( int nYpads, vector<double> dimensions, int nXpads ) {
@@ -908,69 +929,69 @@ void tuPads::print(string name) {
 /*     return *this; */
 /* }; */
 
-/* // ------------------------------------------------------ */
-/* // | Implementation of tuMsgTree                        | */
-/* // ------------------------------------------------------ */
-/* tuMsgTree::tuMsgTree(bool set_echo) : */ 
-/*     b_msg{""}, */ 
-/*     tree{"Messages", "Tree of messages"} */
-/* { */
-/*     tree.Branch("messages", &b_msg); */
-/*     dash(); */
-/*     msg(" Start of msg tree "); */
-/*     dash(); */
-/*     echo_to_cout = set_echo; */
-/* }; */
-/* void tuMsgTree::msg(string msg) { */
-/*     b_msg = msg; */
-/*     if (echo_to_cout) cout << b_msg << endl; */
-/*     tree.Fill(); */
-/* }; */
-/* void tuMsgTree::msg(vector<string> messages) { */
-/*     for (auto& msg : messages) { */
-/*         b_msg = msg; */
-/*         if (echo_to_cout) cout << b_msg << endl; */
-/*         tree.Fill(); */
-/*     } */
-/* }; */
-/* void tuMsgTree::dash() { */
-/*     b_msg = "---------------"; */
-/*     if (echo_to_cout) cout << b_msg << endl; */
-/*     tree.Fill(); */
-/* }; */
-/* void tuMsgTree::write(){ */
-/*     tree.Write(); */
-/* }; */
-/* void tuMsgTree::read_messages(const char* f_name){ */
-/*     cout << " Reading file: " << f_name << endl; */
-/*     /1* TTree *tree; *1/ */
-/*     TFile* fin  = new TFile(f_name, "read"); */
-/*     if (!fin->IsOpen()) { */
-/*         cout << " Input file: " << f_name << " is not open." << endl; */
-/*         delete fin; */
-/*         return; */
-/*     } */
-/*     TTreeReader myReader("Messages",fin); */
-/*     TTreeReaderValue<string> msg(myReader, "messages"); */
-/*     cout << "  Contents of TFile(\""<<f_name<<"\") TTree(\"Messages\"):" << endl; */
-/*     while (myReader.Next()) cout << " " << *msg << endl; */
-/*     fin->Close(); */
-/*     delete fin; */
-/*     /1* } *1/ */
-/*     }; */
-/* void tuMsgTree::slurp_file(const char* which_file) { */
-/*     // try and read all lines of which_file into the tree */
-/*     msg(Form("--Begin contents of file \"%s\"",which_file)); */
-/*     ifstream f_in {which_file}; */
-/*     if (!f_in.is_open()) { */
-/*         msg(Form("  error: couldn't open file \"%s\"",which_file)); */
-/*     } else { */
-/*         string line; */
-/*         while (getline(f_in,line)) msg(line); */
-/*     } */
-/*     msg(Form("--End contents of file \"%s\"",which_file)); */
-/*     return; */
-/* }; */
+// ------------------------------------------------------
+// | Implementation of tuMsgTree                        |
+// ------------------------------------------------------
+tuMsgTree::tuMsgTree(bool set_echo) : 
+    b_msg{""}, 
+    tree{"Messages", "Tree of messages"}
+{
+    tree.Branch("messages", &b_msg);
+    dash();
+    msg(" Start of msg tree ");
+    dash();
+    echo_to_cout = set_echo;
+};
+void tuMsgTree::msg(string msg) {
+    b_msg = msg;
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void tuMsgTree::msg(vector<string> messages) {
+    for (auto& msg : messages) {
+        b_msg = msg;
+        if (echo_to_cout) cout << b_msg << endl;
+        tree.Fill();
+    }
+};
+void tuMsgTree::dash() {
+    b_msg = "---------------";
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void tuMsgTree::write(){
+    tree.Write();
+};
+void tuMsgTree::read_messages(const char* f_name){
+    cout << " Reading file: " << f_name << endl;
+    /* TTree *tree; */
+    TFile* fin  = new TFile(f_name, "read");
+    if (!fin->IsOpen()) {
+        cout << " Input file: " << f_name << " is not open." << endl;
+        delete fin;
+        return;
+    }
+    TTreeReader myReader("Messages",fin);
+    TTreeReaderValue<string> msg(myReader, "messages");
+    cout << "  Contents of TFile(\""<<f_name<<"\") TTree(\"Messages\"):" << endl;
+    while (myReader.Next()) cout << " " << *msg << endl;
+    fin->Close();
+    delete fin;
+    /* } */
+    };
+void tuMsgTree::slurp_file(const char* which_file) {
+    // try and read all lines of which_file into the tree
+    msg(Form("--Begin contents of file \"%s\"",which_file));
+    ifstream f_in {which_file};
+    if (!f_in.is_open()) {
+        msg(Form("  error: couldn't open file \"%s\"",which_file));
+    } else {
+        string line;
+        while (getline(f_in,line)) msg(line);
+    }
+    msg(Form("--End contents of file \"%s\"",which_file));
+    return;
+};
 
 /* vector<int> tuIntVec::vals(string tag) { */
 /*     assert_tag(tag,"vals"); */
@@ -1632,20 +1653,35 @@ int tuIntSet::operator[](int val) {
 /*     return false; */
 /* }; */
 
-/* tuCycleTrue::tuCycleTrue(int period_in) : */
-/*     period { period_in }, cnt{0} */
-/* {}; */
-/* bool tuCycleTrue::operator()() { */
-/*     ++ cnt; */
-/*     if (cnt == period) { */
-/*         cnt = 0; */
-/*         return true; */
-/*     } else { */
-/*         return false; */
-/*     } */
-/* }; */
-/* tuCycleTrue::operator bool() { return this->operator()(); }; */
-/* void tuCycleTrue::reset() { cnt = 0; }; */
+tuCycleTrue::tuCycleTrue(int period_in) :
+    period { period_in }, cnt{1}
+{};
+bool tuCycleTrue::operator()() {
+    ++ cnt;
+    if (cnt == period) {
+        cnt = 0;
+        return true;
+    } else {
+        return false;
+    }
+};
+tuCycleTrue::operator bool() { return this->operator()(); };
+void tuCycleTrue::reset() { cnt = 0; };
+
+tuCycleSpacer::tuCycleSpacer(int period, int _n_width, const char* _spacer, const char* _newline_spacer) :
+    cycle{period}, spacer{_spacer}, n_width{_n_width}, newline_spacer{_newline_spacer}
+{
+    cycle.cnt=0;
+};
+
+ostream& operator<<(ostream& os, tuCycleSpacer& cs) {
+    os << cs.spacer;
+    if (cs.cycle) os << endl << cs.newline_spacer;
+    if (cs.n_width) os << setw(cs.n_width);
+    return os;
+};
+
+void tuCycleSpacer::reset() { cycle.cnt=0; };
 
 /* tuXYbounder::tuXYbounder(vector<double> x, vector <double> y, tuOptMap opt) : */
 /*     X{x}, Y{y}, */
@@ -1693,20 +1729,6 @@ int tuIntSet::operator[](int val) {
 /*     else return Y[bin]; */
 /* }; */
 
-/* tuCycleSpacer::tuCycleSpacer(int period, int _n_width, const char* _spacer) : */
-/*     cycle{period}, spacer{_spacer}, n_width{_n_width} */ 
-/* { */
-/*     cycle.cnt=-1; */
-/* }; */
-
-/* ostream& operator<<(ostream& os, tuCycleSpacer& cs) { */
-/*     if (cs.cycle) os << endl; */
-/*     os << cs.spacer; */
-/*     if (cs.n_width) os << setw(cs.n_width); */
-/*     return os; */
-/* }; */
-
-/* void tuCycleSpacer::reset() { cycle.cnt=-1; }; */
 
 
 
@@ -1963,11 +1985,10 @@ TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2> err,
     if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); };
     auto tgase = pts.tgase;
     tu_fmt(tgase,dict);
-    /* tgase->SetFillColor(kBlue); */
-    if ( dict["FillColor"] ) {
-        tgase->Draw("E2");
-    };
-    if ( dict["LineColor"] ) tuDrawBoxErrors(tgase, dict);
+    /* if ( dict["FillColor"] ) { */
+    /*     tgase->Draw("E2 same"); */
+    /* }; */
+    /* if ( dict["LineColor"] ) tuDrawBoxErrors(tgase, dict); */
     return tgase;
 };
 

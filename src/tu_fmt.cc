@@ -9,6 +9,43 @@ TLine* tu_fmt(TLine* line, tuOptMap options, tuOptMap dict)
     line->SetLineWidth(dict("LineWidth"));
     return line;
 };
+tuOptMap tu_fmt__graph_dict() {
+    return {{
+        "MarkerStyle", kFullCircle,
+        "MarkerColor", kBlack,
+        "MarkerAlpha", 1.,
+        "MarkerSize",  1.,
+
+        "LineWidth",   1 ,
+        "LineStyle",   1 ,
+
+        "xAxisTitleFont",     43,
+        "xAxisTitleSize",     22,
+        "xAxisTitleOffset", 1.6 ,
+
+        "xAxisLabelFont",      43,
+        "xAxisLabelSize",      18,
+        "xAxisLabelOffset",  0.02,
+
+        "yAxisTitleFont",     43,
+        "yAxisTitleSize",     22,
+        "yAxisTitleOffset", 1.85,
+
+        "yAxisLabelFont",     43,
+        "yAxisLabelSize",     18,
+        "yAxisLabelOffset",  0.02,
+
+        "zAxisTitleFont", 43,
+        "zAxisTitleSize", 22,
+        "zAxisTitleOffset", 2.4 ,
+
+        "zAxisLabelFont", 43,
+        "zAxisLabelSize", 18,
+        "zAxisLabelOffset", 0.02 ,
+
+        "SetStats", 0
+    }};
+};
 
 tuOptMap tu_fmt__hg_dict() {
     return {{
@@ -199,6 +236,10 @@ TGraph* tu_fmt (TGraph* hg, tuOptMap _override, tuOptMap dict) {
     dict += _override;
 
     if (dict["Title"])      hg->SetTitle(dict("Title"));
+
+    /* cout << " Fill style: " << dict("FillStyle",1001.) << endl; */
+    hg->SetFillStyle(dict("FillStyle",1001.));
+    hg->SetFillColorAlpha(dict("FillColor",kBlue),dict("FillAlpha",0.5));
 
     if (dict["MarkerStyle"])
         hg->SetMarkerStyle(dict("MarkerStyle"));
