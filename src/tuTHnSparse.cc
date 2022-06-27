@@ -1,5 +1,6 @@
 #include "tuTHnSparse.h"
 #include "tuClass.h"
+#include "tu_fnc.h"
 // BEAR0
 tuTrackSparse::tuTrackSparse(
         THnSparseD* _data_track, THnSparseD* _data_trig, THnSparseD* _data_rhoPU, bool _dbprint
@@ -183,3 +184,113 @@ double tuTrackSparse::get_sum_PU(int i_bin) { // bins 1 thorugh 4
     delete hg;
     return val;
 };
+
+// 
+tuTrackSparse_leg::tuTrackSparse_leg(THnSparseD* _data_track, THnSparseD* _data_trig) :
+    data_trig { _data_trig }, data_track { _data_track } {};
+tuTrackSparse_leg::tuTrackSparse_leg(const char* bin_file, const char* tag) {
+    TString s_tag = tag;
+    /* int i_bins = (s_tag.Contains("_10")) ? 10 : 3; */
+    tuBinVec bin_EAbbc { bin_file, "EAbbc_10bin" };
+    tuBinVec bin_EAtpc { bin_file, "EAtpc_10bin" }; //"EAtpc_3bin" };
+    tuBinVec bin_TrigEt    {{ 0.,0.,30,30.}};
+
+    tuBinVec info_ZDCx { bin_file, "zdcX_mu_sigma_206" };
+    tuBinVec bin_ZDCx  {{ info_ZDCx[6], info_ZDCx[2], info_ZDCx[3], info_ZDCx[7] }};
+
+    tuBinVec info_vz   { bin_file, "vz_mu_sigma_206" };
+    tuBinVec bin_vz    {{ info_vz  [6], info_vz  [2], info_vz  [3], info_vz  [7] }};
+
+    tuBinVec bin_trackPt { bin_file, "trackpt_resolution" };
+    tuBinVec bin_absDphi {{ 0., 0., 64., M_PI }};
+
+    // get the ZDCx bins:
+
+    nbins[0] = bin_EAbbc;
+    nbins[1] = bin_EAtpc;
+    nbins[2] = bin_TrigEt;
+    nbins[3] = bin_ZDCx;
+    nbins[4] = bin_vz;
+    nbins[5] = bin_trackPt;
+    nbins[6] = bin_absDphi;
+
+    data_trig = new THnSparseD(Form("data_trig%s",tag),
+            "triggers;EAbbc;EAtpc;TrigEt;ZDCx;Vz;",
+            5, nbins, NULL, NULL);
+    data_trig->SetBinEdges(0,bin_EAbbc);
+    data_trig->SetBinEdges(1,bin_EAtpc);
+    data_trig->SetBinEdges(2,bin_TrigEt);
+    data_trig->SetBinEdges(3,bin_ZDCx);
+    data_trig->SetBinEdges(4,bin_vz);
+
+    data_track = new THnSparseD(Form("data_track%s",tag),
+            "tracks;EAbbc;EAtpc;TrigEt;ZDCx;Vz;track #it{p}_{T};"
+            "|#phi_{track}-#phi{trigger}|;",
+            7, nbins, NULL, NULL);
+    data_track->SetBinEdges(0,bin_EAbbc);
+    data_track->SetBinEdges(1,bin_EAtpc);
+    data_track->SetBinEdges(2,bin_TrigEt);
+    data_track->SetBinEdges(3,bin_ZDCx);
+    data_track->SetBinEdges(4,bin_vz);
+    data_track->SetBinEdges(5,bin_trackPt);
+    data_track->SetBinEdges(6,bin_absDphi);
+
+    data_track->Sumw2();
+};
+void tuTrackSparse_leg::tuTrackSparse_leg::write() { 
+    cout << " entries for " << data_trig->GetName() << " trig-entries: " <<
+        data_trig->GetEntries() << " track-entries: " << data_track->GetEntries() << endl;
+    data_trig->Write();
+    data_track->Write();
+};
+void tuTrackSparse_leg::fill_trig(
+        double EAbbc, double EAtpc, double TrigEt, double ZDCx, double Vz){
+    hopper[0] = EAbbc;
+    hopper[1] = EAtpc;
+    hopper[2] = TrigEt;
+    hopper[3] = ZDCx;
+    hopper[4] = Vz;
+    data_trig->Fill(hopper,weight);
+};
+void tuTrackSparse_leg::fill_trackpt_absDphi(double trackpt, double absDphi) {
+    hopper[5] = trackpt;
+    hopper[6] = absDphi;
+    data_track->Fill(hopper,weight);
+};
+void tuTrackSparse_leg::range_axes (int i_axis, int i0, int i1) {
+    if (i_axis > 6) throw std::runtime_error(
+        Form("fatal: error in tuTrackSparse_leg, axis(%i) not valid, but by <7",
+        i_axis)
+    );
+
+    n_triggers = -1.;
+    data_track ->GetAxis(i_axis)->SetRange(i0, i1);
+    if (i_axis < 5) data_trig->GetAxis(i_axis)->SetRange(i0, i1);
+};
+
+TH1D* tuTrackSparse_leg::hg_axis (int i_axis, double norm, bool use_track_data){
+    TH1D* hg;
+    TH1D* _hg = (TH1D*) (use_track_data ? data_track : data_trig)->Projection(i_axis,"E");
+    if (bins != nullptr) {
+        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
+        delete _hg;
+        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
+    } else {
+        hg = _hg;
+        hg->SetName(tuUniqueName());
+    }
+    if (norm == 0.) {
+        hg->Scale(1./get_n_triggers());
+    } else {
+        hg->Scale(1./norm);
+    }
+    return hg;
+};
+double tuTrackSparse_leg::get_n_triggers() { 
+    if (n_triggers != -1.) return n_triggers;
+    auto hg = (TH1D*) data_trig->Projection(0);
+    n_triggers = hg->Integral();
+    delete hg;
+    return n_triggers;
+};
+

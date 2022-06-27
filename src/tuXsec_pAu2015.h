@@ -1,9 +1,9 @@
-#ifndef ioXsec_pAu2015__h
-#define ioXsec_pAu2015__h
+#ifndef tuXsec_pAu2015__h
+#define tuXsec_pAu2015__h
 
 #include "TH1D.h"
 
-struct ioXsec_pAu2015 {
+struct tuXsec_pAu2015 {
     // There are 9 pthat bins:
     // 0: 5-7
     // 1: 7-9
@@ -35,7 +35,7 @@ struct ioXsec_pAu2015 {
     long int n_collected_total;
     TH1D* hg_collected;
 
-    ioXsec_pAu2015();
+    tuXsec_pAu2015();
 };
 
 

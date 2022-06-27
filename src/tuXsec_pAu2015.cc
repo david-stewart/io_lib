@@ -1,4 +1,4 @@
-#include "ioXsec_pAu2015.h"
+#include "tuXsec_pAu2015.h"
 #include "TH1D.h"
 #include <iostream>
 
@@ -6,12 +6,12 @@ using std::cout;
 using std::endl;
 
 
-ioXsec_pAu2015::ioXsec_pAu2015() : 
+tuXsec_pAu2015::tuXsec_pAu2015() : 
     n_collected{0,0,0,0,0,0,0,0,0},
     n_collected_total {0} 
 {};
 
-unsigned int ioXsec_pAu2015::pthatbin(int pthat_min, int pthat_max){
+unsigned int tuXsec_pAu2015::pthatbin(int pthat_min, int pthat_max){
 	int pt_bin { pthat_min * 1000 + pthat_max };
 	switch ( pthat_min * 1000 + pthat_max ) {
 		case 5007: return 0;
@@ -34,18 +34,18 @@ unsigned int ioXsec_pAu2015::pthatbin(int pthat_min, int pthat_max){
 //   If number_of_events == 0:
 //      if collected events, use collected events
 //      else use default numbers (from my local trees)
-/* double ioXsec_pAu2015::XsecPyth8(int pthat_min, int pthat_max, int number_of_events=0){ */
+/* double tuXsec_pAu2015::XsecPyth8(int pthat_min, int pthat_max, int number_of_events=0){ */
 /*     return XsecPyth8(pthatbin(pthat_min, pthat_max), number_of_events); */
 /* }; */
 
-double ioXsec_pAu2015::XsecPyth6(pair<int,int> ptrange, int number_of_events){
+double tuXsec_pAu2015::XsecPyth6(pair<int,int> ptrange, int number_of_events){
     return XsecPyth6(pthatbin(ptrange.first, ptrange.second), number_of_events);
 };
-double ioXsec_pAu2015::XsecPyth8(pair<int,int> ptrange, int number_of_events){
+double tuXsec_pAu2015::XsecPyth8(pair<int,int> ptrange, int number_of_events){
     return XsecPyth8(pthatbin(ptrange.first, ptrange.second), number_of_events);
 };
 
-double ioXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
+double tuXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
 	const static double Xsec[9] {
 		0.1604997783173907, 0.0279900193730690,     0.006924398431,
 	    0.0028726057079642, 0.0005197051748372, 0.0000140447879818,
@@ -69,7 +69,7 @@ double ioXsec_pAu2015::XsecPyth8(int pthat_bin, int number_of_events){
     }
 };
 
-double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
+double tuXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
 	const static double Xsec[9] {
         // these versions were pulled from the actual embedding files
         0.107509,   0.0190967,  0.00475202,
@@ -98,10 +98,10 @@ double ioXsec_pAu2015::XsecPyth6(int pthat_bin, int number_of_events){
     }
 };
 
-void   ioXsec_pAu2015::collect(int pthat_min, int pthat_max){
+void   tuXsec_pAu2015::collect(int pthat_min, int pthat_max){
     collect(pthatbin(pthat_min, pthat_max));
 };
-void   ioXsec_pAu2015::collect(int pthat_bin){
+void   tuXsec_pAu2015::collect(int pthat_bin){
     ++n_collected[pthat_bin];
     ++n_collected_total;
     if (!hg_collected){

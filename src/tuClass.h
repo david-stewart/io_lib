@@ -196,6 +196,7 @@ struct tuPads {
     vector<pair<tuPadDim,tuPadDim>> pad_dimensions;
     vector<TPad*> pads; // all the generated smaller pads
     TPad* canvas_pad;   // a single big pad the size of the canvas
+    void pause();
 
     //FIXME
     /* tuPads ( vector<tuPadDim>, int canvas_width, int canv_heigth ); */
@@ -361,22 +362,22 @@ struct tuIntList {
 //     vector<int> bin_indices();
 // };
 // 
-// // tuMsgTree:
-// // Used to write messages to a MsgTree in the local file, and read from it
-// class tuMsgTree {
-//     private:
-//         string b_msg;
-//         TTree tree;
-//     public:
-//         tuMsgTree(bool set_echo=true);
-//         static void read_messages(const char* f_name);
-//         void msg(string msg);                  // write a message
-//         void msg(vector<string> messages);     // *ditto*
-//         void write(); // write to tree
-//         void dash();  // write dashes to tree
-//         bool echo_to_cout {false};
-//         void slurp_file(const char* which_file); // write a given file to input
-// };
+// tuMsgTree:
+// Used to write messages to a MsgTree in the local file, and read from it
+class tuMsgTree {
+    private:
+        string b_msg;
+        TTree tree;
+    public:
+        tuMsgTree(bool set_echo=true);
+        static void read_messages(const char* f_name);
+        void msg(string msg);                  // write a message
+        void msg(vector<string> messages);     // *ditto*
+        void write(); // write to tree
+        void dash();  // write dashes to tree
+        bool echo_to_cout {false};
+        void slurp_file(const char* which_file); // write a given file to input
+};
 // 
 // struct tuIntVec {
 //     // A class that has at it's heart a vector<vector<int>> of data

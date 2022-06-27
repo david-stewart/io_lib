@@ -276,6 +276,11 @@ vector<tuPadDim> tuPadDimSet::calc_pads() {
     return pads;
 };
 
+void tuPads::pause() {
+    canvas_pad->cd();
+    canvas_pad->WaitPrimitive();
+};
+
 tuPads::tuPads ( int nYpads, vector<double> dimensions, int nXpads ) {
     // build the tuPadDimSet out of dimensions
     tuPadDimSet xPads{ {0.2, 0.0001, 0.01}, {0.0001,0.0,0.01 }};
@@ -901,69 +906,69 @@ void tuPads::save(const char* name, const char* tag) {
 /*     return *this; */
 /* }; */
 
-/* // ------------------------------------------------------ */
-/* // | Implementation of tuMsgTree                        | */
-/* // ------------------------------------------------------ */
-/* tuMsgTree::tuMsgTree(bool set_echo) : */ 
-/*     b_msg{""}, */ 
-/*     tree{"Messages", "Tree of messages"} */
-/* { */
-/*     tree.Branch("messages", &b_msg); */
-/*     dash(); */
-/*     msg(" Start of msg tree "); */
-/*     dash(); */
-/*     echo_to_cout = set_echo; */
-/* }; */
-/* void tuMsgTree::msg(string msg) { */
-/*     b_msg = msg; */
-/*     if (echo_to_cout) cout << b_msg << endl; */
-/*     tree.Fill(); */
-/* }; */
-/* void tuMsgTree::msg(vector<string> messages) { */
-/*     for (auto& msg : messages) { */
-/*         b_msg = msg; */
-/*         if (echo_to_cout) cout << b_msg << endl; */
-/*         tree.Fill(); */
-/*     } */
-/* }; */
-/* void tuMsgTree::dash() { */
-/*     b_msg = "---------------"; */
-/*     if (echo_to_cout) cout << b_msg << endl; */
-/*     tree.Fill(); */
-/* }; */
-/* void tuMsgTree::write(){ */
-/*     tree.Write(); */
-/* }; */
-/* void tuMsgTree::read_messages(const char* f_name){ */
-/*     cout << " Reading file: " << f_name << endl; */
-/*     /1* TTree *tree; *1/ */
-/*     TFile* fin  = new TFile(f_name, "read"); */
-/*     if (!fin->IsOpen()) { */
-/*         cout << " Input file: " << f_name << " is not open." << endl; */
-/*         delete fin; */
-/*         return; */
-/*     } */
-/*     TTreeReader myReader("Messages",fin); */
-/*     TTreeReaderValue<string> msg(myReader, "messages"); */
-/*     cout << "  Contents of TFile(\""<<f_name<<"\") TTree(\"Messages\"):" << endl; */
-/*     while (myReader.Next()) cout << " " << *msg << endl; */
-/*     fin->Close(); */
-/*     delete fin; */
-/*     /1* } *1/ */
-/*     }; */
-/* void tuMsgTree::slurp_file(const char* which_file) { */
-/*     // try and read all lines of which_file into the tree */
-/*     msg(Form("--Begin contents of file \"%s\"",which_file)); */
-/*     ifstream f_in {which_file}; */
-/*     if (!f_in.is_open()) { */
-/*         msg(Form("  error: couldn't open file \"%s\"",which_file)); */
-/*     } else { */
-/*         string line; */
-/*         while (getline(f_in,line)) msg(line); */
-/*     } */
-/*     msg(Form("--End contents of file \"%s\"",which_file)); */
-/*     return; */
-/* }; */
+// ------------------------------------------------------
+// | Implementation of tuMsgTree                        |
+// ------------------------------------------------------
+tuMsgTree::tuMsgTree(bool set_echo) : 
+    b_msg{""}, 
+    tree{"Messages", "Tree of messages"}
+{
+    tree.Branch("messages", &b_msg);
+    dash();
+    msg(" Start of msg tree ");
+    dash();
+    echo_to_cout = set_echo;
+};
+void tuMsgTree::msg(string msg) {
+    b_msg = msg;
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void tuMsgTree::msg(vector<string> messages) {
+    for (auto& msg : messages) {
+        b_msg = msg;
+        if (echo_to_cout) cout << b_msg << endl;
+        tree.Fill();
+    }
+};
+void tuMsgTree::dash() {
+    b_msg = "---------------";
+    if (echo_to_cout) cout << b_msg << endl;
+    tree.Fill();
+};
+void tuMsgTree::write(){
+    tree.Write();
+};
+void tuMsgTree::read_messages(const char* f_name){
+    cout << " Reading file: " << f_name << endl;
+    /* TTree *tree; */
+    TFile* fin  = new TFile(f_name, "read");
+    if (!fin->IsOpen()) {
+        cout << " Input file: " << f_name << " is not open." << endl;
+        delete fin;
+        return;
+    }
+    TTreeReader myReader("Messages",fin);
+    TTreeReaderValue<string> msg(myReader, "messages");
+    cout << "  Contents of TFile(\""<<f_name<<"\") TTree(\"Messages\"):" << endl;
+    while (myReader.Next()) cout << " " << *msg << endl;
+    fin->Close();
+    delete fin;
+    /* } */
+    };
+void tuMsgTree::slurp_file(const char* which_file) {
+    // try and read all lines of which_file into the tree
+    msg(Form("--Begin contents of file \"%s\"",which_file));
+    ifstream f_in {which_file};
+    if (!f_in.is_open()) {
+        msg(Form("  error: couldn't open file \"%s\"",which_file));
+    } else {
+        string line;
+        while (getline(f_in,line)) msg(line);
+    }
+    msg(Form("--End contents of file \"%s\"",which_file));
+    return;
+};
 
 /* vector<int> tuIntVec::vals(string tag) { */
 /*     assert_tag(tag,"vals"); */
@@ -1957,11 +1962,10 @@ TGraphAsymmErrors* tu_draw_error_boxes(TH1D* mean, array<tuPtrDbl,2> err,
     if (range_lo!=0. || range_hi!=0) { pts.set_x_range(range_lo,range_hi); };
     auto tgase = pts.tgase;
     tu_fmt(tgase,dict);
-    /* tgase->SetFillColor(kBlue); */
-    if ( dict["FillColor"] ) {
-        tgase->Draw("E2");
-    };
-    if ( dict["LineColor"] ) tuDrawBoxErrors(tgase, dict);
+    /* if ( dict["FillColor"] ) { */
+    /*     tgase->Draw("E2 same"); */
+    /* }; */
+    /* if ( dict["LineColor"] ) tuDrawBoxErrors(tgase, dict); */
     return tgase;
 };
 

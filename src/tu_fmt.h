@@ -18,6 +18,7 @@
 
 // a few default dictionaries
 tuOptMap tu_fmt__hg_dict();
+tuOptMap tu_fmt__graph_dict();
 tuOptMap tu_fmt__leg_dict();
 
 // default dictionary options for formating TH1D
@@ -40,7 +41,7 @@ TLegend*  tu_fmt (TLegend* leg,  tuOptMap _override={}, tuOptMap dict=tu_fmt__le
 /* TH1D* tu_fmt (TH1D* hg, TPad* pad, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */
 /* THStack* tu_fmt (THStack* hg,   tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */
 //repeat of the above, but for TGraph
-TGraph*            tu_fmt (TGraph* hg,            tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
+TGraph*            tu_fmt (TGraph* hg,            tuOptMap _override={}, tuOptMap dict=tu_fmt__graph_dict());
 /* TGraphErrors*      tu_fmt (TGraphErrors* hg,      tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */
 /* TGraphAsymmErrors* tu_fmt (TGraphAsymmErrors* hg, tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict()); */
 TMultiGraph*       tu_fmt (TMultiGraph* hg,       tuOptMap _override={}, tuOptMap dict=tu_fmt__hg_dict());
