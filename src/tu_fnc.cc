@@ -1500,8 +1500,10 @@ double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1) {
     if (y0 < 1) y0 = 1;
     if (y1 > hg->GetYaxis()->GetNbins()) y1 = hg->GetYaxis()->GetNbins();
     if ( (x1<x0) || (y1<y0) ) return 0.;
-    double start = hg->Integral(x0,x1,y0,y1);
-    if (start ==0) return 0.;
+
+    double scrubbed = hg->Integral(x0,x1,y0,y1);
+    /* cout << " start("<<x0<<","<<x1<<":"<<y0<<","<<y1<<") " << start << endl; */
+    if (scrubbed==0) return 0.;
     for (int x=x0;x<=x1;++x) {
         for (int y=y0;y<=y1;++y) {
             if (hg->GetBinContent(x,y) != 0) {
@@ -1510,7 +1512,8 @@ double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1) {
             }
         }
     }
-    return start - hg->Integral();
+    /* cout << " integral " << hg->Integral() << "  " << (start-hg->Integral()) << endl; */
+    return scrubbed;
 };
 double tuScrubBlock(TH1* hg, int x0, int x1){
     if (x0 < 1) x0 = 1;
@@ -1576,7 +1579,7 @@ double tuScrubIslands(TH2* hg,  bool isX, int nblank_max, double max_scrub_rat) 
         for (j=jbin_max-1; j>=1; --j) {
             if (hg->GetBinContent(x,y) == 0.) {
                 ++n_blank;
-                if (n_blank == nblank_max) {
+                if (n_blank >= nblank_max) {
                     // check percentage above the blanks
                     if ( hg->Integral(x_min, x, y_min, y)/sum_strip <= max_scrub_rat) {
                         tuScrubBlock(hg, x_min, x, y_min, y);
@@ -1608,8 +1611,147 @@ double tuScrubIslands(TH2* hg,  bool isX, int nblank_max, double max_scrub_rat) 
     return total - hg->Integral();
 };
 
+double tuScrubNsigs(TH2D* hg, double nsig, bool isX, double q0, double q1){
+    double scrubbed = 0.;
+    int n, i_cut, empty{0};
+    int n_strips  = isX ? hg->GetYaxis()->GetNbins() : hg->GetXaxis()->GetNbins();
+    int strip_end = isX ? hg->GetXaxis()->GetNbins() : hg->GetYaxis()->GetNbins();
+
+    int& x0 = isX ? i_cut     : n;
+    int& x1 = isX ? strip_end : n;
+    int& y0 = isX ? n : i_cut;
+    int& y1 = isX ? n : strip_end;
+
+    double t=-1.1;
+    for (n=1; n<=n_strips; ++n) {
+        auto strip = (TH1D*) isX ? hg->ProjectionX(tuUniqueName(),n,n) : hg->ProjectionY(tuUniqueName(),n,n);
+        tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
+        i_cut = stats("i_cut",0);
+        if (i_cut) {
+            t = tuScrubBlock(hg, x0, x1, y0, y1);
+        }
+        scrubbed += t;
+        cout << " n: " << n << " " << t << " of " << strip->Integral() << endl;
+        delete strip;
+    }
+    return scrubbed;
+};
+
+
 void tuInflate(TH1* h) {
     h->GetXaxis()->SetRange(1,h->GetXaxis()->GetNbins());
     h->GetYaxis()->SetRange(1,h->GetYaxis()->GetNbins());
 };
 
+TH2D* tuNaiveRebin2D (TH2D* h_in, vector<double> x_bins, vector<double> y_bins, string name) {
+    // generate the new histogram
+    double *x_edge = new double[x_bins.size()];
+    double *y_edge = new double[y_bins.size()];
+
+    auto x_axis = h_in->GetXaxis();
+    auto y_axis = h_in->GetYaxis();
+
+    for (unsigned int i=0; i<x_bins.size(); ++i) x_edge[i] = x_bins[i];
+    for (unsigned int i=0; i<y_bins.size(); ++i) y_edge[i] = y_bins[i];
+    TH2D* h_out = new TH2D ( (name=="") ? tuUniqueName() : name.c_str(), 
+            Form("%s;%s;%s", h_in->GetTitle(), x_axis->GetTitle(), y_axis->GetTitle()),
+            x_bins.size()-1, x_edge, y_bins.size()-1, y_edge);
+
+    // Fill with values
+    auto xto_axis = h_out->GetXaxis();
+    auto yto_axis = h_out->GetYaxis();
+    auto xto_max = xto_axis->GetNbins();
+    auto yto_max = yto_axis->GetNbins();
+
+    for (int x=1; x<=x_axis->GetNbins(); ++x) {
+        int xto = xto_axis->FindBin(x_axis->GetBinCenter(x));
+        if (xto<1 || xto>xto_max) continue;
+        for (int y=1; y<=y_axis->GetNbins(); ++y) {
+            int yto = yto_axis->FindBin(y_axis->GetBinCenter(y));
+            if (yto<1 || yto>yto_max) continue;
+            if (h_in->GetBinContent(x,y)==0) continue;
+            h_out->SetBinContent(xto,yto, h_out->GetBinContent(xto,yto) + h_in->GetBinContent(x, y));
+        }
+    }
+    for (int xto=1; xto<=xto_max; ++xto) {
+        for (int yto=1; yto<=yto_max; ++yto) {
+            if (h_out->GetBinContent(xto,yto) != 0) {
+                h_out->SetBinError(xto, yto, sqrt(h_out->GetBinContent(xto,yto)));
+            }
+        }
+    }
+    return h_out;
+};
+
+TH1D* tuNaiveRebin1D (TH1D* h_in, vector<double> x_bins, string name) {
+    // generate the new histogram
+    double *x_edge = new double[x_bins.size()];
+    auto x_axis = h_in->GetXaxis();
+
+    for (unsigned int i=0; i<x_bins.size(); ++i) x_edge[i] = x_bins[i];
+    TH1D* h_out = new TH1D ( (name=="") ? tuUniqueName() : name.c_str(), 
+            Form("%s;%s;%s", h_in->GetTitle(), x_axis->GetTitle(), h_in->GetYaxis()->GetTitle()),
+            x_bins.size()-1, x_edge);
+
+    // Fill with values
+    auto xto_axis = h_out->GetXaxis();
+    auto xto_max = xto_axis->GetNbins();
+
+    for (int x=1; x<=x_axis->GetNbins(); ++x) {
+        int xto = xto_axis->FindBin(x_axis->GetBinCenter(x));
+        if (xto<1 || xto>xto_max) continue;
+        if (h_in->GetBinContent(x)==0) continue;
+        h_out->SetBinContent(xto, h_out->GetBinContent(xto) + h_in->GetBinContent(x));
+    }
+    for (int xto=1; xto<=xto_max; ++xto) {
+        if (h_out->GetBinContent(xto) != 0) {
+            h_out->SetBinError(xto, sqrt(h_out->GetBinContent(xto)));
+        }
+    }
+    return h_out;
+};
+
+void tuSqrtErr(TH1* hg) {
+    for (int i=1;i<hg->GetNcells();++i) {
+        if (hg->GetBinContent(i) != 0) {
+            double val = sqrt(hg->GetBinContent(i));
+            if (val != hg->GetBinError(i)) {
+                hg->SetBinError(i,val);
+            }
+        }
+    }
+};
+
+void tuUpdateTMfromR(TH2D* resp, TH2D* mod_res, TH1D* truth, TH1D* meas) {
+    mod_res->Add(resp,-1.);
+    auto mod_truth = (TH1D*) resp->ProjectionY(tuUniqueName());
+    auto mod_meas  = (TH1D*) resp->ProjectionX(tuUniqueName());
+    truth->Add(mod_truth);
+    meas ->Add(mod_meas);
+    delete mod_truth;
+    delete mod_meas;
+};
+
+string tuFileName(string name) {
+    string out="";
+    unsigned long i0 = 0;
+    int i = 0;
+    while (true) {
+        /* cout << " " << i << endl; */
+        bool last_word = false;
+        unsigned long i1 = name.find(" ",i0);
+        string word;
+        if (i1 == string::npos) {
+            word = name.substr(i0,name.length());
+            last_word = true;
+        } else {
+            word = name.substr(i0,i1-i0);
+            i0 = i1+1;
+        }
+        if (word.find(".",1) != string::npos) word = word.substr(0,word.find(".",1));
+        out += word;
+        if (last_word) break;
+        if (i++ > 100) break; // in case of unforseen bug
+    }
+    return out;
+};

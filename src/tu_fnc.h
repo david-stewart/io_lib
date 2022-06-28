@@ -15,14 +15,11 @@
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "tuOptMap.h"
-/* #include "RooUnfoldResponse.h" */
-
+/* #include "RooUnfold/RooUnfoldResponse.h" */
 #include "tu_fmt.h"
 /* #include "tu_IOS.h" */
 /* #include "tu_enum.h" */
 #include "tuOptMap.h"
-/* #include "RooUnfoldResponse.h" */
-/* #include "tuClass.h" */
 
 /* #define TU_pi      3.14159266 // use M_PI */
 /* #define TU_2PI   6.28318532 */
@@ -269,13 +266,26 @@ TH1* tuAddBinCnt(TH1* hg_to, TH1* hg_from,
 
 TH1D* tu_build_CDF(TH1* hg, int first_bin=1, int last_bin=0, double alpha=1.);
 
+// Scrubbers for messy histograms
 double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1);
 double tuScrubBlock(TH1* hg, int x0, int x1);
 double tuScrubBins (TH1* hg, int min_bins);
 double tuScrubIslands(TH2* hg,  bool isX=true, int nblank=1, double max_scrub_rat = 0.05);
+double tuScrubNsigs(TH2D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
+
 tuOptMap tuCalcRowStats(TH1* hg, double q0=0., double q1=1., double nSig=3., bool cut=false);
-double tuScrub_qnsig(TH2* hg, bool isX=true, double q0=0., double q1=1., double nsig=3.);
+
+TH2D* tuNaiveRebin2D (TH2D* hg, vector<double> x_bins, vector<double> y_bins, string name="");
+TH1D* tuNaiveRebin1D (TH1D* hg, vector<double> x_bins, string name="");
+
+/* void tuAdjustRTM(TH2D* resp_before, TH2D* resp_after, TH1D* M, TH1D* T */
+
 void tuInflate(TH1* hg);
+void tuSqrtErr(TH1* hg); // match up bin contents with Sqrt of contents
+void tuUpdateTMfromR(TH2D* resp, TH2D* mod_resp, TH1D* truth, TH1D* meas); // update truth and measured from changes (cuts) in resp
+                                                                           //
+string tuFileName(string input);
+
 /* void tuInflate(TH2* hg); */
 // Add content of hg_from to bins in hg_to
 //

@@ -600,29 +600,3 @@ TH2D* tuAjSparse_dPhi::hg2_axis (int xAxis, int yAxis, double norm){
     return hg;
 };
 
-TH1D* tuTrackSparse_leg::hg_axis (int i_axis, double norm, bool use_track_data){
-    TH1D* hg;
-    TH1D* _hg = (TH1D*) (use_track_data ? data_track : data_trig)->Projection(i_axis,"E");
-    if (bins != nullptr) {
-        hg = (TH1D*) _hg->Rebin(*bins, tuUniqueName(), *bins);
-        delete _hg;
-        if (scaleByBinWidth) tu_scaleByBinWidth(hg);
-    } else {
-        hg = _hg;
-        hg->SetName(tuUniqueName());
-    }
-    if (norm == 0.) {
-        hg->Scale(1./get_n_triggers());
-    } else {
-        hg->Scale(1./norm);
-    }
-    return hg;
-};
-double tuTrackSparse_leg::get_n_triggers() { 
-    if (n_triggers != -1.) return n_triggers;
-    auto hg = (TH1D*) data_trig->Projection(0);
-    n_triggers = hg->Integral();
-    delete hg;
-    return n_triggers;
-};
-

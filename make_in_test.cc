@@ -3,8 +3,8 @@ root -l <<EOF
     TRandom3 _rand;
     TFile fout{"in_test.root","recreate"};
 
-    TH1D h1 { "h1",";;",100,0.,300.};
-    TH2D h2 { "h2",";;",100,0.,300., 100, 0., 300.};
+    TH1D h1 { "h1","title;x-axis;y-axis",300,0.,300.};
+    TH2D h2 { "h2","title;x-axis;y-axis",300,0.,300., 300, 0., 300.};
     
     for (int i=0; i<1000000; ++i) {
         h1.Fill(_rand.Gaus(30., 15.));
