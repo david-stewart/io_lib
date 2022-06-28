@@ -1457,4 +1457,159 @@ TH1* tu_build_CDF(TH1D* _in, int first_bin, int last_bin, double alpha) {
     return hg_cdf;
 };
 
-                                            
+tuOptMap tuCalcRowStats(TH1* hg, double q0, double q1, double nsig, bool b_cut) {
+    // return a tuOptMap like:
+    // q0 = q0
+    // q1 = q1
+    // x0 = quantile location q0
+    // x1 = quantile location q1
+    // i0 = bin x0
+    // i1 = bin i1
+    // mean = mean from i0 to i1
+    // var  = var  from i0 to i1
+    // cut  = mean + nsig*var
+    tuOptMap dict {{ "q0", q0, "q1", q1, "nsig", nsig }};
+    if (hg->Integral()==0) {
+        dict("nothing_here") = 1.;
+        return dict;
+    };
+    double q[2]; q[0] = q0; q[1]=q1;
+    double x[2];
+
+    hg->GetQuantiles(2,x,q);
+    TAxis *ax = hg->GetXaxis();
+    int nbins = ax->GetNbins();
+    double i0 = ax->FindBin(x[0]);
+    double i1 = ax->FindBin(x[1]);
+    ax->SetRange(i0,i1);
+    double mean = hg->GetMean();
+    double var  = hg->GetStdDev();
+    double x_cut = mean + nsig*var;
+    int    i_cut = ax->FindBin(x_cut)+1;
+    if (i_cut>(nbins+1)) i_cut = nbins+1;
+    if (b_cut) dict("n_cut") = tuScrubBlock(hg, i_cut, nbins);
+    tuInflate(hg);
+    
+    dict += {{ "x0", x[0], "x1", x[1], "i0", i0, "i1", i1, "mean", mean, "var", var, "x_cut", x_cut,
+        "n_cut", dict("n_cut",0), "var", var, "i_cut", i_cut }};
+    return dict;
+};
+double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1) {
+    if (x0 < 1) x0 = 1;
+    if (x1 > hg->GetXaxis()->GetNbins()) x1 = hg->GetXaxis()->GetNbins();
+    if (y0 < 1) y0 = 1;
+    if (y1 > hg->GetYaxis()->GetNbins()) y1 = hg->GetYaxis()->GetNbins();
+    if ( (x1<x0) || (y1<y0) ) return 0.;
+    double start = hg->Integral(x0,x1,y0,y1);
+    if (start ==0) return 0.;
+    for (int x=x0;x<=x1;++x) {
+        for (int y=y0;y<=y1;++y) {
+            if (hg->GetBinContent(x,y) != 0) {
+                hg->SetBinContent(x,y,0.);
+                hg->SetBinError(x,y,0.);
+            }
+        }
+    }
+    return start - hg->Integral();
+};
+double tuScrubBlock(TH1* hg, int x0, int x1){
+    if (x0 < 1) x0 = 1;
+    if (x1 > hg->GetXaxis()->GetNbins()) x1 = hg->GetXaxis()->GetNbins();
+    if (x1<x0) return 0.;
+    double start = hg->Integral(x0,x1);
+    if (start ==0) return 0.;
+    for (int x=x0;x<=x1;++x) {
+        if (hg->GetBinContent(x) != 0) {
+            hg->SetBinContent(x,0.);
+            hg->SetBinError(x,0.);
+        }
+    }
+    return start-hg->Integral(x0,x1);
+};
+
+double tuScrubbBins(TH1* hg, int min_entries) {
+    double start = hg->Integral();
+    if (start == 0) return start;
+    for (int i = 0; i<hg->GetNcells(); ++i) {
+        if (hg->GetBinContent(i)>0. && hg->GetBinContent(i)<min_entries) {
+            hg->SetBinContent(i,0.);
+            hg->SetBinError  (i,0.);
+        }
+    }
+    return start-hg->Integral();
+};
+
+double tuScrubIslands(TH2* hg,  bool isX, int nblank_max, double max_scrub_rat) {
+    double total = hg->Integral();
+    if (total==0.) return 0.;
+    /* int nbins_Y = hg->GetYaxis()->GetNbins(); */
+    /* int nbins_X = hg->GetXaxis()->GetNbins(); */
+    int nbins_i = isX ? hg->GetNbinsY() : hg->GetNbinsX();
+    int nbins_j = isX ? hg->GetNbinsX() : hg->GetNbinsY();
+    int i; // inner loop
+    int j; // outer loop
+    int one {1};
+    int& x = isX ? j : i;
+    int& y = isX ? i : j;
+    int& x_min = isX ? one : x;
+    int& y_min = isX ? y : one;
+    int& x_max = isX ? nbins_j : x;
+    int& y_max = isX ? y : nbins_j;
+
+    for (i=1;i<nbins_i; ++i) {
+        // see if this row is blank
+        double sum_strip = hg->Integral(x_min,x_max,y_min,y_max);
+        if (sum_strip == 0.) continue;
+
+        int jbin_max = 0;
+        double content_max = 0;
+
+        for (j=1;j<=nbins_j;++j) {
+            if (hg->GetBinContent(x,y) > content_max) {
+                content_max = hg->GetBinContent(x,y);
+                jbin_max = j;
+            }
+        }
+        if (jbin_max == 0) continue;
+        // remove all islands below jbin_max
+        int n_blank=0;
+        for (j=jbin_max-1; j>=1; --j) {
+            if (hg->GetBinContent(x,y) == 0.) {
+                ++n_blank;
+                if (n_blank == nblank_max) {
+                    // check percentage above the blanks
+                    if ( hg->Integral(x_min, x, y_min, y)/sum_strip <= max_scrub_rat) {
+                        tuScrubBlock(hg, x_min, x, y_min, y);
+                        break;
+                    }
+                }
+            } else {
+                n_blank = 0;
+            }
+        }
+        // remove all islands above jbin_max
+        j = jbin_max;
+        n_blank=0;
+        for (j=jbin_max+1; j<=nbins_j; ++j) {
+            if (hg->GetBinContent(x,y) == 0.) {
+                ++n_blank;
+                if (n_blank == nblank_max) {
+                    // check percentage above the blanks
+                    if ( hg->Integral(x, x_max, y, y_max)/sum_strip <= max_scrub_rat) {
+                        tuScrubBlock(hg, x, x_max, y, y_max);
+                        break;
+                    }
+                }
+            } else {
+                n_blank = 0;
+            }
+        }
+    }
+    return total - hg->Integral();
+};
+
+void tuInflate(TH1* h) {
+    h->GetXaxis()->SetRange(1,h->GetXaxis()->GetNbins());
+    h->GetYaxis()->SetRange(1,h->GetYaxis()->GetNbins());
+};
+

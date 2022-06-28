@@ -269,6 +269,14 @@ TH1* tuAddBinCnt(TH1* hg_to, TH1* hg_from,
 
 TH1D* tu_build_CDF(TH1* hg, int first_bin=1, int last_bin=0, double alpha=1.);
 
+double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1);
+double tuScrubBlock(TH1* hg, int x0, int x1);
+double tuScrubBins (TH1* hg, int min_bins);
+double tuScrubIslands(TH2* hg,  bool isX=true, int nblank=1, double max_scrub_rat = 0.05);
+tuOptMap tuCalcRowStats(TH1* hg, double q0=0., double q1=1., double nSig=3., bool cut=false);
+double tuScrub_qnsig(TH2* hg, bool isX=true, double q0=0., double q1=1., double nsig=3.);
+void tuInflate(TH1* hg);
+/* void tuInflate(TH2* hg); */
 // Add content of hg_from to bins in hg_to
 //
 
