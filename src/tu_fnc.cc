@@ -1734,7 +1734,10 @@ void tuUpdateTMfromR(TH2D* resp, TH2D* mod_res, TH1D* truth, TH1D* meas) {
     delete mod_meas;
 };
 
-string tuFileName(string name) {
+string tuFileName(string name, vector<string> more_names) {
+    // input is "word word word"
+    // strip off leading ./ symbols
+    // if has {a}.{b} where {a} is not blank, strip off the .{b} part
     string out="";
     unsigned long i0 = 0;
     int i = 0;
@@ -1750,10 +1753,13 @@ string tuFileName(string name) {
             word = name.substr(i0,i1-i0);
             i0 = i1+1;
         }
+        if (word.find("./")==0) word = word.substr(2,word.length()-2);
         if (word.find(".",1) != string::npos) word = word.substr(0,word.find(".",1));
         out += word;
         if (last_word) break;
         if (i++ > 100) break; // in case of unforseen bug
     }
+
+    for (auto other : more_names) out += tuFileName(other);
     return out;
 };

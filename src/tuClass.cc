@@ -479,21 +479,21 @@ string tuIntList::make(const char* in_file, bool print) {
     cout << msg.str();
     return msg.str();
 };
-void tuPads::stamp(const char* msg, tuOptMap options, tuOptMap dict) {
+void tuPads::stamp(string msg, tuOptMap options, tuOptMap dict) {
     dict += options;
     canvas_pad->cd();
     /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
-    tuDrawTLatex(msg,dict("x-loc"), dict("y-loc"), dict);
+    tuDrawTLatex(msg.c_str(),dict("x-loc"), dict("y-loc"), dict);
 };
-void tuPads::save(const char* name, const char* tag) {
+void tuPads::save(string name, string tag) {
     TString check {name};
-    if (!check.Contains(".")) check.Append(Form("%s.pdf",tag));
-    else if (check.EndsWith(".cc")) check.ReplaceAll(".cc",Form("%s.pdf",tag));
-    else if (check.EndsWith(".C" )) check.ReplaceAll(".C", Form("%s.pdf",tag));
+    if (!check.Contains(".")) check.Append(Form("%s.pdf",tag.c_str()));
+    else if (check.EndsWith(".cc")) check.ReplaceAll(".cc",Form("%s.pdf",tag.c_str()));
+    else if (check.EndsWith(".C" )) check.ReplaceAll(".C", Form("%s.pdf",tag.c_str()));
     canvas->Print(check.Data());
 };
-void tuPads::print(string name) {
-    canvas->Print(tuFileName(name).c_str());
+void tuPads::print(string name, vector<string> other) {
+    canvas->Print(tuFileName(name,other).c_str());
 };
     // concatenate each word, and strip any non-leading '.' from them
     /* string out= tuFileName(name); */

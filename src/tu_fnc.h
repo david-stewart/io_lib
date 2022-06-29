@@ -288,7 +288,8 @@ void tuInflate(TH1* hg);
 void tuSqrtErr(TH1* hg); // match up bin contents with Sqrt of contents
 void tuUpdateTMfromR(TH2D* resp, TH2D* mod_resp, TH1D* truth, TH1D* meas); // update truth and measured from changes (cuts) in resp
                                                                            //
-string tuFileName(string input);
+string tuFileName(string input, vector<string> more_name={});
+/* string tuFileName(vector<string> input); */
 
 /* void tuInflate(TH2* hg); */
 // Add content of hg_from to bins in hg_to

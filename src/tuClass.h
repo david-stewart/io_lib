@@ -217,15 +217,15 @@ struct tuPads {
 
     int canvas_width         { 1200 };
     int canvas_height        {  800 };
-    void stamp(const char*, tuOptMap opt={}, 
+    void stamp(string, tuOptMap opt={}, 
         tuOptMap dict = {{ 
         "TextColor", (kGray+2), 
         "TextSize", 12,
         "x-loc", .05,
         "y-loc", .05}} );
     // save the output; check for *cc or *C ending and save as .pdf if required
-    void save(const char* outname, const char* tag=""); // 
-    void print(string);
+    void save(string outname, string tag=""); // 
+    void print(string,vector<string>other={});
 
     // To do here:
 
