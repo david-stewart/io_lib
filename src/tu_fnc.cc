@@ -56,10 +56,12 @@ void tuPause(int i)  {
     c->WaitPrimitive();
 };
 //*
-const char* tuUniqueName(int i) {
-    while (gDirectory->FindObjectAny(Form("unique_name__%i",i))!=nullptr) ++i;
-    return Form("unique_name__%i",i);
+const char* tuUniqueName(int i,const char* prefix) {
+    while (gDirectory->FindObjectAny(Form("%s__%i",prefix,i))!=nullptr) ++i;
+    return Form("%s__%i",prefix,i);
 };
+const char* tuUniqueName(int i, string prefix) { return tuUniqueName(i, prefix.c_str()); };
+const char* tuUniqueName(string prefix, int i) { return tuUniqueName(i, prefix.c_str()); };
 //*
 vector<int> tuColorVec(int n_colors, int palette, bool print) {
     TCanvas *junk_canvas = new TCanvas(tuUniqueName(),"junk_canvas",1200,800);

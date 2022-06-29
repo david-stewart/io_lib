@@ -398,8 +398,8 @@ TPad* tuPads::operator()(int row, int col) {
 };
 void tuPads::init() {
     // make and stylize the TCanvas and pads currently in the list
-    const char* t_name = Form("canv_%s",tuUniqueName());
-    canvas = new TCanvas(t_name, "",canvas_width, canvas_height);
+    /* const char* t_name = Form("canv_%s",tuUniqueName()); */
+    canvas = new TCanvas(tuUniqueName(i_prefix,Form("canv_%s",prefix.c_str())), "",canvas_width, canvas_height);
     tu_fmt(canvas);
     canvas->Draw();
     canvas->cd();
@@ -408,9 +408,6 @@ void tuPads::init() {
     add_pad(pad_dimensions);
 
     canvas->cd();
-    /* canvas_pad = new TPad("canvas_pad","",0.,0.,1.,1.); */
-    /* tu_fmt(canvas_pad); */
-    /* canvas_pad->Draw(); */
 };
 
 
@@ -418,7 +415,7 @@ void tuPads::add_pad(pair<tuPadDim,tuPadDim>& coord){
     canvas->cd();
 
     if (pads.size()==0) {
-        canvas_pad = new TPad(tuUniqueName(),"",0.,0.,1.,1.);
+        canvas_pad = new TPad(tuUniqueName(i_prefix,prefix.c_str()),"",0.,0.,1.,1.);
         tu_fmt(canvas_pad);
         canvas_pad->Draw();
         canvas->cd();

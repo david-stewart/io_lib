@@ -38,7 +38,11 @@ TH1D*       tuHgBlank     (int nbins, double* edges, tuOptMap opt={}, tuOptMap d
 void        tu_fmt_ax     (TH1* to, TH1* from);
 
 void        tuPause       (int i=0);
-const char* tuUniqueName  (int i=0); // return a unique name to the directory
+const char* tuUniqueName  (int i=0, const char* prefix="unique_name"); // return a unique name to the directory
+const char* tuUniqueName  (int i, string prefix); // return a unique name to the directory
+const char* tuUniqueName  (string prefix, int i=0); // return a unique name to the directory
+/* const char* tuUniqueName  (const char*,   int i=0); // return a unique name to the directory */
+                                                                  //
 vector<int> tuColorVec    (int n_colors=2, int palette=kCMYK, bool print=false);
 array<double,3> tuPercentAround(TH1*, double);
 TH1*        tuDivide      (TH1* num, TH1* den, tuOptMap opt={}, tuOptMap dict={}); // possible numbers: norm, and style-den 

@@ -191,6 +191,10 @@ struct tuPadDimSet {
 // inputs to these pads:
 // vector of doubles: { nCol, nRow, {kLeft,kRight,kBottom,kTop, 1-4 values <1, val<1, val<1, val<1}, width, height }
 struct tuPads {
+    tuPads ( int nYpads=1, vector<double> dimensions={}, int nXpads=1);
+    string prefix="";
+    int i_prefix=1;
+
     //internal data
     TCanvas* canvas = nullptr;
     vector<pair<tuPadDim,tuPadDim>> pad_dimensions;
@@ -198,23 +202,9 @@ struct tuPads {
     TPad* canvas_pad;   // a single big pad the size of the canvas
     void pause();
 
-    //FIXME
-    /* tuPads ( vector<tuPadDim>, int canvas_width, int canv_heigth ); */
-    // * Initialize with either a single vector of tuPadDim (which will go as x0, y0, x1, 
-    //   y1, etc...) or two vectors of tuPadDim, which will go as {x0,x1,...} {y0,y1,...}
-    // * Add operator()(int,int=0) for accessing y,x pad
-    tuPads ( vector<pair<tuPadDim, tuPadDim>> pad_dimensions={{{},{}}}, 
-            int canvas_width=0, int canvas_height=0);
+    tuPads ( vector<pair<tuPadDim, tuPadDim>> pad_dimensions={{{},{}}}, int canvas_width=0, int canvas_height=0);
     tuPads ( vector<tuPadDim>y_dim, vector<tuPadDim>x_dim={}, int canvas_width=0, int canv_heigth=0 );
-    /* tuPads ( int nPads=1, int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets */
-    /* tuPads ( int nYpads=1, int nXpads=1, double y_margin=0.15, double x_margin=0.17, */ 
-    /*          int c_wide=0, int c_height=0 ); // default of 1 and 2 pad TPad sets */
-    /* tuPads ( int nYpads=1, int nXpads=1, int c_side=0, int c_height=0, */ 
-    /*         tuPadDimSet Y={{0.15}}, tuPadDimSet X={{0.15}} ); */
     TPad*  operator()(int col=0, int row=0);
-
-    tuPads ( int nYpads=1, vector<double> dimensions={}, int nXpads=1 );
-
     int nRow{1};
     int nCol{1};
 
