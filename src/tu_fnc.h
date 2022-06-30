@@ -276,16 +276,17 @@ double tuScrubBlock(TH1* hg, int x0, int x1);
 double tuScrubBins (TH1* hg, int min_bins);
 double tuScrubIslands(TH2* hg,  bool isX=true, int nblank=1, double max_scrub_rat = 0.05);
 double tuScrubNsigs(TH2D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
+int   tuZeroCopy(TH2D* h_data, TH2D* h_filter); // return number of bins zero'd
 
 tuOptMap tuCalcRowStats(TH1* hg, double q0=0., double q1=1., double nSig=3., bool cut=false);
 
-TH2D* tuNaiveRebin2D (TH2D* hg, vector<double> x_bins, vector<double> y_bins, string name="");
-TH1D* tuNaiveRebin1D (TH1D* hg, vector<double> x_bins, string name="");
+TH2D* tuNaiveRebin2D (TH2D* hg, vector<double> x_bins, vector<double> y_bins, string name="", bool in_place=false);
+TH1D* tuNaiveRebin1D (TH1D* hg, vector<double> x_bins, string name="", bool in_place=false);
 
 /* void tuAdjustRTM(TH2D* resp_before, TH2D* resp_after, TH1D* M, TH1D* T */
 
 void tuInflate(TH1* hg);
-void tuSqrtErr(TH1* hg); // match up bin contents with Sqrt of contents
+void tuSqrtErr(TH1* hg, bool print_if_wrong=false); // match up bin contents with Sqrt of contents
 void tuUpdateTMfromR(TH2D* resp, TH2D* mod_resp, TH1D* truth, TH1D* meas); // update truth and measured from changes (cuts) in resp
                                                                            //
 string tuFileName(string input, vector<string> more_name={});

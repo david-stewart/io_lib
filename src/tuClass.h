@@ -23,6 +23,7 @@
 #include <set>
 #include "TRandom3.h"
 #include "TAxis.h"
+#include "RooUnfold/RooUnfoldResponse.h"
 
 // // --------------------------------------------------------------------------------------
 // // tuGetter:
@@ -677,6 +678,21 @@ struct tuSysErrors {
     operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
     TGraphAsymmErrors* operator-> ();
 };
+
+/* struct tuRooUnfold_RMF { */
+/*     TH2D* response; */
+/*     TH1D* miss; */
+/*     TH1D* fake; */
+/*     tuRooUnfold_RMF(); */
+
+/* struct tuRMT_Updater{ */
+/*     TH2D* response; */
+/*     TH1D* miss; */
+/*     TH1D* fake; */
+    
+
+/*     (TH2D* response, TH1D* truth, TH1D* measured) */ 
+
 // 
 // struct tuJetMatcher_float {
 //     // For filling vectors for Raghav matching algorithm 

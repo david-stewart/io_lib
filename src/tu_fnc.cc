@@ -1532,7 +1532,7 @@ double tuScrubBlock(TH1* hg, int x0, int x1){
     return start-hg->Integral(x0,x1);
 };
 
-double tuScrubbBins(TH1* hg, int min_entries) {
+double tuScrubBins(TH1* hg, int min_entries) {
     double start = hg->Integral();
     if (start == 0) return start;
     for (int i = 0; i<hg->GetNcells(); ++i) {
@@ -1639,13 +1639,30 @@ double tuScrubNsigs(TH2D* hg, double nsig, bool isX, double q0, double q1){
     return scrubbed;
 };
 
+int   tuZeroCopy(TH2D* h_data, TH2D* h_filter) {
+    if (h_data->GetNbinsX() != h_filter->GetNbinsX() ||
+        h_data->GetNbinsY() != h_filter->GetNbinsY())
+        cout << " fatal error in tuZeroCopy: numbers of bins in hg_data and hg_filter do not match" << endl;
+    int n_zero = 0;
+    for (int x=1;x<=h_data.GetNbinsX();++x) {
+        for (int y=1;y<=h_data.GetNbinsY();++y) {
+            if (h_filter->GetBinContent(x,y)==0. && h_data->GetBinContent(x,y)!=0.) {
+                hg_data->SetBinContent(x,y,0.);
+                hg_data->SetBinError(x,y,0.);
+                ++n_zero;
+            }
+        }
+    }
+    return n_zero;
+};
+
 
 void tuInflate(TH1* h) {
     h->GetXaxis()->SetRange(1,h->GetXaxis()->GetNbins());
     h->GetYaxis()->SetRange(1,h->GetYaxis()->GetNbins());
 };
 
-TH2D* tuNaiveRebin2D (TH2D* h_in, vector<double> x_bins, vector<double> y_bins, string name) {
+TH2D* tuNaiveRebin2D (TH2D* h_in, vector<double> x_bins, vector<double> y_bins, string name, bool in_place) {
     // generate the new histogram
     double *x_edge = new double[x_bins.size()];
     double *y_edge = new double[y_bins.size()];
@@ -1682,10 +1699,14 @@ TH2D* tuNaiveRebin2D (TH2D* h_in, vector<double> x_bins, vector<double> y_bins, 
             }
         }
     }
+    if (in_place) {
+        /* delete h_in; */
+        h_in = h_out;
+    }
     return h_out;
 };
 
-TH1D* tuNaiveRebin1D (TH1D* h_in, vector<double> x_bins, string name) {
+TH1D* tuNaiveRebin1D (TH1D* h_in, vector<double> x_bins, string name, bool in_place) {
     // generate the new histogram
     double *x_edge = new double[x_bins.size()];
     auto x_axis = h_in->GetXaxis();
@@ -1710,14 +1731,19 @@ TH1D* tuNaiveRebin1D (TH1D* h_in, vector<double> x_bins, string name) {
             h_out->SetBinError(xto, sqrt(h_out->GetBinContent(xto)));
         }
     }
+    if (in_place) {
+        delete h_in;
+        h_in = h_out;
+    }
     return h_out;
 };
 
-void tuSqrtErr(TH1* hg) {
+void tuSqrtErr(TH1* hg, bool print_if_wrong) {
     for (int i=1;i<hg->GetNcells();++i) {
         if (hg->GetBinContent(i) != 0) {
             double val = sqrt(hg->GetBinContent(i));
             if (val != hg->GetBinError(i)) {
+                if (print_if_wrong) cout << " bin("<<i<<") " << hg->GetBinError(i) << " -> " << val << endl;
                 hg->SetBinError(i,val);
             }
         }
