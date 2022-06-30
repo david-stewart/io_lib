@@ -17,6 +17,7 @@
 #include "tuOptMap.h"
 /* #include "RooUnfold/RooUnfoldResponse.h" */
 #include "tu_fmt.h"
+#include "tuConst.h"
 /* #include "tu_IOS.h" */
 /* #include "tu_enum.h" */
 #include "tuOptMap.h"
@@ -276,6 +277,17 @@ double tuScrubBlock(TH1* hg, int x0, int x1);
 double tuScrubBins (TH1* hg, int min_bins);
 double tuScrubIslands(TH2* hg,  bool isX=true, int nblank=1, double max_scrub_rat = 0.05);
 double tuScrubNsigs(TH2D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
+double tuScrubNsigs(TH1D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
+
+vector<int> tuVecScrubNsig (TH2D* hg, double nsig=2., double q0=0, double q1=1., int which=kRight, bool scrub=true);
+vector<int> tuVecScrubQuant(TH2D* hg, double quantile=0, int which=kRight, bool scrub=true);
+
+int tuVecScrubNsig (TH1D* hg, double nsig=2., double q0=0, double q1=1., int which=kRight, bool scrub=true);
+int tuVecScrubQuant(TH1D* hg, double quantile=0, int which=kRight, bool scrub=true);
+
+double tuVecScrub(TH2D* hg, vector<int> index, int which=kRight);
+
+
 int   tuZeroCopy(TH2D* h_data, TH2D* h_filter); // return number of bins zero'd
 
 tuOptMap tuCalcRowStats(TH1* hg, double q0=0., double q1=1., double nSig=3., bool cut=false);

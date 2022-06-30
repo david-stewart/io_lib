@@ -24,6 +24,7 @@
 #include "TRandom3.h"
 #include "TAxis.h"
 #include "RooUnfold/RooUnfoldResponse.h"
+#include "tuConst.h"
 
 // // --------------------------------------------------------------------------------------
 // // tuGetter:
@@ -678,6 +679,24 @@ struct tuSysErrors {
     operator TGraphAsymmErrors* (); // case it to TGraphAsymmErrors
     TGraphAsymmErrors* operator-> ();
 };
+
+struct tuCopyScrubber2D {
+    // get boundaries from one histogram and apply to the the other
+    vector<int> i_lo{};
+    vector<int> i_hi{};
+    void fill_Nsigs (TH2D* hg, double nsig=3., double q0=0., double q1=1., int which=kRight, bool scrubb=true); // =0 for none, just to fill
+    void fill_quant (TH2D* hg, double q=0.,  int which=kRight, bool scrub=true); // =0 for none, just to fill
+    double scrub(TH2D*); // apply i_lo and i_hi;
+ };
+struct tuCopyScrubber1D {
+    // get boundaries from one histogram and apply to the the other
+    int i_lo{};
+    int i_hi{};
+    void fill_Nsigs (TH1D* hg, double nsig=3., double q0=0., double q1=1., int which=kRight, bool scrubb=true); // =0 for none, just to fill
+    void fill_quant (TH1D* hg, double q=0.,  int which=kRight, bool scrub=true); // =0 for none, just to fill
+    double scrub(TH1D*); // apply i_lo and i_hi;
+};
+
 
 /* struct tuRooUnfold_RMF { */
 /*     TH2D* response; */

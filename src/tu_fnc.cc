@@ -126,7 +126,7 @@ TH1* tuDivide(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
         ret = (TH1D*) num->Clone(tuUniqueName());
     }
 
-    for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
+    for (int j=1;j<den->GetNbinsX()+1;++j){
         double n = num->GetBinContent(j) / norm_num;
         double d = den->GetBinContent(j) / norm_den;
         if (n == 0 || d == 0) {
@@ -163,7 +163,7 @@ TH1* tuMultiply(TH1* num, TH1* den, tuOptMap opt, tuOptMap dict) {
         ret = (TH1D*) num->Clone(tuUniqueName());
     }
 
-    for (int j=1;j<den->GetXaxis()->GetNbins()+1;++j){
+    for (int j=1;j<den->GetNbinsX()+1;++j){
         double n = num->GetBinContent(j) / norm_num;
         double d = den->GetBinContent(j) / norm_den;
         if (n == 0 || d == 0) {
@@ -328,7 +328,7 @@ void tu_print(TH1* hg, const char* tag) {
     cout << " Printing histogram: " << hg->GetName() 
          << "  xTitle " << hg->GetXaxis()->GetTitle()
          << "  yTitle " << hg->GetYaxis()->GetTitle() << endl;
-    int nbins = hg->GetXaxis()->GetNbins();
+    int nbins = hg->GetNbinsX();
     for (int i=1; i<=nbins; ++i) {
         /* cout << i << endl; */
         cout << Form(" bin (%2i)  content(%10.5g)  error(%10.5g)",
@@ -438,17 +438,17 @@ TH1D* tuNorm(TH1D* hg, const char which) {
 //*
 double tu_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
     int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
-    int x1 { (p.first==0  && q.first==0)  ? hg->GetXaxis()->GetNbins() : hg->GetXaxis()->FindBin(q.first)};
+    int x1 { (p.first==0  && q.first==0)  ? hg->GetNbinsX() : hg->GetXaxis()->FindBin(q.first)};
     int y0 { (p.second==0 && q.second==0) ? 1 : hg->GetYaxis()->FindBin(p.second)};
-    int y1 { (p.second==0 && q.second==0) ? hg->GetYaxis()->GetNbins() : hg->GetYaxis()->FindBin(q.second)};
+    int y1 { (p.second==0 && q.second==0) ? hg->GetNbinsY() : hg->GetYaxis()->FindBin(q.second)};
     return hg->Integral(x0,x1,y0,y1);
 };
 //*
 double tu_get_box_integral(TProfile2D* pr, pair<double,double>p, pair<double,double>q){
     int x0 { (p.first==0  && q.first==0)  ? 1 : pr->GetXaxis()->FindBin(p.first)};
-    int x1 { (p.first==0  && q.first==0)  ? pr->GetXaxis()->GetNbins() : pr->GetXaxis()->FindBin(q.first)};
+    int x1 { (p.first==0  && q.first==0)  ? pr->GetNbinsX() : pr->GetXaxis()->FindBin(q.first)};
     int y0 { (p.second==0 && q.second==0) ? 1 : pr->GetYaxis()->FindBin(p.second)};
-    int y1 { (p.second==0 && q.second==0) ? pr->GetYaxis()->GetNbins() : pr->GetYaxis()->FindBin(q.second)};
+    int y1 { (p.second==0 && q.second==0) ? pr->GetNbinsY() : pr->GetYaxis()->FindBin(q.second)};
     return pr->Integral(x0,x1,y0,y1);
 };
 //*
@@ -485,7 +485,7 @@ vector<double> tu_vec_BinCenter(TH1* hg, bool under_over_flow){
 };
 /* /1* template<class T> *1/ */
 pair<int, double*> tu_vecBinEdge(TH1* hg) {
-    int n_bins = hg->GetXaxis()->GetNbins();
+    int n_bins = hg->GetNbinsX();
     double *edges = new double[n_bins+1];
     for (int i{1};i<=n_bins+1;++i){
         edges[i-1] = hg->GetXaxis()->GetBinLowEdge(i);
@@ -878,14 +878,14 @@ TGraph* tuMakeTGraph(TH1D* hg, bool invert, bool skip_zeros, bool normalize) {
     if (normalize) hg->Scale(1./hg->Integral());
     vector<double> x, y;
     TAxis* axis = hg->GetXaxis();
-    for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) {
+    for (int i{1}; i<=hg->GetNbinsX(); ++i) {
         if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue;
         x.push_back(axis->GetBinCenter(i));
         y.push_back(hg->GetBinContent(i));
     }
     TGraph* gr;
     double lo = hg->GetXaxis()->GetBinLowEdge(1);
-    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
+    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetNbinsX());
     if (invert) {
         gr = tuMakeTGraph(y,x);
         // set the limits
@@ -908,7 +908,7 @@ TGraphErrors* tuMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool no
     vector<double> x, x_err, y, y_err;
     TAxis* axis = hg->GetXaxis();
     if (normalize) hg->Scale(1./hg->Integral());
-    for (int i{1}; i<=hg->GetXaxis()->GetNbins(); ++i) {
+    for (int i{1}; i<=hg->GetNbinsX(); ++i) {
         if (hg->GetBinContent(i) == 0 && hg->GetBinError(i) == 0 && skip_zeros) continue;
         x.push_back(axis->GetBinCenter(i));
         x_err.push_back(0.);
@@ -918,7 +918,7 @@ TGraphErrors* tuMakeTGraphErrors(TH1D* hg, bool invert, bool skip_zeros, bool no
     }
     TGraphErrors* gr;
     double lo = hg->GetXaxis()->GetBinLowEdge(1);
-    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetXaxis()->GetNbins());
+    double hi = hg->GetXaxis()->GetBinUpEdge( hg->GetNbinsX());
     if (invert) {
         gr = tuMakeTGraphErrors(y,x,x_err,y_err);
         gr->SetMinimum(lo);
@@ -1162,8 +1162,8 @@ bool tuIsAnyTag    (TString word) {
 };
 
 void tu_normByRow(TH2D* hg, double factor, bool use_max_val) {
-    int nCols = hg->GetXaxis()->GetNbins();
-    int nRows   = hg->GetYaxis()->GetNbins(); 
+    int nCols = hg->GetNbinsX();
+    int nRows   = hg->GetNbinsY(); 
 
     for (int row{1}; row<=nRows; ++row) {
         double mult;
@@ -1189,8 +1189,8 @@ void tu_normByRow(TH2D* hg, double factor, bool use_max_val) {
 
 vector<double> tu_print_first_blank(TH2D* hg) {
     vector<double> vec;
-    int nY = hg->GetYaxis()->GetNbins();
-    int nX = hg->GetXaxis()->GetNbins();
+    int nY = hg->GetNbinsY();
+    int nX = hg->GetNbinsX();
     for (int y = 1; y<=nY; ++y) {
         bool found = false;
         for (int x = 1; x<=nX; ++x) {
@@ -1270,23 +1270,23 @@ vector<double> tu_print_first_blank(TH2D* hg) {
 
 /* vector<int> tu_binvec(TH1* h, tu loc) { */
 /*     vector<int> vec{}; */
-/*     if (h->GetYaxis()->GetNbins() == 1) { */
+/*     if (h->GetNbinsY() == 1) { */
 /*         switch (loc) { */
 /*             case tu::overunderflow: */
-/*                 vec = { 0, h->GetXaxis()->GetNbins()+1 }; */
+/*                 vec = { 0, h->GetNbinsX()+1 }; */
 /*                 break; */
 /*             case tu::all: */
-/*                 vec = { 0, h->GetXaxis()->GetNbins()+1 }; */
+/*                 vec = { 0, h->GetNbinsX()+1 }; */
 /*                 // no break -- continue to next block */
 /*             case tu::in: */
-/*                 for (int i{1}; i<=h->GetXaxis()->GetNbins(); ++i) */ 
+/*                 for (int i{1}; i<=h->GetNbinsX(); ++i) */ 
 /*                     vec.push_back(i); */
 /*                 break; */
 /*             default: break; */
 /*         } */
 /*     } else { */
-/*         int nX = h->GetXaxis()->GetNbins(); */
-/*         int nY = h->GetYaxis()->GetNbins(); */
+/*         int nX = h->GetNbinsX(); */
+/*         int nY = h->GetNbinsY(); */
 /*         switch (loc) { */
 /*             case tu::overunderflow: */ 
 /*                 for (auto x{0}; x<=nX+1; ++x) vec.push_back(h->GetBin(x,0)); */
@@ -1498,9 +1498,9 @@ tuOptMap tuCalcRowStats(TH1* hg, double q0, double q1, double nsig, bool b_cut) 
 };
 double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1) {
     if (x0 < 1) x0 = 1;
-    if (x1 > hg->GetXaxis()->GetNbins()) x1 = hg->GetXaxis()->GetNbins();
+    if (x1 > hg->GetNbinsX()) x1 = hg->GetNbinsX();
     if (y0 < 1) y0 = 1;
-    if (y1 > hg->GetYaxis()->GetNbins()) y1 = hg->GetYaxis()->GetNbins();
+    if (y1 > hg->GetNbinsY()) y1 = hg->GetNbinsY();
     if ( (x1<x0) || (y1<y0) ) return 0.;
 
     double scrubbed = hg->Integral(x0,x1,y0,y1);
@@ -1519,7 +1519,7 @@ double tuScrubBlock(TH2* hg, int x0, int x1, int y0, int y1) {
 };
 double tuScrubBlock(TH1* hg, int x0, int x1){
     if (x0 < 1) x0 = 1;
-    if (x1 > hg->GetXaxis()->GetNbins()) x1 = hg->GetXaxis()->GetNbins();
+    if (x1 > hg->GetNbinsX()) x1 = hg->GetNbinsX();
     if (x1<x0) return 0.;
     double start = hg->Integral(x0,x1);
     if (start ==0) return 0.;
@@ -1547,8 +1547,8 @@ double tuScrubBins(TH1* hg, int min_entries) {
 double tuScrubIslands(TH2* hg,  bool isX, int nblank_max, double max_scrub_rat) {
     double total = hg->Integral();
     if (total==0.) return 0.;
-    /* int nbins_Y = hg->GetYaxis()->GetNbins(); */
-    /* int nbins_X = hg->GetXaxis()->GetNbins(); */
+    /* int nbins_Y = hg->GetNbinsY(); */
+    /* int nbins_X = hg->GetNbinsX(); */
     int nbins_i = isX ? hg->GetNbinsY() : hg->GetNbinsX();
     int nbins_j = isX ? hg->GetNbinsX() : hg->GetNbinsY();
     int i; // inner loop
@@ -1616,15 +1616,15 @@ double tuScrubIslands(TH2* hg,  bool isX, int nblank_max, double max_scrub_rat) 
 double tuScrubNsigs(TH2D* hg, double nsig, bool isX, double q0, double q1){
     double scrubbed = 0.;
     int n, i_cut, empty{0};
-    int n_strips  = isX ? hg->GetYaxis()->GetNbins() : hg->GetXaxis()->GetNbins();
-    int strip_end = isX ? hg->GetXaxis()->GetNbins() : hg->GetYaxis()->GetNbins();
+    int n_strips  = isX ? hg->GetNbinsY() : hg->GetNbinsX();
+    int strip_end = isX ? hg->GetNbinsX() : hg->GetNbinsY();
 
     int& x0 = isX ? i_cut     : n;
     int& x1 = isX ? strip_end : n;
     int& y0 = isX ? n : i_cut;
     int& y1 = isX ? n : strip_end;
 
-    double t=-1.1;
+    double t=0.;
     for (n=1; n<=n_strips; ++n) {
         auto strip = (TH1D*) isX ? hg->ProjectionX(tuUniqueName(),n,n) : hg->ProjectionY(tuUniqueName(),n,n);
         tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
@@ -1633,20 +1633,29 @@ double tuScrubNsigs(TH2D* hg, double nsig, bool isX, double q0, double q1){
             t = tuScrubBlock(hg, x0, x1, y0, y1);
         }
         scrubbed += t;
-        cout << " n: " << n << " " << t << " of " << strip->Integral() << endl;
+        /* cout << " n: " << n << " " << t << " of " << strip->Integral() << endl; */
         delete strip;
     }
     return scrubbed;
 };
+double tuScrubNsigs(TH1D* hg, double nsig, double q0, double q1){
+    double scrubbed = 0.;
+    tuOptMap stats = tuCalcRowStats(hg, q0, q1, nsig);
+    int i_cut = stats("i_cut",0);
+    if (i_cut) scrubbed+= tuScrubBlock(hg, i_cut, hg->GetNbinsX());
+    return scrubbed;
+};
 
-int   tuZeroCopy(TH2D* h_data, TH2D* h_filter) {
-    if (h_data->GetNbinsX() != h_filter->GetNbinsX() ||
-        h_data->GetNbinsY() != h_filter->GetNbinsY())
+int   tuZeroCopy(TH2D* hg_data, TH2D* hg_filter) {
+    if (hg_data->GetNbinsX() != hg_filter->GetNbinsX() ||
+        hg_data->GetNbinsY() != hg_filter->GetNbinsY()) {
         cout << " fatal error in tuZeroCopy: numbers of bins in hg_data and hg_filter do not match" << endl;
+        return -1.;
+    }
     int n_zero = 0;
-    for (int x=1;x<=h_data.GetNbinsX();++x) {
-        for (int y=1;y<=h_data.GetNbinsY();++y) {
-            if (h_filter->GetBinContent(x,y)==0. && h_data->GetBinContent(x,y)!=0.) {
+    for (int x=1;x<=hg_data->GetNbinsX();++x) {
+        for (int y=1;y<=hg_data->GetNbinsY();++y) {
+            if (hg_filter->GetBinContent(x,y)==0. && hg_data->GetBinContent(x,y)!=0.) {
                 hg_data->SetBinContent(x,y,0.);
                 hg_data->SetBinError(x,y,0.);
                 ++n_zero;
@@ -1655,11 +1664,119 @@ int   tuZeroCopy(TH2D* h_data, TH2D* h_filter) {
     }
     return n_zero;
 };
+int   tuZeroCopy(TH1D* hg_data, TH1D* hg_filter) {
+    if (hg_data->GetNbinsX() != hg_filter->GetNbinsX()) {
+        cout << " fatal error in tuZeroCopy: numbers of bins in hg_data and hg_filter do not match" << endl;
+        return -1.;
+    }
+    int n_zero = 0;
+    for (int x=1;x<=hg_data->GetNbinsX();++x) {
+            if (hg_filter->GetBinContent(x)==0. && hg_data->GetBinContent(x)!=0.) {
+                hg_data->SetBinContent(x,0.);
+                hg_data->SetBinError(x,0.);
+                ++n_zero;
+            }
+    }
+    return n_zero;
+};
 
+vector<int> tuVecScrubNsig(TH2D* hg, double nsig, double q0, double q1, int which, bool scrub) {
+    vector<int> index;
+    const int x1 = hg->GetNbinsX();
+    for (int y = 1; y <= hg->GetNbinsY(); ++y) {
+        auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y);
+        tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
+        int i_cut = stats("i_cut",0);
+        if (which==kLeft) i_cut -=2;
+        index.push_back(i_cut);
+        if (scrub) {
+            if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
+            else               tuScrubBlock(hg,1, i_cut,y,y);
+        }
+        delete strip;
+    }
+    return index;
+};
+int tuVecScrubNsig(TH1D* hg, double nsig, double q0, double q1, int which, bool scrub) {
+    int index;
+    const int x1 = hg->GetNbinsX();
+    /* for (int y = 1; y <= hg->GetNbinsY(); ++y) { */
+        auto strip = hg;
+        tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
+        int i_cut = stats("i_cut",0);
+        if (which==kLeft) i_cut -=2;
+        index = i_cut;
+        if (scrub) {
+            if (which==kRight) tuScrubBlock(hg,i_cut,x1);
+            else               tuScrubBlock(hg,1, i_cut);
+        }
+        delete strip;
+    /* } */
+    return index;
+};
+vector<int> tuVecScrubQuant(TH2D* hg, double quantile, int which, bool scrub) {
+    vector<int> index;
+    const int x1 = hg->GetNbinsX();
+    double *q = new double[1];
+    double *x = new double[1];
+    q[0] = quantile;
+    for (int y = 1; y <= hg->GetNbinsY(); ++y) {
+        auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y);
+        strip->GetQuantiles(1,x,q);
+        int i_cut = x[0];
+        i_cut += (which==kRight) ? 1 : -1;
+        index.push_back(i_cut);
+        if (scrub) {
+            if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
+            else               tuScrubBlock(hg,1, i_cut,y,y);
+        }
+        delete strip;
+    }
+    delete[] q;
+    delete[] x;
+    return index;
+};
+int tuVecScrubQuant(TH1D* hg, double quantile, int which, bool scrub) {
+    int index;
+    const int x1 = hg->GetNbinsX();
+    double *q = new double[1];
+    double *x = new double[1];
+    q[0] = quantile;
+    /* for (int y = 1; y <= hg->GetNbinsY(); ++y) { */
+        auto strip = hg;
+        strip->GetQuantiles(1,x,q);
+        int i_cut = x[0];
+        i_cut += (which==kRight) ? 1 : -1;
+        index = i_cut;
+        if (scrub) {
+            if (which==kRight) tuScrubBlock(hg,i_cut,x1);
+            else               tuScrubBlock(hg,1, i_cut);
+        }
+        /* delete strip; */
+    /* } */
+    delete[] q;
+    delete[] x;
+    return index;
+};
+
+
+double tuVecScrub(TH2D* hg, vector<int> index, int which) {
+    double nscrub = 0.;
+    int one = 1;
+    int xmax = hg->GetNbinsX();
+    int i=1;
+    int& x0 = (which==kRight) ? i : one;
+    int& x1 = (which==kRight) ? xmax : i;
+    for (int y=1;y<hg->GetNbinsY(); ++y) {
+        i = index[y-1];
+        nscrub += tuScrubBlock(hg,x0,x1,y,y);
+    }
+    return nscrub;
+}
 
 void tuInflate(TH1* h) {
-    h->GetXaxis()->SetRange(1,h->GetXaxis()->GetNbins());
-    h->GetYaxis()->SetRange(1,h->GetYaxis()->GetNbins());
+    h->GetXaxis()->SetRange(1,h->GetNbinsX());
+    h->GetYaxis()->SetRange(1,h->GetNbinsY());
 };
 
 TH2D* tuNaiveRebin2D (TH2D* h_in, vector<double> x_bins, vector<double> y_bins, string name, bool in_place) {

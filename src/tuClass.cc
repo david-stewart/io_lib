@@ -2141,6 +2141,19 @@ tuSysErrors& tuSysErrors::set_rat_xbins(array<double,4> rat_rel) {
 TGraphAsymmErrors* tuSysErrors::operator-> () { return tgase; };
 tuSysErrors::operator TGraphAsymmErrors* () { return tgase; };
 
+
+/* tuCopyScrubber2D::fill_Nsigs (TH2D* hg, double nsig, double q0, double q1, int which, bool scrubb) { */
+/*     vector<double>& i_vec = (which==kLeft) ? i_lo : i_hi; */
+/*     for (int y = 1; y <= hg->GetNbinsY(); ++y) { */
+/*         auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y); */
+/*         tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig); */
+/*         i_vec.push_back(stats("i_cut",0)); */
+/*         if (scrubb */
+/*         delete strip; */
+/*     } */
+/*     if (scrubb) scrub(hg); */
+/*  }; */
+
 /* tu_TF1fitter::tu_TF1fitter(const char* fnc_str, const char* _name, TH1D* hg, double _lo, double _hi) : */
 /*     name { strcmp(_name,"")==0 ? tuUniqueName() : _name } , */
 /*     fn_str { fnc_str } */
