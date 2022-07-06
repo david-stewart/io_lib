@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 for file in include lib obj; do
 if [[ ! -d ${file} ]]; then
     mkdir ${file}
