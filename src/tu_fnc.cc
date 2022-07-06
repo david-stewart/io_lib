@@ -535,7 +535,8 @@ float tu_02pi(float  phi){
 };
 
 vector<double> tuQuantiles(TH1D* hg, vector<double> percents){
-    cout << hg->GetName() << endl;
+    if (hg->Integral()==0) return {};
+    /* cout << hg->GetName() << endl; */
     int n {(int)percents.size()};
     double *x = new double[n];
     double *q = new double[n];
@@ -546,6 +547,15 @@ vector<double> tuQuantiles(TH1D* hg, vector<double> percents){
     delete[] x;
     delete[] q;
     return vec;
+};
+vector<int> tuBinQuantiles(TH1D* hg, vector<double> ratios){
+    auto p = tuQuantiles(hg, ratios);
+    if (p.size()==0) return {};
+    vector<int> indices{};
+    for (auto val : p) {
+        indices.push_back(hg->GetXaxis()->FindBin(val));
+    }
+    return indices;
 };
 string  tuStringVec(vector<double> vec, const char* name, const char* formatter){
     if (vec.size()==0) return "";
@@ -993,7 +1003,7 @@ TGraphErrors* tuMakeTGraphErrors(vector<double> x, vector<double> y, vector<doub
     return new TGraphErrors(n,xpts,ypts,xerr,yerr);
 };
 
-TGraph* tuMakeTGraph(vector<double> x, vector<double> y) {
+TGraph* tuMakeTGraph(vector<double> x, vector<double> y, tuOptMap dict) {
     if (x.size() != y.size()) 
         throw std::runtime_error("tuMakeTGraph(vec, vec) required vectors of same length");
     const unsigned int n = x.size();
@@ -1003,7 +1013,9 @@ TGraph* tuMakeTGraph(vector<double> x, vector<double> y) {
         xpts[i] = x[i];
         ypts[i] = y[i];
     }
-    return new TGraph(n,xpts,ypts);
+    TGraph* r_pts = new TGraph(n,xpts,ypts);
+    if (dict.dict.size()!=0) tu_fmt(r_pts,dict);
+    return r_pts;
 };
 
 // find the bin in a vector
@@ -1475,10 +1487,7 @@ tuOptMap tuCalcRowStats(TH1* hg, double q0, double q1, double nsig, bool b_cut) 
         dict("nothing_here") = 1.;
         return dict;
     };
-    double q[2]; q[0] = q0; q[1]=q1;
-    double x[2];
-
-    hg->GetQuantiles(2,x,q);
+    auto x = tuQuantiles((TH1D*) hg,{q0,q1});
     TAxis *ax = hg->GetXaxis();
     int nbins = ax->GetNbins();
     double i0 = ax->FindBin(x[0]);
@@ -1686,79 +1695,98 @@ vector<int> tuVecScrubNsig(TH2D* hg, double nsig, double q0, double q1, int whic
     for (int y = 1; y <= hg->GetNbinsY(); ++y) {
         auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y);
         tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
-        int i_cut = stats("i_cut",0);
-        if (which==kLeft) i_cut -=2;
-        index.push_back(i_cut);
-        if (scrub) {
-            if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
-            else               tuScrubBlock(hg,1, i_cut,y,y);
+        int i_cut = stats("i_cut",-999);
+        if (i_cut!=-999) {
+            if (which==kLeft) i_cut -=2;
+            if (scrub) {
+                if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
+                else               tuScrubBlock(hg,1, i_cut,y,y);
+            }
         }
+        index.push_back(i_cut);
         delete strip;
     }
     return index;
 };
 int tuVecScrubNsig(TH1D* hg, double nsig, double q0, double q1, int which, bool scrub) {
-    int index;
+    int index=-999;
+    if (hg->Integral()==0) return index;
     const int x1 = hg->GetNbinsX();
     /* for (int y = 1; y <= hg->GetNbinsY(); ++y) { */
-        auto strip = hg;
-        tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
-        int i_cut = stats("i_cut",0);
+    auto strip = hg;
+    tuOptMap stats = tuCalcRowStats(strip, q0, q1, nsig);
+    int i_cut = stats("i_cut",-999);
+    if (i_cut!=-999) {
         if (which==kLeft) i_cut -=2;
         index = i_cut;
         if (scrub) {
             if (which==kRight) tuScrubBlock(hg,i_cut,x1);
             else               tuScrubBlock(hg,1, i_cut);
         }
+    }
+    return index;
+};
+vector<int> tuVecScrubIslands(TH2D* hg, double quantile, int which, bool scrub) {
+    vector<int> index;
+    const int x1 = hg->GetNbinsX();
+    /* double *q = new double[1]; */
+    /* double *x = new double[1]; */
+    /* q[0] = quantile; */
+    for (int y = 1; y <= hg->GetNbinsY(); ++y) {
+        auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y);
+        int i_cut = -999;
+        if (strip->Integral() != 0) {
+            auto quant_loc = tuQuantiles(strip,{quantile});
+            i_cut = hg->GetXaxis()->FindBin(quant_loc[0]);
+            i_cut += (which==kRight) ? 1 : -1;
+            if (scrub) {
+                if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
+                else               tuScrubBlock(hg,1, i_cut,y,y);
+            }
+        }
+        index.push_back(i_cut);
         delete strip;
-    /* } */
+    }
     return index;
 };
 vector<int> tuVecScrubQuant(TH2D* hg, double quantile, int which, bool scrub) {
     vector<int> index;
     const int x1 = hg->GetNbinsX();
-    double *q = new double[1];
-    double *x = new double[1];
-    q[0] = quantile;
+    /* double *q = new double[1]; */
+    /* double *x = new double[1]; */
+    /* q[0] = quantile; */
     for (int y = 1; y <= hg->GetNbinsY(); ++y) {
         auto strip = (TH1D*) hg->ProjectionX(tuUniqueName(),y,y);
-        strip->GetQuantiles(1,x,q);
-        int i_cut = x[0];
-        i_cut += (which==kRight) ? 1 : -1;
-        index.push_back(i_cut);
-        if (scrub) {
-            if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
-            else               tuScrubBlock(hg,1, i_cut,y,y);
+        int i_cut = -999;
+        if (strip->Integral() != 0) {
+            auto quant_loc = tuQuantiles(strip,{quantile});
+            i_cut = hg->GetXaxis()->FindBin(quant_loc[0]);
+            i_cut += (which==kRight) ? 1 : -1;
+            if (scrub) {
+                if (which==kRight) tuScrubBlock(hg,i_cut,x1,y,y);
+                else               tuScrubBlock(hg,1, i_cut,y,y);
+            }
         }
+        index.push_back(i_cut);
         delete strip;
     }
-    delete[] q;
-    delete[] x;
     return index;
 };
-int tuVecScrubQuant(TH1D* hg, double quantile, int which, bool scrub) {
-    int index;
+int tuScrubQuant(TH1D* hg, double quantile, int which, bool scrub) {
+    int index = -999;
+    if (hg->Integral()==0) return index;
     const int x1 = hg->GetNbinsX();
-    double *q = new double[1];
-    double *x = new double[1];
-    q[0] = quantile;
-    /* for (int y = 1; y <= hg->GetNbinsY(); ++y) { */
-        auto strip = hg;
-        strip->GetQuantiles(1,x,q);
-        int i_cut = x[0];
-        i_cut += (which==kRight) ? 1 : -1;
-        index = i_cut;
-        if (scrub) {
-            if (which==kRight) tuScrubBlock(hg,i_cut,x1);
-            else               tuScrubBlock(hg,1, i_cut);
-        }
-        /* delete strip; */
-    /* } */
-    delete[] q;
-    delete[] x;
+    auto strip = hg;
+    auto quant_loc = tuQuantiles(strip,{quantile});
+    int i_cut = strip->GetXaxis()->FindBin(quant_loc[0]);
+    i_cut += (which==kRight) ? 1 : -1;
+    index = i_cut;
+    if (scrub) {
+        if (which==kRight) tuScrubBlock(hg,i_cut,x1);
+        else               tuScrubBlock(hg,1, i_cut);
+    }
     return index;
 };
-
 
 double tuVecScrub(TH2D* hg, vector<int> index, int which) {
     double nscrub = 0.;
@@ -1769,6 +1797,7 @@ double tuVecScrub(TH2D* hg, vector<int> index, int which) {
     int& x1 = (which==kRight) ? xmax : i;
     for (int y=1;y<hg->GetNbinsY(); ++y) {
         i = index[y-1];
+        if (i==-999) continue;
         nscrub += tuScrubBlock(hg,x0,x1,y,y);
     }
     return nscrub;

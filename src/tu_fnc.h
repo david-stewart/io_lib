@@ -122,7 +122,8 @@ float tu_absDphi(float phi0, float phi1); // phi1 - phi0, returns in range (-pi,
 float tu_02pi(float &phi); // puts phi in range [0,2pi]
 float tu_02pi(float  phi); // same as above
 
-vector<double> tuQuantiles(TH1D* hg, vector<double> percents);
+vector<double> tuQuantiles(TH1D* hg, vector<double> ratios);
+vector<int>    tuBinQuantiles(TH1D* hg, vector<double> ratios);
 string  tuStringVec(vector<double>, const char* name="vec", const char* fmt="5.2f");
 
 int tu_count_digits(int i, int min_val=1); // returns number of digits in int; for 12->2; for 102311->6
@@ -178,7 +179,7 @@ double* tuSetValsPtr(vector<double>);
 //         column==val will only pick out that val per line
 //         skip_commas will remove all commas from all lines
 
-TGraph* tuMakeTGraph(vector<double> x, vector<double> y);
+TGraph* tuMakeTGraph(vector<double> x, vector<double> y, tuOptMap dict={});
 TGraph* tuMakeTGraph(TH1D* hg, bool invert_XY=false, bool skip_zeros=true, bool normalize=false);
 TGraph* tuMakeTGraph(TProfile* pr, bool invert_XY=false, bool skip_zeros=true, bool normalize=false);
 
@@ -277,13 +278,14 @@ double tuScrubBlock(TH1* hg, int x0, int x1);
 double tuScrubBins (TH1* hg, int min_bins);
 double tuScrubIslands(TH2* hg,  bool isX=true, int nblank=1, double max_scrub_rat = 0.05);
 double tuScrubNsigs(TH2D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
-double tuScrubNsigs(TH1D* hg, double nsig, bool isX=true, double q0=0., double q1=1.);
+double tuScrubNsigs(TH1D* hg, double nsig, double q0=0., double q1=1.);
 
 vector<int> tuVecScrubNsig (TH2D* hg, double nsig=2., double q0=0, double q1=1., int which=kRight, bool scrub=true);
 vector<int> tuVecScrubQuant(TH2D* hg, double quantile=0, int which=kRight, bool scrub=true);
+/* vector<int> tuVecScrubIsland(TH2D* hg, double quantile=0, int which=kRight, bool scrub=true); */
 
 int tuVecScrubNsig (TH1D* hg, double nsig=2., double q0=0, double q1=1., int which=kRight, bool scrub=true);
-int tuVecScrubQuant(TH1D* hg, double quantile=0, int which=kRight, bool scrub=true);
+int tuScrubQuant(TH1D* hg, double quantile=0, int which=kRight, bool scrub=true);
 
 double tuVecScrub(TH2D* hg, vector<int> index, int which=kRight);
 
