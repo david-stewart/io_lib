@@ -11,3 +11,4 @@ test*
 *.swp
 sandbox
 examples
+*.pdf
