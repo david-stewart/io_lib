@@ -303,6 +303,7 @@ void tuInflate(TH1* hg);
 void tuSqrtErr(TH1* hg, bool print_if_wrong=false); // match up bin contents with Sqrt of contents
 void tuUpdateTMfromR(TH2D* resp, TH2D* mod_resp, TH1D* truth, TH1D* meas); // update truth and measured from changes (cuts) in resp
                                                                            //
+
 string tuFileName(string input, vector<string> more_name={});
 /* string tuFileName(vector<string> input); */
 
@@ -313,5 +314,6 @@ string tuFileName(string input, vector<string> more_name={});
 // function to trim all bins < n_min from a TH2D or TH1D
 /* void tuTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */
 /* void tuTrimSmallBins(TH1D* hg, int Nmin, bool cut_underover_flow=true); */
+double tuXsec2015(int i_pthatbin);
 
 #endif

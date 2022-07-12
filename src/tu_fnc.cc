@@ -1935,3 +1935,11 @@ string tuFileName(string name, vector<string> more_names) {
     for (auto other : more_names) out += tuFileName(other);
     return out;
 };
+
+double tuXsec2015(int i_bin) {
+    //const static float NUMBEROFEVENT[NUMBEROFPT] = {242090.0,159181.0,96283.0,125463.0,441145.0,169818.0,58406.0,59431.0,59973.0};//old
+    const static array<double,9> xsection {0.107509,0.019097,0.004752,0.001988,0.000361,0.00000965,0.000000471,0.0000000268,0.00000000138};
+    const static array<double,9> n_events { 3.98674e+06, 2.11431e+06, 1.19222e+06, 1.67257e+06, 4.92392e+06, 1.79834e+06, 260674, 261926, 262366};
+    return xsection[i_bin]/n_events[i_bin];
+};
+
