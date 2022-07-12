@@ -1,5 +1,12 @@
 #include "oiJetMaker.h"
 
+ostream& operator<<(ostream& os, oiJetMaker& out) {
+    cout << " Contents of oiJetMaker, ("<<out.pseudojets.size() <<") PseudoJets :" << endl;
+    cout << Form("%-5s %-9s %-9s %-9s","index","pt","phi","eta") << endl;
+    int i{0};
+    for (auto& jet : out.pseudojets) cout << Form("%-5i %-9.5f %-9.5f %-9.5f",i++,jet.perp(),jet.phi(),jet.eta()) << endl;
+    return os;
+};
 oiJetMaker::oiJetMaker(ioOptMap _opt, ioOptMap _defaults) :
     opt    { _defaults+_opt },
     jet_R  { opt["jet_R"]() },
@@ -31,16 +38,35 @@ oiJetMaker::oiJetMaker(ioOptMap _opt, ioOptMap _defaults) :
         /* jet_R, jetrap, min_jet_pt) << endl; */
 };
 
-void oiJetMaker::add_particle(double pt, double eta, double phi){
-    particles.push_back(PseudoJet());
-    particles[n_particles++].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
+void oiJetMaker::remass(double mass, int index) {
+    if (index == -1) index = n_particles-1;
+    auto& p= particles[index];
+    p.reset_PtYPhiM( p.perp(), p.eta(), p.phi(), mass);
 };
-void oiJetMaker::add_particle(double pt, double eta, double phi, int index, bool is_neutral){
+void oiJetMaker::add_particle(PseudoJet jet, double mass) {
+    ++n_particles;
+    particles.push_back(jet);
+    remass(mass);
+};
+void oiJetMaker::add_particle(PseudoJet jet) {
+    ++n_particles;
+    particles.push_back(jet);
+};
+void oiJetMaker::add_particle(double pt, double eta, double phi, double mass){
+    ++n_particles;
     particles.push_back(PseudoJet());
-    particles[n_particles].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS );
+    particles[n_particles-1].reset_PtYPhiM( pt, eta, phi, mass );
+};
+/* void oiJetMaker::add_particle(double pt, double eta, double phi){ */
+/*     particles.push_back(PseudoJet()); */
+/*     particles[n_particles-1].reset_PtYPhiM( pt, eta, phi, PIPLUS_MASS ); */
+/* }; */
+void oiJetMaker::add_particle(double pt, double eta, double phi, int index, bool is_neutral, double mass){
+    ++n_particles;
+    particles.push_back(PseudoJet());
+    particles[n_particles-1].reset_PtYPhiM( pt, eta, phi, mass );
     if (is_neutral) index = -index-2; // must preserve -1 for ghost particles
     particles[n_particles].set_user_index(index);
-    n_particles++;
 };
 
 vector<int> oiJetMaker::get_indices(PseudoJet& jet) {
@@ -118,6 +144,7 @@ bool oiJetMaker::next() {
 int oiJetMaker::size() { return njets; };
 
 __oiJetMaker_Jet& oiJetMaker::operator[](int i) { return jets[i]; };
+PseudoJet& oiJetMaker::operator()(int i) { return pseudojets[i]; };
 
 int oiJetMaker::cluster_jets() {
     /* cout << " calc_areas: " << calc_areas << " jet_R " << jet_R << "  min_jet_pt " << min_jet_pt << endl; */

@@ -9,6 +9,21 @@ double* ioEdges_pAuJet_prelim_13bins(){
 };
 
 // jet_match_floats
+/* ioSimpleJetMatcher  ioSimpleJetMatcher(double _R) : R{_R} {}; */
+/* void addjet_MC( */
+/* struct ioSimpleJetMatcher { */
+/*     ioSimpleJetMatcher(double _R); */
+/*     const double R; */
+/*     vector<double> miss; */
+/*     vector<double> fake; */
+/*     vector<double> truth; */
+/*     vector<double> measured; */
+/*     vector<pair<double,double>> matched; */
+
+/*     void addjet_MC(float eta, float phi, float pT); */
+/*     void addjet_reco(float eta, float phi, float pT); */
+/*     bool do_matching(); // return true if successful matching */
+/* }; */
 
 
 ioJetMatcher::ioJetMatcher (const char* _name, ioXsec& _Xsec, 

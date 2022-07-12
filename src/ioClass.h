@@ -18,6 +18,11 @@
 #include "TF1.h"
 #include <set>
 #include "TRandom3.h"
+#include "RooUnfoldResponse.h"
+#include "fastjet/PseudoJet.hh"
+#include "TH1D.h"
+#include "TH2D.h"
+using fastjet::PseudoJet;
 
 // --------------------------------------------------------------------------------------
 // ioGetter:
@@ -83,6 +88,7 @@ struct ioBinVec {
     ioBinVec(const char* file, const char* tag, ioOptMap options={}, bool use_binspacer=true); 
     ioBinVec(TH1*, const char axis='x');
     ioBinVec(const ioBinVec&);
+    ioBinVec& operator= (const ioBinVec& _);
     void init(vector<double>, bool range_double=true);
     /* void update(); */
     // all constructors use build_ptr
@@ -90,9 +96,11 @@ struct ioBinVec {
     // read the vec from a file with ioReadValVec
     ~ioBinVec();
     double*        ptr;
-    int            size;
-    vector<double> vec;
+    bool           has_ptr{false};
+    int            size {0}; // number of edges
+    vector<double> vec {};
     void set_val(int i, double val);
+    void print(ostream& os=std::cout);
 
     /* int nbins(); // return size_ptr-1 */
     /* operator int (); */
@@ -834,6 +842,26 @@ struct ioHopper1D {
     vector<pair<double,double>>::iterator begin();
     vector<pair<double,double>>::iterator end();
     int fill(double val, double weight=1.);
+};
+
+struct ioSimpleJetMatcher {
+    vector<unsigned int> misses {};
+    vector<unsigned int> fakes {};
+    vector<pair<unsigned int, unsigned int>> matches {};
+    ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M, double R=0.4);
+    ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M,  double trigger_phi, 
+            pair<double,double> delta_phi_range={0, M_PI/3.}, double R=0.4);
+};
+
+struct ioRooUnfoldResponseFiller {
+    array<RooUnfoldResponse*,9> response, response_A, response_B;
+    ioRooUnfoldResponseFiller(TH1D* form_true, TH1D* form_meas, string tag="");
+    vector<int> pthatbins {5,7,9,11,15,25,35,45,55,65};
+    double min_T, max_T, min_M, max_M;
+    void write(bool print=false);
+    void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A);
+    void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A, double phi_trig,
+            pair<double,double> trig_range);
 };
 
 

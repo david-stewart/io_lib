@@ -25,6 +25,20 @@ struct ioJetMatcher_index {
     float dR;   // distance between the matches
 };
 
+/* struct ioSimpleJetMatcher { */
+/*     ioSimpleJetMatcher(double _R); */
+/*     const double R; */
+/*     vector<double> miss; */
+/*     vector<double> fake; */
+/*     vector<double> truth; */
+/*     vector<double> measured; */
+/*     vector<pair<double,double>> matched; */
+
+/*     void addjet_MC(float eta, float phi, float pT); */
+/*     void addjet_reco(float eta, float phi, float pT); */
+/*     bool do_matching(); // return true if successful matching */
+/* }; */
+
 struct ioJetMatcher {
     // like above, but uses it's own ioXsec
     public:
