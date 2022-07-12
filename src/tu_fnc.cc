@@ -1032,23 +1032,6 @@ int tuwhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));
 } ;
 
-double* ax_doubleptr(vector<int> vals) {
-    sort(vals.begin(), vals.end());
-    int size { static_cast<int>(vals.size()) };
-    double* x = new double[size + 1];
-    if (size == 0) return x;
-    if (size == 1) {
-        x[0] = vals[0]-0.5;
-        x[1] = vals[0]+0.5;
-        return x;
-    }
-    x[0] = vals[0] - (vals[1] - vals[0])/2.;
-    for (int i{1}; i<size; ++i) {
-        x[i] = (vals[i]+vals[i-1])/2.;
-    }
-    x[size] = vals[size-1]+(vals[size-1]-vals[size-2])/2.;
-    return x;
-};
 double tu_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
 double tu_D2(double x0,double y0,double x1,double y1) 

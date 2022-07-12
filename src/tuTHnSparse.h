@@ -6,6 +6,80 @@
 #include "TRandom3.h"
 
 /* using fastjet::PseudoJet; */
+class tuTrackSparse2 {
+    // axes:
+    // EVENT:
+    // 0 : bbc     - 3 bins
+    // 1 : TrigEt  - 3 bins
+    // 2 : TrigEta - 3 bins
+    // 3 : TrigPhi - 60 bins
+    // 4 : ZDCx    - 3 bins -- 4-10, 10-16, 16-22 kHz
+    // 5 : runId   - 3 bins -- 16125035 16142059 16149001 16159024
+    // TRACK:
+    // 6 : pt       - 40 bins
+    // 7 : abs_dphi - 3  bins -- 0 - trans, 1, same-size, 2, recoil 
+    // 8 : phi      - 60 bins
+    // 9 : eta      - 3  bins -- east, mid, west
+    // 10 : dca
+    private:
+    int nbins[11];
+    double n_triggers{-1};
+    bool scaleByBinWidth=true;
+
+    public:
+    double weight{1.};
+    double hopper[11];
+    double trig_phi;
+    tuBinVec* bins {nullptr};
+    tuTrackSparse2(const char* tag="", bool debug_print=false);
+    tuTrackSparse2(THnSparseD* _data_jet, THnSparseD* data_trig, bool debug_print=false);
+    void write();
+
+    THnSparseD* data_trig;
+    THnSparseD* data_track;
+
+    bool debug_print {false};
+    
+    void fill_trig (double EAbbc, double TrigEt, double TrigEta, double trigPhi, double ZDCx, double runId);
+    void fill_track(double pt, double eta, double phi, double dca); 
+    // note: will fill with last values in hopper from fill_trig;
+
+    void range_axes       (int i_axis, int i0, int i1);
+    void range_axes_float (int i_axis, double f0, double f1);
+    void range_bbc        (int i0, int i1) { range_axes(0,i0,i1); };
+
+    void range_EAbbc    (int i0, int i1) { range_axes(0,i0,i1); };
+    void range_TrigEt   (int i0, int i1) { range_axes(1,i0,i1); };
+    void range_TrigEta  (int i0, int i1) { range_axes(2,i0,i1); };
+    void range_TrigPhi  (int i0, int i1) { range_axes(3,i0,i1); };
+    void range_ZDCx     (int i0, int i1) { range_axes(4,i0,i1); };
+    void range_runId    (int i0, int i1) { range_axes(5,i0,i1); };
+
+    void range_pt       (int i0, int i1) { range_axes(6, i0,i1); };
+    void range_abs_dphi (int i0, int i1) { range_axes(7, i0,i1); };
+    void range_phi      (int i0, int i1) { range_axes(8, i0,i1); };
+    void range_eta      (int i0, int i1) { range_axes(9, i0,i1); };
+    void range_dca      (int i0, int i1) { range_axes(10, i0,i1); };
+
+    TH1D* hg_axis     (int i_axis,  double norm=0., bool is_trig=true);
+    TH2D* hg2_axis    (int i0_axis, int i1_axis, double norm=0., bool is_trigger=true);
+
+    TH1D* hg_EAbbc    (double norm=1., bool is_trig=true) { return hg_axis(0, norm, is_trig); };
+    TH1D* hg_TrigEt   (double norm=1., bool is_trig=true) { return hg_axis(1, norm, is_trig); };
+    TH1D* hg_TrigEta  (double norm=1., bool is_trig=true) { return hg_axis(2, norm, is_trig); };
+    TH1D* hg_TrigPhi  (double norm=1., bool is_trig=true) { return hg_axis(3, norm, is_trig); };
+    TH1D* hg_ZDCx     (double norm=1., bool is_trig=true) { return hg_axis(4, norm, is_trig); };
+    TH1D* hg_runId    (double norm=1., bool is_trig=true) { return hg_axis(5, norm, is_trig); };
+
+    TH1D* hg_pt       (double norm=1.) { return hg_axis(6, norm, false); };
+    TH1D* hg_abs_dphi (double norm=1.) { return hg_axis(7, norm, false); };
+    TH1D* hg_phi      (double norm=1.) { return hg_axis(8, norm, false); };
+    TH1D* hg_eta      (double norm=1.) { return hg_axis(9, norm, false); };
+    TH1D* hg_dca      (double norm=1.) { return hg_axis(10, norm, false); };
+
+    double get_n_triggers();
+};
+
 
 class tuTrackSparse {
     // axes:

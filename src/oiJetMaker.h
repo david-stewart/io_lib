@@ -34,6 +34,7 @@ class oiJetMaker {
     double ghost_max_rap;
     double ghost_R;
 
+    friend ostream& operator<<(ostream& os, oiJetMaker& out);
     // set the values for const members in the constructor
     oiJetMaker(ioOptMap options={},
             ioOptMap defaults={{
@@ -50,8 +51,12 @@ class oiJetMaker {
     // add options in the future to jet jet areas with ghost_particles
 
     vector<PseudoJet> particles {};
-    void add_particle(double pt, double eta, double phi);
-    void add_particle(double pt, double eta, double phi, int index, bool is_neutral=false);
+    void remass(double mass, int index=-1);
+    void add_particle(PseudoJet);
+    void add_particle(PseudoJet, double mass);
+    void add_particle(double pt, double eta, double phi, double mass=0.);
+    /* void add_particle(double pt, double eta, double phi); */
+    void add_particle(double pt, double eta, double phi, int index, bool is_neutral=false, double mass=0.);
 
     // get the indices in the jets:
     static bool has_N_index(PseudoJet& jet, int index); // see if part. is in jet
@@ -82,6 +87,7 @@ class oiJetMaker {
     
     vector<__oiJetMaker_Jet> jets {}; // filled from pseudojets
     __oiJetMaker_Jet& operator[](int);
+    PseudoJet& operator()(int);
 
     /* ~oiJetMaker(); */
 };

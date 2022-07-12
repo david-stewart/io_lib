@@ -197,16 +197,6 @@ int tuwhichbin1(double val, TH1D*); // remember that the first bin is zero-index
 void tu_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
 void tu_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
 
-double* ax_doubleptr(vector<int> vec);
-/* int tuwhichbin(double val, int nBec, double*); */
-/* int tuwhichbin(double val, vector<double>&, vector<int> remap); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound */
-/* int tuwhichbin(double val, int, double*,   vector<int> remap); */
-
-double tu_D (double x0,double y0,double x1,double y1);
-double tu_D2(double x0,double y0,double x1,double y1);
-double tu_R (double eta0,double phi0,double eta1,double phi1);
-double tu_R2(double eta0,double phi0,double eta1,double phi1);
-
 // return the ratio of a circle of radius R outside of a line distance d away 
 double tuRatCircleOverLine (double R, double d);
 double tuRatCircleInTwoParallelLines (const double d0,const double d1, double C, double R);

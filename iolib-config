@@ -10,6 +10,9 @@ elif [ $1 = "-L" ]; then
             str="${str} -l${io}${line}"
         done < ${lib_path}/${io}_lib_list
     done
+    while read line; do
+        str="${str} -ltu${line}"
+    done < ${lib_path}/tu_lib_list
     echo ${str}
 fi
 

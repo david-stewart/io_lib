@@ -100,16 +100,30 @@ ioBinVec::ioBinVec(TAxis* ax) {
     init(build_vec);
 };
 ioBinVec::ioBinVec(int nbins, double lo, double hi) :
-    size {nbins} 
+    size {nbins+1} 
 {
     double step = (hi-lo)/nbins;
-    for (int i{1}; i<=size; ++i) vec.push_back(lo+i*step);
+    for (int i{0}; i<size; ++i) vec.push_back(lo+i*step);
     build_ptr();
 };
 void ioBinVec::build_ptr() {
+    /* cout << " build_ptr 0 " << size << endl; */
     size = vec.size();
+    /* cout << " build_ptr 1 " << size << endl; */
+    if (has_ptr) {
+        delete[] ptr;
+        has_ptr = false;
+    }
+    /* cout << " build_ptr 2" << endl; */
     ptr = new double[size];
-    for (int i{0}; i<size; ++i) ptr[i] = vec[i];
+    has_ptr = true;
+    /* cout << " build_ptr 3 " << size << endl; */
+    for (int i{0}; i<size; ++i) {
+        /* cout << " filling : " << i << " -> " << vec[i] << endl; */
+        ptr[i] = vec[i];
+        /* cout << " ? fill ?  " << i << " -> " << ptr[i] << " is " << vec[i] << endl; */
+    }
+    /* cout << " build_ptr 4" << endl; */
 };
 /* ioBinVec::operator int () { return size-1; }; */
 ioBinVec::operator int () const { return size-1; };
@@ -134,7 +148,13 @@ ioBinVec::ioBinVec(vector<vector<double>> V_in) {
 };
 // copy constructor
 ioBinVec::ioBinVec(const ioBinVec& cp) {
+    /* cout << " COPY " << endl; */
     init(cp.vec, true);
+};
+ioBinVec& ioBinVec::operator= (const ioBinVec& _) {
+    /* cout << " Assignement " << endl; */
+    this->init(_.vec);
+    return *this;
 };
 ioBinVec::ioBinVec(TH1* h, const char axis) {
     TAxis* ax;
@@ -177,8 +197,14 @@ void ioBinVec::set_val(int i, double val) {
 /* ioBinVec operator+ (ioBinVec lhs, const ioBinVec& rhs) { lhs += rhs; return lhs; }; */
 
 void ioBinVec::init(vector<double> V, bool range_repeat) {
+    /* cout << " init 0 " << endl; */
+    if (vec.size() != 0) vec.clear();
+    /* cout << " init 1 " << endl; */
+    /* if (ptr != nullptr) delete [] ptr; */
     if (!range_repeat || V.size()==0) {
+    /* cout << " init 2 " << endl; */
         for (auto v : V) vec.push_back(v);
+    /* cout << " init 3 " << endl; */
         build_ptr();
         return;
     }
@@ -204,7 +230,7 @@ void ioBinVec::init(vector<double> V, bool range_repeat) {
     build_ptr();
 };
 ioBinVec::~ioBinVec() {
-    delete[] ptr;
+    if (has_ptr) delete[] ptr;
 };
 /* int ioBinVec::nbins() { return (int) size-1; }; */
 vector<double>::const_iterator ioBinVec::begin() const { return vec.begin(); };
@@ -219,8 +245,17 @@ double ioBinVec::bin_overflow() {
     int i { static_cast<int>(vec.size())-1 };
     return vec[i]+(vec[i]-vec[i-1]);
 };
+void ioBinVec::print(ostream& os) {
+    os << " ioBinVec::vector: " << endl;
+    for (auto v : vec) os << " " << v;
+    os << endl;
+    os << " ioBinVec::ptr " << endl;
+    for (auto i=0;i<size;++i) os << Form("double* (%3i,",i) <<" " << ptr[i] <<")" << endl;
+};
 ostream& operator<<(ostream& os, ioBinVec& io) {
-    for (auto v : io) cout << " " << v;
+    for (auto v : io) os << " " << v;
+    /* os << endl; */
+    /* for (auto i=0;i<io.size;++i) os << Form("double* (%3i,",i) <<" " << io.ptr[i] <<")" << endl; */
     return os;
 };
 
@@ -1907,6 +1942,7 @@ ioPtrDbl& ioPtrDbl::operator=(const ioPtrDbl& rhs) {
 
 void ioPtrDbl::build_ptr() {
     size = vec.size();
+    /* if (ptr != nullptr) delete[] ptr; */
     ptr = new double[size];
     for (int i{0}; i<size; ++i) ptr[i] = vec[i];
 };
@@ -2449,3 +2485,171 @@ vector<pair<double,double>>::iterator ioHopper1D::begin() {
 vector<pair<double,double>>::iterator ioHopper1D::end() {
     return hopper.end();
 }
+
+ioRooUnfoldResponseFiller::ioRooUnfoldResponseFiller(TH1D* template_M, TH1D* template_T, string tag) {
+    min_T = template_T->GetXaxis()->GetBinLowEdge(1);
+    min_M = template_M->GetXaxis()->GetBinLowEdge(1);
+    max_T = template_T->GetXaxis()->GetBinUpEdge(template_T->GetXaxis()->GetNbins());
+    max_M = template_M->GetXaxis()->GetBinUpEdge(template_M->GetXaxis()->GetNbins());
+    for (int i=0;i<9;++i) {
+        response   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_%i",tag.c_str(),i),
+            Form("Response, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_A   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_A_%i",tag.c_str(),i),
+            Form("Response A, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_B   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_B_%i",tag.c_str(),i),
+            Form("Response B, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+    };
+};
+void ioRooUnfoldResponseFiller::write(bool print) {
+    for (auto R : response)     R->Write();
+    for (auto R : response_A)   R->Write();
+    for (auto R : response_B)   R->Write();
+    if (print) {
+        cout << "Entries in : " << response[0]->GetName() << endl;
+        for (int i=0;i<9;++i) cout << Form("%2i : all %f  A %f  B %f",i,response[i]->Hresponse()->Integral(),
+                response_A[i]->Hresponse()->Integral(), response_B[i]->Hresponse()->Integral()) << endl;
+    }
+};
+/* void ioRooUnfoldResponseFiller::miss(int pthatbin, double T, bool is_A) { */
+/*     if (T < min_T || T > max_T) return; */
+/*     response[pthatbin]->Miss(T); */
+/*     (is_A ? response_A[pthatbin] : response_B[pthatbin])->Miss(T); */
+/* }; */
+/* void ioRooUnfoldResponseFiller::fake(int pthatbin, double M, bool is_A) { */
+/*     if (M < min_M || M > max_M) return; */
+/*     response[pthatbin]->Fake(M); */
+/*     (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fake(M); */
+/* }; */
+/* void ioRooUnfoldResponseFiller::match(int pthatbin, double M, double T, bool is_A) { */
+/*     if (M < min_M || M > max_M || T < min_T || T > max_T) return; */
+/*     response[pthatbin]->Fill(M,T); */
+/*     (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fill(M,T); */
+/* }; */
+void ioRooUnfoldResponseFiller::fill(int pthatbin, vector<PseudoJet>& T_jet, vector<PseudoJet>& M_jet, bool is_A) {
+    ioSimpleJetMatcher indices { T_jet, M_jet };
+    for (auto i : indices.fakes)  {
+        double M = M_jet[i].perp();
+        if (M < min_M || M > max_M) continue;
+        response[pthatbin]->Fake(M);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fake(M);
+    }
+    for (auto i : indices.misses)  {
+        double T = T_jet[i].perp();
+        if (T < min_T || T > max_T) continue;
+        response[pthatbin]->Miss(T);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Miss(T);
+    }
+    for (auto p : indices.matches) {
+        double M = M_jet[p.second].perp();
+        double T = T_jet[p.first ].perp();
+        if (M < min_M || M > max_M || T < min_T || T > max_T) continue;
+        response[pthatbin]->Fill(M,T);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fill(M,T);
+    }
+};
+void ioRooUnfoldResponseFiller::fill(int pthatbin, vector<PseudoJet>& T_jet, vector<PseudoJet>& M_jet, bool is_A,
+        double phi_trig, pair<double,double> trig_range) {
+    ioSimpleJetMatcher indices { T_jet, M_jet, phi_trig, trig_range };
+    for (auto i : indices.fakes)  {
+        double M = M_jet[i].perp();
+        if (M < min_M || M > max_M) continue;
+        response[pthatbin]->Fake(M);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fake(M);
+    }
+    for (auto i : indices.misses)  {
+        double T = T_jet[i].perp();
+        if (T < min_T || T > max_T) continue;
+        response[pthatbin]->Miss(T);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Miss(T);
+    }
+    for (auto p : indices.matches) {
+        double M = M_jet[p.second].perp();
+        double T = T_jet[p.first ].perp();
+        if (M < min_M || M > max_M || T < min_T || T > max_T) continue;
+        response[pthatbin]->Fill(M,T);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fill(M,T);
+    }
+};
+
+ioSimpleJetMatcher::ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M, double R) {
+    // NOTE :: vectors of jets are assumed to already be sorted by pT
+    const unsigned int nT = jets_T.size() ;
+    const unsigned int nM = jets_M.size() ;
+    const double limit_R2 {R*R};
+    vector<bool> matched_T (nT, false);
+    vector<bool> matched_M (nM, false);
+    for (unsigned int t=0; t<nT; ++t) {
+        bool found_match {false};
+        for (unsigned int m=0; m<nM; ++m) {
+            if (matched_M[m]) continue; // jet is already matched
+            if ( jets_T[t].squared_distance(jets_M[m]) <= limit_R2 ) {
+                matched_T[t] = true;
+                matched_M[m] = true;
+                matches.push_back({t,m});
+                found_match = true;
+                break;
+            }
+        }
+        if (!found_match) misses.push_back(t);
+    }
+    for (unsigned int m=0; m<nM; ++m) {
+        if (!matched_M[m]) fakes.push_back(m);
+    }
+};
+
+
+ioSimpleJetMatcher::ioSimpleJetMatcher(
+        vector<PseudoJet>& jets_T, 
+        vector<PseudoJet>& jets_M, 
+        double phi_trig, 
+        pair<double,double> dphi_range, 
+        double R) 
+{
+    // NOTE :: vectors of jets are assumed to already be sorted by pT
+    const unsigned int nT = jets_T.size() ;
+    const unsigned int nM = jets_M.size() ;
+    const double limit_R2 {R*R};
+
+    vector<bool> phi_cut_T (nT, false);
+    for (unsigned int i=0; i<jets_T.size(); ++i) {
+        double absDphi = io_absDphi(phi_trig, jets_T[i].phi());
+        if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_T[i] = true;
+    }
+    vector<bool> phi_cut_M (nT, false);
+    for (unsigned int i=0; i<jets_M.size(); ++i) {
+        double absDphi = io_absDphi(phi_trig, jets_M[i].phi());
+        if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_M[i] = true;
+    }
+
+    vector<bool> matched_T (nT, false);
+    vector<bool> matched_M (nM, false);
+
+    /* cout << " nT " << nT << "  nM " << nM << endl; */
+
+    /* cout << " start " << endl; */
+    /* for (auto tf : matched_T) cout << tf << " "; cout << endl; */
+
+    for (unsigned int t=0; t<nT; ++t) {
+        if (phi_cut_T[t]) continue;
+        /* cout << " T:" << t << " " << jets_T[t].perp() << endl; */
+        bool found_match {false};
+        for (unsigned int m=0; m<nM; ++m) {
+            if (phi_cut_M[m]) continue;
+            if (matched_M[m]) continue; // jet is already matched
+            if ( jets_T[t].squared_distance(jets_M[m]) <= limit_R2 ) {
+                matched_T[t] = true;
+                matched_M[m] = true;
+                matches.push_back({t,m});
+                found_match = true;
+                /* for (auto tf : matched_T) cout << tf << " "; cout << endl; */
+                break;
+            }
+        }
+        if (!found_match) misses.push_back(t);
+    }
+    for (unsigned int m=0; m<nM; ++m) {
+        if (phi_cut_M[m]) continue;
+        if (!matched_M[m]) fakes.push_back(m);
+    }
+};
+
