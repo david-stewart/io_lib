@@ -1032,6 +1032,7 @@ int tuwhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));
 } ;
 
+
 double tu_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
 double tu_D2(double x0,double y0,double x1,double y1) 
@@ -1156,9 +1157,36 @@ bool tuIsAnyTag    (TString word) {
     return word.EndsWith(">");
 };
 
+void tu_normByCol(TH2D* hg, double factor, bool use_max_val) {
+    int nCols = hg->GetNbinsX();
+    int nRows = hg->GetNbinsY(); 
+
+    for (int col{1}; col<=nCols; ++col) {
+        double mult;
+        if (use_max_val) {
+            double vmax { hg->GetBinContent(col,1) };
+            for (int row{1}; row <= nRows; ++row) {
+                if (hg->GetBinContent(col,row) > vmax) {
+                    vmax = hg->GetBinContent(col,row);
+                }
+            }
+            mult = 1./vmax;
+        } else {
+            /* mult = factor / hg->Integral(1,nCols,row,row); */
+            mult = factor / hg->Integral(col,col,1,nRows);
+        }
+
+        for (int row {1}; row <= nRows; ++row) {
+            hg->SetBinContent(col, row, hg->GetBinContent(col, row) * mult);
+            hg->SetBinError  (col, row, hg->GetBinError  (col, row) * mult);
+        }
+    };
+};
+
+
 void tu_normByRow(TH2D* hg, double factor, bool use_max_val) {
     int nCols = hg->GetNbinsX();
-    int nRows   = hg->GetNbinsY(); 
+    int nRows = hg->GetNbinsY(); 
 
     for (int row{1}; row<=nRows; ++row) {
         double mult;
