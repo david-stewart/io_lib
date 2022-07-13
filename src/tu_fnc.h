@@ -194,8 +194,8 @@ int tuwhichbin0(double val, TH1D*); // remember that the first bin is zero-index
 int tuwhichbin1(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 int tuwhichbin1(double val, TH1D*); // remember that the first bin is zero-indexed
 
-void tu_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
-void tu_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
+/*void tu_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row */
+/*void tu_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row */
 
 // return the ratio of a circle of radius R outside of a line distance d away 
 double tuRatCircleOverLine (double R, double d);
@@ -227,6 +227,7 @@ bool tuIsAnyTag    (TString word);
 // if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
 
 void tu_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
+void tu_normByCol(TH2D* hg, double factor=1.0, bool use_max_val=false);
 
 vector<double> tu_print_first_blank(TH2D*);
 
