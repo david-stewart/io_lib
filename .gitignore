@@ -12,3 +12,7 @@ test*
 sandbox
 examples
 *.pdf
+*.root
+temp*
+src/RooUnfold
+root_L_script.sh
