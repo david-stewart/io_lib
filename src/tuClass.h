@@ -230,6 +230,20 @@ struct tuPads {
     void save(string outname, string tag=""); // 
     void print(string,vector<string>other={});
 
+    // rules:
+    // In all words, strip a ".cc" ".C" or ".cxx"
+    // prepend `pwd`/ to the name
+    // concatenate all words together
+    // add a .pdf
+    void pdf(string string_with_dollar0, vector<string> additional={} );
+    /* // prepend the `date` `pwd`/$0 */
+    void label(string string_with_dollar0, tuOptMap opt={}, 
+        tuOptMap dict = {{ 
+        "TextColor", (kGray+2), 
+        "TextSize", 12,
+        "x-loc", .05,
+        "y-loc", .05}}, vector<string> additional={} );
+
     // To do here:
 
 };

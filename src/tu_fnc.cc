@@ -435,6 +435,14 @@ TH1D* tuNorm(TH1D* hg, const char which) {
             return hg;
     }
 };
+TH1D*       tuNormByBin (TH1D* hg, int bin=1) {
+    double norm = hg->GetBinContent(bin);
+    for (int i=1; i<=hg->GetNbinsX();++i) {
+        hg->SetBinContent(i, hg->GetBinContent(i)/norm);
+        hg->SetBinError  (i, hg->GetBinError  (i)/norm);
+    }
+    return hg;
+};
 //*
 double tu_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
     int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
@@ -1954,3 +1962,32 @@ double tuXsec2015(int i_bin) {
     return xsection[i_bin]/n_events[i_bin];
 };
 
+string tuStripEnd(string word, string sub) {
+    auto i0  = sub.length();
+    auto i1  = word.length();
+    if (i1 < i0) return word;
+    return (word.substr(i1-i0,i0)==sub)
+        ? word.substr(0,i1-i0)
+        : word;
+}
+string tuStripEnds(string word, vector<string> endings) {
+    for (auto sub : endings) {
+        word = tuStripEnd(word,sub);
+    }
+    return word;
+};
+string tuStripStart(string word, string sub) {
+    auto i0  = sub.length();
+    auto i1  = word.length();
+    if (i0>i1) return word;
+    word = (word.substr(0,i0) == sub) 
+        ? word.substr(i0,i1-i0)
+        : word;
+    return word;
+};
+string tuStripStarts(string word, vector<string> startings) {
+    for (auto pre : startings) {
+        word = tuStripStart(word,pre);
+    }
+    return word;
+};
