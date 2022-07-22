@@ -11,6 +11,7 @@
 #include <set>
 #include "TTreeReader.h"
 #include "tuConst.h"
+#include "TSystem.h"
 
 using namespace std;
 
@@ -485,6 +486,16 @@ void tuPads::stamp(string msg, tuOptMap options, tuOptMap dict) {
     /* cout << " x: " << dict["x-loc"] << "  " << dict["y-loc"] << endl; */
     tuDrawTLatex(msg.c_str(),dict("x-loc"), dict("y-loc"), dict);
 };
+void tuPads::label(string msg, tuOptMap options, tuOptMap dict, vector<string> additional) {
+    TString _ = gSystem->GetFromPipe("date");
+    TString pwd = gSystem->pwd();
+    string output = Form("%s %s/",_.Data(),pwd.Data());
+    output += tuStripStart(msg,"./");
+    for (auto w : additional) output += w;
+    dict += options;
+    canvas_pad->cd();
+    tuDrawTLatex(output.c_str(),dict("x-loc"), dict("y-loc"), dict);
+};
 void tuPads::save(string name, string tag) {
     TString check {name};
     if (!check.Contains(".")) check.Append(Form("%s.pdf",tag.c_str()));
@@ -492,8 +503,27 @@ void tuPads::save(string name, string tag) {
     else if (check.EndsWith(".C" )) check.ReplaceAll(".C", Form("%s.pdf",tag.c_str()));
     canvas->Print(check.Data());
 };
-void tuPads::print(string name, vector<string> other) {
-    canvas->Print(tuFileName(name,other).c_str());
+/* void tuPads::print(string name, vector<string> other) { */
+/*     canvas->Print(tuFileName(name,other).c_str()); */
+/* }; */
+void tuPads::pdf(string string_with_dollar0, vector<string> other) {
+    string name = gSystem->pwd();
+    name += "/";
+    istringstream iss;
+    iss.str(string_with_dollar0);
+    string word;
+    while (iss >> word) {
+        name += tuStripEnds( tuStripStart(word, "./"), {".C",".cc",".cxx",".pdf"});
+    }
+    for (auto& words : other) {
+        iss.clear();
+        iss.str(words);
+        while (iss >> word)  {
+            name += tuStripEnds( tuStripStart(word, "./"), {".C",".cc",".cxx",".pdf"});
+        }
+    }
+    name += ".pdf";
+    canvas->Print(name.c_str());
 };
     // concatenate each word, and strip any non-leading '.' from them
     /* string out= tuFileName(name); */
