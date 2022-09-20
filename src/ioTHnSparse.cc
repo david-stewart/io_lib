@@ -26,11 +26,11 @@ ioTrackSparse::ioTrackSparse( const char* tag, bool _dbprint) :
 {
     ioBinVec bin_TrigEt   {{ 0.,4.,8.,12.,30.}};
     ioBinVec bin_ZDCx     {{ 4000., 10000., 16000., 22000. }};
-    ioBinVec bin_vz       {{ -10., -10., 20, 10. }};
+    ioBinVec bin_vz       {{ 0., 1. }};
     ioBinVec bin_abs_dphi {{ 0., M_PI/3., 2*M_PI/3., M_PI+0.00001 }};
     ioBinVec bin_etabin_      {{ -1.0, -0.3, 0.3, 1. }};
     ioBinVec bin_eta_PU    {{ -1.0, -0.3, 0.3, 1., 2.}};// the eta bin is for overall PU density
-    ioBinVec bin_eta       {{ -1.0, -1.0, 10, 1.}};
+    ioBinVec bin_eta       {{ -1.0, -.3, 0.3, 1.}};
 
     const ioBinVec bin_trpt {{ // track pT bins
      0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,

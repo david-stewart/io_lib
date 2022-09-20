@@ -19,6 +19,19 @@ struct tuXsec_pAu2015 {
     // fail if not one of the above sets
     unsigned int pthatbin(int pthat_min, int pthat_max);
 
+    static constexpr double f_n10xPyth6[9] {
+        3920155 , 2101168 , 1187058 , 1695141 , 
+        4967075 , 1797387 , 260676 , 261926 , 262366
+    };
+    static constexpr double f_XsecPyth6[9] {
+        0.107509,   0.0190967,  0.00475202,
+        0.00198812, 0.000361282, 9.65463E-06,
+        4.71077E-07, 2.68464E-08, 1.38211E-09
+    };
+    static double w10xPyth6(int i) {
+        return f_XsecPyth6[i] / f_n10xPyth6[i];
+    };
+
     // Return the Xsection according to Pythia8/6
     //   divided by number_of_events.
     //   If number_of_events == 0:

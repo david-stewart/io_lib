@@ -23,6 +23,7 @@
 #include "TH1D.h"
 #include "TH2D.h"
 using fastjet::PseudoJet;
+using std::array;
 
 // --------------------------------------------------------------------------------------
 // ioGetter:
@@ -838,6 +839,7 @@ struct ioHopper1D {
     vector<pair<double,double>> hopper;
     void reset();
     int nbins;
+    double total {0.};
     ioHopper1D(vector<double> _edges);
     vector<pair<double,double>>::iterator begin();
     vector<pair<double,double>>::iterator end();

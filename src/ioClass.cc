@@ -2474,10 +2474,12 @@ int ioHopper1D::fill(double val, double weight) {
     if (lb == edges.end())   return -1; // don't fill anything
     int bin = static_cast<int>(lb-edges.begin()-1);
     hopper[bin].second += weight;
+    total += weight;
     return bin;
 };
 void ioHopper1D::reset() {
     for (auto& v : hopper) v.second = 0.;
+    total = 0;
 };
 vector<pair<double,double>>::iterator ioHopper1D::begin() {
     return hopper.begin();

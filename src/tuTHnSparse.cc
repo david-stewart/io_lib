@@ -14,6 +14,8 @@ tuTrackSparse2::tuTrackSparse2( const char* tag, bool _dbprint) :
 {
     tuBinVec bin_EAbbc3 {{ 0.0000,  8315.4606, 24292.8207, 64000.0000 }};
     tuBinVec bin_TrigEt  {{ 0.,4.,8.,12.,30.}};
+    tuBinVec bin_TrigEta {{ -1.0, 1.0001 }};
+    tuBinVec bin_TrigPhi {{ 0., 2*M_PI+0.0001 }};
     tuBinVec bin_eta     {{ -1.0, -0.3, 0.3, 1. }};
     tuBinVec bin_phi     {{ 0., 0., 60, 2*M_PI }};
     tuBinVec bin_ZDCx    {{ 4000., 4000., 18, 22000. }};
@@ -35,8 +37,8 @@ tuTrackSparse2::tuTrackSparse2( const char* tag, bool _dbprint) :
     // trigger 
     nbins[0] = bin_EAbbc3;
     nbins[1] = bin_TrigEt;
-    nbins[2] = bin_eta;
-    nbins[3] = bin_phi;
+    nbins[2] = bin_TrigEta;
+    nbins[3] = bin_TrigPhi;
     nbins[4] = bin_ZDCx;
     nbins[5] = bin_runId;
 
@@ -52,7 +54,7 @@ tuTrackSparse2::tuTrackSparse2( const char* tag, bool _dbprint) :
         for (int i{0}; i<7; ++i) cout << " nbins["<<i<<"] " << nbins[i] << endl;
     }
 
-    string trig_string= "bbc;E_{T};Trig #eta;Trig #phi;ZDCx;runId";
+    string trig_string= "bbc;E_{T};Trig #eta;Trig #phi;ZDCx;runId;";
     string word_trig = "triggers;";
            
     data_trig = new THnSparseD(Form("data_trig2%s",tag),
@@ -60,21 +62,21 @@ tuTrackSparse2::tuTrackSparse2( const char* tag, bool _dbprint) :
             6, nbins, NULL, NULL);
     data_trig->SetBinEdges(0,bin_EAbbc3);
     data_trig->SetBinEdges(1,bin_TrigEt);
-    data_trig->SetBinEdges(2,bin_eta);
-    data_trig->SetBinEdges(3,bin_phi);
+    data_trig->SetBinEdges(2,bin_TrigEta);
+    data_trig->SetBinEdges(3,bin_TrigPhi);
     data_trig->SetBinEdges(4,bin_ZDCx);
     data_trig->SetBinEdges(5,bin_runId);
     data_trig->Sumw2();
 
-    string track_string= "track-pT;track #Delta#phi;track #phi;track #eta;dca";
+    string track_string= "track-pT;track #Delta#phi;track #phi;track #eta;dca;";
     string word_track ="track;";
     data_track = new THnSparseD(Form("data_track2%s",tag),
             (word_track+trig_string+track_string).c_str(),
             11, nbins, NULL, NULL);
     data_track->SetBinEdges(0,bin_EAbbc3);
     data_track->SetBinEdges(1,bin_TrigEt);
-    data_track->SetBinEdges(2,bin_eta);
-    data_track->SetBinEdges(3,bin_phi);
+    data_track->SetBinEdges(2,bin_TrigEta);
+    data_track->SetBinEdges(3,bin_TrigPhi);
     data_track->SetBinEdges(4,bin_ZDCx);
     data_track->SetBinEdges(5,bin_runId);
     data_track->SetBinEdges(6,bin_trpt);
