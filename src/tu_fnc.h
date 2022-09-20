@@ -80,6 +80,7 @@ const char* tu_geant05_ascii         (int geantid);
 const char* tu_geant05_greek         (int geantid);
 /* TH1D*       tu_BayesUnfold           (TH1D* data, TH1D* T, TH2D* R, int iRepUnfold=3, TH1D* M=nullptr); */
 TH1D*       tuNorm                   (TH1D*, const char which='o'); // 0 for no, 1 for yes, 2 for variable bin-width
+TH1D*       tuNormByBin              (TH1D*, int bin); // 0 for no, 1 for yes, 2 for variable bin-width
 // xTH2*  tuDivideTH2byTH1(TH2* num, TH1* den, bool scale_by_cols=true); //
 // xTH1D* tuRebin(TH1D*, int, double* =nullptr);
 double      tu_get_box_integral      (TH2D* hg, vector<double>p, vector<double>q);
@@ -194,8 +195,8 @@ int tuwhichbin0(double val, TH1D*); // remember that the first bin is zero-index
 int tuwhichbin1(double val, vector<double>&); // return which bin (starting from 0) the data is in: lower bound <= val < upper bound
 int tuwhichbin1(double val, TH1D*); // remember that the first bin is zero-indexed
 
-void tu_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
-void tu_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row
+/*void tu_normalize_per_row(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row */
+/*void tu_normalize_per_col(TH2D*, double overall_factor=1.); // re-weight all entries to 1 per row */
 
 // return the ratio of a circle of radius R outside of a line distance d away 
 double tuRatCircleOverLine (double R, double d);
@@ -227,6 +228,7 @@ bool tuIsAnyTag    (TString word);
 // if word==<name> return 1 for start, if word==</name> return 2 for end; else return 0
 
 void tu_normByRow(TH2D* hg, double factor=1.0, bool use_max_val=false);
+void tu_normByCol(TH2D* hg, double factor=1.0, bool use_max_val=false);
 
 vector<double> tu_print_first_blank(TH2D*);
 
@@ -293,7 +295,12 @@ void tuInflate(TH1* hg);
 void tuSqrtErr(TH1* hg, bool print_if_wrong=false); // match up bin contents with Sqrt of contents
 void tuUpdateTMfromR(TH2D* resp, TH2D* mod_resp, TH1D* truth, TH1D* meas); // update truth and measured from changes (cuts) in resp
                                                                            //
+
 string tuFileName(string input, vector<string> more_name={});
+string tuStripEnd(string word, string app);
+string tuStripStart(string word, string app);
+string tuStripStarts(string word, vector<string> app);
+string tuStripEnds(string word, vector<string> app);
 /* string tuFileName(vector<string> input); */
 
 /* void tuInflate(TH2* hg); */
@@ -303,5 +310,6 @@ string tuFileName(string input, vector<string> more_name={});
 // function to trim all bins < n_min from a TH2D or TH1D
 /* void tuTrimSmallBins(TH2D* hg, int Nmin, bool cut_underover_flow=true); */
 /* void tuTrimSmallBins(TH1D* hg, int Nmin, bool cut_underover_flow=true); */
+double tuXsec2015(int i_pthatbin);
 
 #endif

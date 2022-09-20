@@ -435,6 +435,14 @@ TH1D* tuNorm(TH1D* hg, const char which) {
             return hg;
     }
 };
+TH1D*       tuNormByBin (TH1D* hg, int bin=1) {
+    double norm = hg->GetBinContent(bin);
+    for (int i=1; i<=hg->GetNbinsX();++i) {
+        hg->SetBinContent(i, hg->GetBinContent(i)/norm);
+        hg->SetBinError  (i, hg->GetBinError  (i)/norm);
+    }
+    return hg;
+};
 //*
 double tu_get_box_integral(TH2D* hg, pair<double,double>p, pair<double,double>q){
     int x0 { (p.first==0  && q.first==0)  ? 1 : hg->GetXaxis()->FindBin(p.first)};
@@ -1032,6 +1040,7 @@ int tuwhichbin1(double val, TH1D* hg) {
     return (int)(hg->GetXaxis()->FindBin(val));
 } ;
 
+
 double tu_D(double x0,double y0,double x1,double y1) 
 { return TMath::Sqrt( TMath::Sq(x1-x0)+TMath::Sq(y1-y0)); };
 double tu_D2(double x0,double y0,double x1,double y1) 
@@ -1156,9 +1165,36 @@ bool tuIsAnyTag    (TString word) {
     return word.EndsWith(">");
 };
 
+void tu_normByCol(TH2D* hg, double factor, bool use_max_val) {
+    int nCols = hg->GetNbinsX();
+    int nRows = hg->GetNbinsY(); 
+
+    for (int col{1}; col<=nCols; ++col) {
+        double mult;
+        if (use_max_val) {
+            double vmax { hg->GetBinContent(col,1) };
+            for (int row{1}; row <= nRows; ++row) {
+                if (hg->GetBinContent(col,row) > vmax) {
+                    vmax = hg->GetBinContent(col,row);
+                }
+            }
+            mult = 1./vmax;
+        } else {
+            /* mult = factor / hg->Integral(1,nCols,row,row); */
+            mult = factor / hg->Integral(col,col,1,nRows);
+        }
+
+        for (int row {1}; row <= nRows; ++row) {
+            hg->SetBinContent(col, row, hg->GetBinContent(col, row) * mult);
+            hg->SetBinError  (col, row, hg->GetBinError  (col, row) * mult);
+        }
+    };
+};
+
+
 void tu_normByRow(TH2D* hg, double factor, bool use_max_val) {
     int nCols = hg->GetNbinsX();
-    int nRows   = hg->GetNbinsY(); 
+    int nRows = hg->GetNbinsY(); 
 
     for (int row{1}; row<=nRows; ++row) {
         double mult;
@@ -1917,4 +1953,41 @@ string tuFileName(string name, vector<string> more_names) {
 
     for (auto other : more_names) out += tuFileName(other);
     return out;
+};
+
+double tuXsec2015(int i_bin) {
+    //const static float NUMBEROFEVENT[NUMBEROFPT] = {242090.0,159181.0,96283.0,125463.0,441145.0,169818.0,58406.0,59431.0,59973.0};//old
+    const static array<double,9> xsection {0.107509,0.019097,0.004752,0.001988,0.000361,0.00000965,0.000000471,0.0000000268,0.00000000138};
+    const static array<double,9> n_events { 3.98674e+06, 2.11431e+06, 1.19222e+06, 1.67257e+06, 4.92392e+06, 1.79834e+06, 260674, 261926, 262366};
+    return xsection[i_bin]/n_events[i_bin];
+};
+
+string tuStripEnd(string word, string sub) {
+    auto i0  = sub.length();
+    auto i1  = word.length();
+    if (i1 < i0) return word;
+    return (word.substr(i1-i0,i0)==sub)
+        ? word.substr(0,i1-i0)
+        : word;
+}
+string tuStripEnds(string word, vector<string> endings) {
+    for (auto sub : endings) {
+        word = tuStripEnd(word,sub);
+    }
+    return word;
+};
+string tuStripStart(string word, string sub) {
+    auto i0  = sub.length();
+    auto i1  = word.length();
+    if (i0>i1) return word;
+    word = (word.substr(0,i0) == sub) 
+        ? word.substr(i0,i1-i0)
+        : word;
+    return word;
+};
+string tuStripStarts(string word, vector<string> startings) {
+    for (auto pre : startings) {
+        word = tuStripStart(word,pre);
+    }
+    return word;
 };

@@ -121,8 +121,8 @@ void tuTrackSparse2::fill_track(double pt, double eta, double phi, double dca){
     data_track->Fill(hopper,weight);
 };
 void tuTrackSparse2::range_axes (int i_axis, int i0, int i1) {
-    if (i_axis > 9) throw std::runtime_error(
-        Form("fatal: error in tuTrackSparse2, axis(%i) not valid, but by <7",
+    if (i_axis > 10) throw std::runtime_error(
+        Form("fatal: error in tuTrackSparse2, axis(%i) not valid, but by <10",
         i_axis)
     );
 
@@ -131,7 +131,7 @@ void tuTrackSparse2::range_axes (int i_axis, int i0, int i1) {
     if (i_axis < 6) { data_trig->GetAxis(i_axis)->SetRange(i0, i1); }
 };
 void tuTrackSparse2::range_axes_float (int i_axis, double f0, double f1) {
-    if (i_axis > 9) throw std::runtime_error(
+    if (i_axis > 10) throw std::runtime_error(
         Form("fatal: error in tuTrackSparse2, axis(%i) not valid, but by <7",
         i_axis)
     );

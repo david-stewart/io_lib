@@ -71,11 +71,11 @@ class tuTrackSparse2 {
     TH1D* hg_ZDCx     (double norm=1., bool is_trig=true) { return hg_axis(4, norm, is_trig); };
     TH1D* hg_runId    (double norm=1., bool is_trig=true) { return hg_axis(5, norm, is_trig); };
 
-    TH1D* hg_pt       (double norm=1.) { return hg_axis(6, norm, false); };
-    TH1D* hg_abs_dphi (double norm=1.) { return hg_axis(7, norm, false); };
-    TH1D* hg_phi      (double norm=1.) { return hg_axis(8, norm, false); };
-    TH1D* hg_eta      (double norm=1.) { return hg_axis(9, norm, false); };
-    TH1D* hg_dca      (double norm=1.) { return hg_axis(10, norm, false); };
+    TH1D* hg_pt       (double norm=0.) { return hg_axis(6, norm, false); };
+    TH1D* hg_abs_dphi (double norm=0.) { return hg_axis(7, norm, false); };
+    TH1D* hg_phi      (double norm=0.) { return hg_axis(8, norm, false); };
+    TH1D* hg_eta      (double norm=0.) { return hg_axis(9, norm, false); };
+    TH1D* hg_dca      (double norm=0.) { return hg_axis(10, norm, false); };
 
     double get_n_triggers();
 };
