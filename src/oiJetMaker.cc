@@ -66,7 +66,7 @@ void oiJetMaker::add_particle(double pt, double eta, double phi, int index, bool
     particles.push_back(PseudoJet());
     particles[n_particles-1].reset_PtYPhiM( pt, eta, phi, mass );
     if (is_neutral) index = -index-2; // must preserve -1 for ghost particles
-    particles[n_particles].set_user_index(index);
+    particles[n_particles-1].set_user_index(index);
 };
 
 vector<int> oiJetMaker::get_indices(PseudoJet& jet) {

@@ -2599,7 +2599,6 @@ ioSimpleJetMatcher::ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJ
     }
 };
 
-
 ioSimpleJetMatcher::ioSimpleJetMatcher(
         vector<PseudoJet>& jets_T, 
         vector<PseudoJet>& jets_M, 
@@ -2617,7 +2616,7 @@ ioSimpleJetMatcher::ioSimpleJetMatcher(
         double absDphi = io_absDphi(phi_trig, jets_T[i].phi());
         if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_T[i] = true;
     }
-    vector<bool> phi_cut_M (nT, false);
+    vector<bool> phi_cut_M (nM, false);
     for (unsigned int i=0; i<jets_M.size(); ++i) {
         double absDphi = io_absDphi(phi_trig, jets_M[i].phi());
         if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_M[i] = true;
@@ -2652,6 +2651,243 @@ ioSimpleJetMatcher::ioSimpleJetMatcher(
     for (unsigned int m=0; m<nM; ++m) {
         if (phi_cut_M[m]) continue;
         if (!matched_M[m]) fakes.push_back(m);
+    }
+};
+
+ioSimpleJetMatcher::ioSimpleJetMatcher(
+        vector<PseudoJet>& jets_T, 
+        vector<PseudoJet>& jets_M, 
+        double phi_trig, 
+        pair<double,double> dphi_range, 
+        TH1D* JES_mean,
+        TH1D* JER,
+        double nJER,
+        double R) 
+{
+    // NOTE :: vectors of jets are assumed to already be sorted by pT
+    const unsigned int nT = jets_T.size() ;
+    const unsigned int nM = jets_M.size() ;
+    const double limit_R2 {R*R};
+
+    vector<bool> phi_cut_T (nT, false);
+    for (unsigned int i=0; i<jets_T.size(); ++i) {
+        double absDphi = io_absDphi(phi_trig, jets_T[i].phi());
+        if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_T[i] = true;
+    }
+
+    vector<bool> phi_cut_M (nT, false);
+    for (unsigned int i=0; i<jets_M.size(); ++i) {
+        double absDphi = io_absDphi(phi_trig, jets_M[i].phi());
+        if (absDphi < dphi_range.first || absDphi > dphi_range.second) phi_cut_M[i] = true;
+    }
+
+    vector<bool> matched_T (nT, false);
+    vector<bool> matched_M (nM, false);
+
+    /* cout << " nT " << nT << "  nM " << nM << endl; */
+
+    /* cout << " start " << endl; */
+    /* for (auto tf : matched_T) cout << tf << " "; cout << endl; */
+
+    for (unsigned int t=0; t<nT; ++t) {
+        if (phi_cut_T[t]) continue;
+        /* cout << " T:" << t << " " << jets_T[t].perp() << endl; */
+
+        auto pt_T = jets_T[t].perp();
+        if (pt_T<5. || pt_T>=55.) continue;
+        int bin = JER->GetXaxis()->FindBin(pt_T);
+        double limit_M = JES_mean->GetBinContent(bin)+JER->GetBinContent(bin)*nJER;
+        double limit_M_low = JES_mean->GetBinContent(bin)-2.0*JER->GetBinContent(bin)*nJER;
+        /* cout << " " << pt_T << " " << limit_M<<"-"<<limit_M_low << endl; */
+
+        bool found_match {false};
+        for (unsigned int m=0; m<nM; ++m) {
+            if (phi_cut_M[m]) continue;
+            if (matched_M[m]) continue; // jet is already matched
+            if ( jets_T[t].squared_distance(jets_M[m]) <= limit_R2
+            && jets_M[m].perp() < limit_M 
+            && jets_M[m].perp() > limit_M_low
+            ) {
+                matched_T[t] = true;
+                matched_M[m] = true;
+                matches.push_back({t,m});
+                found_match = true;
+                /* for (auto tf : matched_T) cout << tf << " "; cout << endl; */
+                break;
+            }
+        }
+        if (!found_match) misses.push_back(t);
+    }
+    for (unsigned int m=0; m<nM; ++m) {
+        if (phi_cut_M[m]) continue;
+        if (!matched_M[m]) fakes.push_back(m);
+    }
+};
+
+
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+// START of ioRooUnfoldResponseFiller_W -- which is like ioRooUnfoldResponseFiller, but with weights
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+ioRooUnfoldResponseFiller_W::ioRooUnfoldResponseFiller_W(TH1D* template_M, TH1D* template_T, string tag) {
+    min_T = template_T->GetXaxis()->GetBinLowEdge(1);
+    min_M = template_M->GetXaxis()->GetBinLowEdge(1);
+    max_T = template_T->GetXaxis()->GetBinUpEdge(template_T->GetXaxis()->GetNbins());
+    max_M = template_M->GetXaxis()->GetBinUpEdge(template_M->GetXaxis()->GetNbins());
+    for (int i=0;i<9;++i) {
+        response   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_%i",tag.c_str(),i),
+            Form("Response, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_A   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_A_%i",tag.c_str(),i),
+            Form("Response A, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_B   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_B_%i",tag.c_str(),i),
+            Form("Response B, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_W_%i",tag.c_str(),i),
+            Form("Response W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_A_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_A_W_%i",tag.c_str(),i),
+            Form("Response A W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_B_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_B_W_%i",tag.c_str(),i),
+            Form("Response B W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+    };
+};
+void ioRooUnfoldResponseFiller_W::write(bool print) {
+    for (auto R : response)     R->Write();
+    for (auto R : response_A)   R->Write();
+    for (auto R : response_B)   R->Write();
+    for (auto R : response_W)   R->Write();
+    for (auto R : response_A_W) R->Write();
+    for (auto R : response_B_W) R->Write();
+    if (print) {
+        cout << "Entries in : " << response[0]->GetName() << endl;
+        for (int i=0;i<9;++i) cout << Form("%2i : all %f  A %f  B %f",i,response[i]->Hresponse()->Integral(),
+                response_A[i]->Hresponse()->Integral(), response_B[i]->Hresponse()->Integral()) << endl;
+        for (int i=0;i<9;++i) cout << Form("%2i : all %f  A %f  B %f weighted",i,response_W[i]->Hresponse()->Integral(),
+                response_A_W[i]->Hresponse()->Integral(), response_B_W[i]->Hresponse()->Integral()) << endl;
+    }
+};
+bool ioRooUnfoldResponseFiller_W::fill(int pthatbin, vector<PseudoJet>& T_jet, vector<PseudoJet>& M_jet, bool is_A,
+    double phi_trig, pair<double,double> trig_range, double W) {
+    ioSimpleJetMatcher indices { T_jet, M_jet, phi_trig, trig_range };
+    for (auto i : indices.fakes)  {
+        double M = M_jet[i].perp();
+        if (M < min_M || M > max_M) continue;
+        response[pthatbin]->Fake(M);
+        response_W[pthatbin]->Fake(M,W);
+        (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Fake(M);
+        (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Fake(M,W);
+    }
+    for (auto i : indices.misses)  {
+        double T = T_jet[i].perp();
+        if (T < min_T || T > max_T) continue;
+        response[pthatbin]   ->Miss(T);
+        response_W[pthatbin] ->Miss(T,W);
+        (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Miss(T);
+        (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Miss(T,W);
+    }
+    for (auto p : indices.matches) {
+        double M = M_jet[p.second].perp();
+        double T = T_jet[p.first ].perp();
+        // FIXME
+        if ((M < min_M || M > max_M)) { // outside of measured bounds 
+            if (T >=min_T && T<=max_T) { // but inside of truth bounds
+                response[pthatbin]   ->Miss(T);
+                response_W[pthatbin] ->Miss(T,W);
+                (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Miss(T);
+                (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Miss(T,W);
+            } else {
+                continue;
+            }
+        } else if ((T < min_T || T > max_T)) { // outside of truth bounds 
+            if (M >=min_M && M<=max_M) { // but inside of measured bounds
+                response[pthatbin]->Fake(M);
+                response_W[pthatbin]->Fake(M,W);
+                (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Fake(M);
+                (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Fake(M,W);
+            } else {
+                continue;
+            }
+        } else {
+            response[pthatbin]->Fill(M,T);
+            response_W[pthatbin]->Fill(M,T,W);
+            (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Fill(M,T);
+            (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Fill(M,T,W);
+        }
+    }
+    return false;
+};
+
+
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+// START of ioRooUnfoldResponseFiller_W_JESJER -- which is like ioRooUnfoldResponseFiller_W,
+// but with cutoffs beyond JES_mean+n*JER per truth bin
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+ioRooUnfoldResponseFiller_W_JESJER::ioRooUnfoldResponseFiller_W_JESJER(TH1D* template_M, TH1D* template_T, 
+        TH1D* _JES_mean, TH1D* _JER, const double _nJER_limit, string tag) :
+    JES_mean{_JES_mean}, JER{_JER}, nJER_limit {_nJER_limit} 
+{
+    min_T = template_T->GetXaxis()->GetBinLowEdge(1);
+    min_M = template_M->GetXaxis()->GetBinLowEdge(1);
+    max_T = template_T->GetXaxis()->GetBinUpEdge(template_T->GetXaxis()->GetNbins());
+    max_M = template_M->GetXaxis()->GetBinUpEdge(template_M->GetXaxis()->GetNbins());
+    for (int i=0;i<9;++i) {
+        response   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_%i",tag.c_str(),i),
+            Form("Response, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_A   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_A_%i",tag.c_str(),i),
+            Form("Response A, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_B   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_B_%i",tag.c_str(),i),
+            Form("Response B, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_W_%i",tag.c_str(),i),
+            Form("Response W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_A_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_A_W_%i",tag.c_str(),i),
+            Form("Response A W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+        response_B_W   [i] = new RooUnfoldResponse( template_M, template_T, Form("response%s_B_W_%i",tag.c_str(),i),
+            Form("Response B W, #vec{#it{p}}_{T}[%i]#in[%i, %i]", i, pthatbins[i],pthatbins[i+1]));
+    };
+};
+void ioRooUnfoldResponseFiller_W_JESJER::write(bool print) {
+    for (auto R : response)     R->Write();
+    for (auto R : response_A)   R->Write();
+    for (auto R : response_B)   R->Write();
+    for (auto R : response_W)   R->Write();
+    for (auto R : response_A_W) R->Write();
+    for (auto R : response_B_W) R->Write();
+    if (print) {
+        cout << "Entries in : " << response[0]->GetName() << endl;
+        for (int i=0;i<9;++i) cout << Form("%2i : all %f  A %f  B %f",i,response[i]->Hresponse()->Integral(),
+                response_A[i]->Hresponse()->Integral(), response_B[i]->Hresponse()->Integral()) << endl;
+        for (int i=0;i<9;++i) cout << Form("%2i : all %f  A %f  B %f weighted",i,response_W[i]->Hresponse()->Integral(),
+                response_A_W[i]->Hresponse()->Integral(), response_B_W[i]->Hresponse()->Integral()) << endl;
+    }
+};
+void ioRooUnfoldResponseFiller_W_JESJER::fill(int pthatbin, vector<PseudoJet>& T_jet, vector<PseudoJet>& M_jet, bool is_A,
+        double phi_trig, pair<double,double> trig_range, double W) {
+    ioSimpleJetMatcher indices { T_jet, M_jet, phi_trig, trig_range, JES_mean, JER, nJER_limit };
+    for (auto i : indices.fakes)  {
+        double M = M_jet[i].perp();
+        if (M < min_M || M > max_M) continue;
+        response[pthatbin]->Fake(M);
+        response_W[pthatbin]->Fake(M,W);
+        (is_A ? response_A[pthatbin]   : response_B[pthatbin])   ->Fake(M);
+        (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin]) ->Fake(M,W);
+    }
+    for (auto i : indices.misses)  {
+        double T = T_jet[i].perp();
+        if (T < min_T || T > max_T) continue;
+        response[pthatbin]->Miss(T);
+        response_W[pthatbin]->Miss(T,W);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Miss(T);
+        (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin])->Miss(T,W);
+    }
+    for (auto p : indices.matches) {
+        double M = M_jet[p.second].perp();
+        double T = T_jet[p.first ].perp();
+        if (M < min_M || M > max_M || T < min_T || T > max_T) continue;
+        response[pthatbin]->Fill(M,T);
+        response_W[pthatbin]->Fill(M,T,W);
+        (is_A ? response_A[pthatbin] : response_B[pthatbin])->Fill(M,T);
+        (is_A ? response_A_W[pthatbin] : response_B_W[pthatbin])->Fill(M,T,W);
     }
 };
 

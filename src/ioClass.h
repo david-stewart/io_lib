@@ -853,6 +853,8 @@ struct ioSimpleJetMatcher {
     ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M, double R=0.4);
     ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M,  double trigger_phi, 
             pair<double,double> delta_phi_range={0, M_PI/3.}, double R=0.4);
+    ioSimpleJetMatcher(vector<PseudoJet>& jets_T, vector<PseudoJet>& jets_M,  double trigger_phi, 
+            pair<double,double> delta_phi_range, TH1D* _JES_mean, TH1D* _JER, double _nJER, double R=0.4);
 };
 
 struct ioRooUnfoldResponseFiller {
@@ -864,6 +866,39 @@ struct ioRooUnfoldResponseFiller {
     void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A);
     void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A, double phi_trig,
             pair<double,double> trig_range);
+};
+
+// the same as above, but with the ability to add one set with a weight always of 1., the other with a weighting of W
+struct ioRooUnfoldResponseFiller_W {
+    array<RooUnfoldResponse*,9> response, response_A, response_B;
+    array<RooUnfoldResponse*,9> response_W, response_A_W, response_B_W;
+    ioRooUnfoldResponseFiller_W(TH1D* form_true, TH1D* form_meas, string tag="");
+    vector<int> pthatbins {5,7,9,11,15,25,35,45,55,65};
+    double min_T, max_T, min_M, max_M;
+    void write(bool print=false);
+    /* bool fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A, double W); */
+    bool fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool
+            is_A, double phi_trig, pair<double,double> trig_range, double W);
+    /* bool fill(double etatrig, int pthatbin, vector<PseudoJet>& T, */
+    /*         vector<PseudoJet>& M, bool is_A, double phi_trig, */
+    /*         pair<double,double> trig_range, double W); */
+};
+
+struct ioRooUnfoldResponseFiller_W_JESJER {
+    TH1D* JES_mean;
+    TH1D* JER;
+    double nJER_limit;
+    
+    array<RooUnfoldResponse*,9> response, response_A, response_B;
+    array<RooUnfoldResponse*,9> response_W, response_A_W, response_B_W;
+    ioRooUnfoldResponseFiller_W_JESJER(TH1D* form_true, TH1D* form_meas, 
+            TH1D* _JES_mean, TH1D* _JER, const double _nJER_limit, string tag="");
+    vector<int> pthatbins {5,7,9,11,15,25,35,45,55,65};
+    double min_T, max_T, min_M, max_M;
+    void write(bool print=false);
+    void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A, double W);
+    void fill(int pthatbin, vector<PseudoJet>& T, vector<PseudoJet>& M, bool is_A, double phi_trig,
+            pair<double,double> trig_range, double W);
 };
 
 
